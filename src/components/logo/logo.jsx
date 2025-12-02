@@ -1,0 +1,25 @@
+"use client";
+
+import { Activity } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React from "react";
+
+const Logo = () => {
+  const router = useRouter();
+
+  return (
+    <div
+      className="flex items-center space-x-2 cursor-pointer"
+      onClick={() => router.push("/")}
+    >
+      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+        <Activity className="w-5 h-5 text-white" />
+      </div>
+      <span className="text font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        ProjectFlow
+      </span>
+    </div>
+  );
+};
+
+export default Logo;
