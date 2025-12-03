@@ -25,12 +25,12 @@ export default function Layout({ children }) {
                    border-b border-border"
           >
             <div className="flex items-center gap-2 pr-4">
-              <SidebarTrigger className="-ml-1" />
+              {/* <SidebarTrigger className="-ml-1" />
               <Separator
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
-              <AutoBreadcrumb />
+              <AutoBreadcrumb /> */}
             </div>
             <ThemeToggle />
           </header>

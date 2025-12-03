@@ -28,7 +28,7 @@ import {
 import { healthLevels, priorities } from "./dummy-data";
 import { defaultAddSubtaskValues } from "./view/project-detail-list-view";
 import { toast } from "sonner";
-import { useBoolean } from "@/hooks/useBoolean";
+import { useBoolean } from "@/hooks/use-boolean";
 import {
   LIST_DEPARTMENTS,
   LIST_PRIORITY_LEVELS,

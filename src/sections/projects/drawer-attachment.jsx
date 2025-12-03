@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FileIcon, Download, Trash2, CloudUpload } from "lucide-react";
 import { fDateTime } from "@/utils/format-time";
 import Iconify from "@/components/iconify";
-import { useBoolean } from "@/hooks/useBoolean";
+import { useBoolean } from "@/hooks/use-boolean";
 import { ConfirmDialog } from "@/components/dialog";
 
 const DUMMY_ATTACHMENTS = [

@@ -1,5 +1,7 @@
 "use client";
 
+import axios from "axios";
+import Cookies from "js-cookie";
 import { createContext, useContext, useEffect, useReducer } from "react";
 
 // 🎯 Reducer function
@@ -9,6 +11,7 @@ function authReducer(state, action) {
       return {
         ...state,
         user: action.payload,
+        token: action.payload.token,
         isAuthenticated: !!action.payload,
         isLoading: false,
       };
@@ -20,6 +23,7 @@ function authReducer(state, action) {
       return {
         ...state,
         user: action.payload,
+        token: action.payload?.token,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -32,6 +36,7 @@ function authReducer(state, action) {
       return {
         ...state,
         user: null,
+        token: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
@@ -55,9 +60,9 @@ export function AuthProvider({ children }) {
 
   // Restore user state on mount or initial load
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("is_logged_in") === "true";
+    const isLoggedIn = Cookies.get("T_SESSION") !== undefined;
     if (isLoggedIn) {
-      dispatch({ type: "INIT", payload: {} }); // dummy user object
+      dispatch({ type: "INIT", payload: { token: Cookies.get("T_SESSION") } });
     } else {
       dispatch({ type: "INIT", payload: null });
     }
@@ -67,13 +72,12 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       dispatch({ type: "LOGIN_START" });
-      localStorage.setItem("is_logged_in", "true");
 
-      dispatch({ type: "LOGIN_SUCCESS" });
-      // dispatch({ type: "LOGIN_SUCCESS", payload: record });
-      // return record;
+      const response = await axios.post("/api/auth/login", { email, password });
 
-      return true;
+      dispatch({ type: "LOGIN_SUCCESS", payload: response.data });
+
+      return response.data;
     } catch (error) {
       dispatch({ type: "LOGIN_ERROR", payload: error });
       throw error;
@@ -85,13 +89,11 @@ export function AuthProvider({ children }) {
     try {
       dispatch({ type: "LOGIN_START" });
 
-      localStorage.setItem("is_logged_in", "true");
+      const response = await axios.post("/api/auth/login", {});
 
-      dispatch({ type: "LOGIN_SUCCESS" });
-      // dispatch({ type: "LOGIN_SUCCESS", payload: record });
-      // return record;
+      dispatch({ type: "LOGIN_SUCCESS", payload: response.data });
 
-      return true;
+      return response.data;
     } catch (error) {
       dispatch({ type: "LOGIN_ERROR", payload: error });
       throw error;
@@ -100,12 +102,13 @@ export function AuthProvider({ children }) {
 
   // Logout action
   const logout = () => {
-    localStorage.removeItem("is_logged_in");
+    Cookies.remove("T_SESSION");
     dispatch({ type: "LOGOUT" });
   };
 
   const value = {
     user: state.user,
+    tokeb: state.token,
     isLoading: state.isLoading,
     error: state.error,
     isAuthenticated: state.isAuthenticated, // ✅ isAuthenticated state

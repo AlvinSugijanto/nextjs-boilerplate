@@ -18,7 +18,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { useBoolean } from "@/hooks/useBoolean";
+import { useBoolean } from "@/hooks/use-boolean";
 import { toast } from "sonner";
 import { LIST_PROJECT_STATUS } from "./variable";
 import { useAuth } from "@/context/auth-context";

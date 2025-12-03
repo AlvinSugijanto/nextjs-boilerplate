@@ -22,7 +22,7 @@ import { Drawer } from "@/components/ui/drawer";
 import DrawerAddEditProject from "../drawer-add-edit-project";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
-import { useBoolean } from "@/hooks/useBoolean";
+import { useBoolean } from "@/hooks/use-boolean";
 import { toast } from "sonner";
 import { RowProjectActions } from "../row-project-action";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

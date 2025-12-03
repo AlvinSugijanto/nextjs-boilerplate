@@ -35,7 +35,7 @@ import ProjectDetailTableRowList from "./project-detail-table-row-list";
 import { generateDummyDataListProject } from "./dummy-data";
 import { useDebounce } from "react-use";
 import { Spinner } from "@/components/ui/spinner";
-import { useBoolean } from "@/hooks/useBoolean";
+import { useBoolean } from "@/hooks/use-boolean";
 import { useFormContext } from "react-hook-form";
 import {
   DropdownMenu,
