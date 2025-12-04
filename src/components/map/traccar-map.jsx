@@ -383,7 +383,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
         const el = document.createElement('div');
         el.innerHTML = `<div class="device-marker w-4 h-4 rounded-full border-2 border-white shadow-lg ${getMarkerColor(device.status)}"></div>`;
 
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
+        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
 
         const newMarker = new mapboxgl.Marker(el)
           .setLngLat(lngLat)
