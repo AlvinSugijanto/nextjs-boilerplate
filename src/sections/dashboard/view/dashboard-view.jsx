@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Card } from "@/components/ui/card";
 import DeviceCard from "../device-card";
 import MapCard from "../map-card";
 import InfoCard from "../info-card";
@@ -22,8 +21,6 @@ const STORAGE_KEY = "dashboard-layout-sizes";
 
 const DashboardView = () => {
   // hooks
-  const mapRef = useRef(null);
-  const mapContainerRef = useRef(null);
   const topRowRef = useRef(null);
   const bottomRowRef = useRef(null);
   const topRightRef = useRef(null);
@@ -294,7 +291,7 @@ const DashboardView = () => {
       <div className="flex-1 min-w-0 flex flex-col gap-1 h-full overflow-hidden">
         {/* Top Right Panel */}
         <div ref={topRightRef} className="min-h-[150px]">
-          <MapCard mapRef={mapRef} mapContainerRef={mapContainerRef} />
+          <MapCard devices={devices} setDevices={setDevices} />
         </div>
 
         {/* Horizontal Resize Handle for Right Column */}

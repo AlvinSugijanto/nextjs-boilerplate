@@ -14,7 +14,7 @@ const NavigationsList = () => {
     },
     {
       name: "Map",
-      url: "/map",
+      url: "/example-map",
       icon: Map,
     },
   ];
