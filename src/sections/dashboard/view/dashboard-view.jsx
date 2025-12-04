@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Card } from "@/components/ui/card";
 import DeviceCard from "../device-card";
 import MapCard from "../map-card";
 import InfoCard from "../info-card";
@@ -22,20 +21,19 @@ const STORAGE_KEY = "dashboard-layout-sizes";
 
 const DashboardView = () => {
   // hooks
-  const mapRef = useRef(null);
-  const mapContainerRef = useRef(null);
   const topRowRef = useRef(null);
   const bottomRowRef = useRef(null);
   const topRightRef = useRef(null);
   const bottomRightRef = useRef(null);
   const leftColumnRef = useRef(null);
-
+  const mapRef = useRef(null);
   const loadingDevices = useBoolean();
 
   // state
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -254,6 +252,10 @@ const DashboardView = () => {
     fetchDevices();
   }, []);
 
+  const handleDeviceClick = useCallback((device) => {
+    setSelectedDeviceId(device.id);
+  }, []);
+
   return (
     <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
       {/* Left Column */}
@@ -263,7 +265,7 @@ const DashboardView = () => {
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
-          <DeviceCard devices={devices} />
+          <DeviceCard devices={devices} onDeviceClick={handleDeviceClick} />
         </div>
 
         {/* Horizontal Resize Handle */}
@@ -294,7 +296,12 @@ const DashboardView = () => {
       <div className="flex-1 min-w-0 flex flex-col gap-1 h-full overflow-hidden">
         {/* Top Right Panel */}
         <div ref={topRightRef} className="min-h-[150px]">
-          <MapCard mapRef={mapRef} mapContainerRef={mapContainerRef} />
+          <MapCard
+            devices={devices}
+            setDevices={setDevices}
+            mapRef={mapRef}
+            selectedDeviceId={selectedDeviceId}
+          />
         </div>
 
         {/* Horizontal Resize Handle for Right Column */}
