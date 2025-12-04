@@ -44,8 +44,17 @@ const TraccarMap = ({ devices, positions }) => {
         mapRef.current = null;
       }
     };
-  }, [isDark]);
+  }, []);
 
+  // Update map style when theme changes
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+
+    const newStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11';
+    mapRef.current.setStyle(newStyle);
+  }, [isDark, mapLoaded]);
+
+  // Update markers when devices/positions change
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
 
@@ -67,14 +76,14 @@ const TraccarMap = ({ devices, positions }) => {
       const lngLat = [longitude, latitude];
 
       const popupHtml = `
-            <div class="text-sm text-black">
-                <div class="font-semibold mb-1">${device.name}</div>
-                <div class="text-xs text-gray-600 mb-1">Status: ${device.status}</div>
-                <div class="text-xs text-gray-500">
-                    ${latitude.toFixed(5)}, ${longitude.toFixed(5)}
-                </div>
-            </div>
-        `;
+        <div class="text-sm text-black">
+          <div class="font-semibold mb-1">${device.name}</div>
+          <div class="text-xs text-gray-600 mb-1">Status: ${device.status}</div>
+          <div class="text-xs text-gray-500">
+            ${latitude.toFixed(5)}, ${longitude.toFixed(5)}
+          </div>
+        </div>
+      `;
 
       if (markersRef.current[device.id]) {
         markersRef.current[device.id].setLngLat(lngLat);
@@ -113,7 +122,7 @@ const TraccarMap = ({ devices, positions }) => {
           Mapbox access token is not configured. Please set NEXT_PUBLIC_MAPBOX_TOKEN in your environment variables.
         </p>
       </div>
-    )
+    );
   }
 
   return <div ref={mapContainerRef} className="w-full h-full" />;
