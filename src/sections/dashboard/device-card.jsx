@@ -17,14 +17,7 @@ import {
 import { TableList } from "@/components/table";
 import { fDateTime } from "@/utils/format-time";
 
-const dummyData = [...new Array(200)].map((_, index) => ({
-  id: index + 1,
-  name: faker.commerce.productName(),
-  status: faker.helpers.arrayElement(["Online", "Offline", "Idle"]),
-  lastActive: faker.date.recent().toLocaleString(),
-}));
-
-function DeviceCard({ devices = [] }) {
+function DeviceCard({ devices = [], onDeviceClick }) {
   // state
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([
@@ -136,6 +129,9 @@ function DeviceCard({ devices = [] }) {
           rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
           onRowClick={(device) => {
             console.log("Clicked device:", device);
+            if (onDeviceClick) {
+              onDeviceClick(device);
+            }
           }}
           tableProps={{
             initialState: {

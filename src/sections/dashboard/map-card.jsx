@@ -4,7 +4,7 @@ import TraccarMap from "@/components/map/traccar-map";
 import ClientOnly from "@/components/client-only";
 import Cookies from "js-cookie";
 
-function MapCard({ devices, setDevices }) {
+function MapCard({ devices, setDevices, mapRef, selectedDeviceId }) {
   const [positions, setPositions] = useState([]);
   const [geofences, setGeofences] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +123,8 @@ function MapCard({ devices, setDevices }) {
               devices={devices}
               positions={positions}
               geofences={geofences}
+              mapRef={mapRef}
+              selectedDeviceId={selectedDeviceId}
             />
           </ClientOnly>
         )}

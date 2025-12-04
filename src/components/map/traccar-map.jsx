@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
-const TraccarMap = ({ devices, positions, geofences }) => {
+const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, selectedDeviceId }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef({});
@@ -19,11 +19,51 @@ const TraccarMap = ({ devices, positions, geofences }) => {
     geofencesRef.current = geofences;
   }, [geofences]);
 
+  // Expose map instance to parent via ref
+  useEffect(() => {
+    if (externalMapRef && mapRef.current) {
+      externalMapRef.current = mapRef.current;
+    }
+  }, [externalMapRef, mapRef.current]);
+
+  // Focus on selected device
+  useEffect(() => {
+    if (!selectedDeviceId || !mapRef.current || !mapLoaded) return;
+
+    const position = positions.find(p => p.deviceId === selectedDeviceId);
+    if (!position) return;
+
+    const { latitude, longitude } = position;
+
+    // Close all open popups first
+    Object.values(markersRef.current).forEach(marker => {
+      if (marker.getPopup().isOpen()) {
+        marker.togglePopup();
+      }
+    });
+
+    // Fly to the device location with animation
+    mapRef.current.flyTo({
+      center: [longitude, latitude],
+      zoom: 16,
+      duration: 1500,
+      essential: true
+    });
+
+    // Open the popup for the selected device only
+    setTimeout(() => {
+      const marker = markersRef.current[selectedDeviceId];
+      if (marker && !marker.getPopup().isOpen()) {
+        marker.togglePopup();
+      }
+    }, 1600);
+  }, [selectedDeviceId, positions, mapLoaded]);
+
   // Calculate centroid of a polygon
   const calculateCentroid = (coordinates) => {
-    const coords = coordinates[0]; // Get outer ring
+    const coords = coordinates[0];
     let x = 0, y = 0;
-    const numPoints = coords.length - 1; // Exclude the closing point
+    const numPoints = coords.length - 1;
 
     for (let i = 0; i < numPoints; i++) {
       x += coords[i][0];
@@ -56,7 +96,7 @@ const TraccarMap = ({ devices, positions, geofences }) => {
         return {
           type: 'Polygon',
           coordinates: [coords],
-          center: center // Return the actual center for circles
+          center: center
         };
       }
     } else if (area.startsWith('POLYGON')) {
@@ -124,7 +164,6 @@ const TraccarMap = ({ devices, positions, geofences }) => {
       });
     }
 
-    // Add label source and layer
     if (!map.getSource('geofence-labels')) {
       map.addSource('geofence-labels', {
         type: 'geojson',
@@ -167,7 +206,6 @@ const TraccarMap = ({ devices, positions, geofences }) => {
       const geometryData = parseGeofence(geofence.area);
       if (!geometryData) return;
 
-      // Add geofence polygon
       features.push({
         type: 'Feature',
         properties: {
@@ -181,10 +219,8 @@ const TraccarMap = ({ devices, positions, geofences }) => {
         }
       });
 
-      // Calculate center for label
       const center = geometryData.center || calculateCentroid(geometryData.coordinates);
 
-      // Add label point
       labelFeatures.push({
         type: 'Feature',
         properties: {
@@ -255,12 +291,10 @@ const TraccarMap = ({ devices, positions, geofences }) => {
     const newStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11';
     mapRef.current.setStyle(newStyle);
 
-    // Re-add geofence layers and data after style change
     mapRef.current.once('style.load', () => {
       addGeofenceLayers(mapRef.current);
       updateGeofenceData(mapRef.current, geofencesRef.current);
 
-      // Update label text halo color based on theme
       if (mapRef.current.getLayer('geofence-labels')) {
         mapRef.current.setPaintProperty(
           'geofence-labels',
@@ -284,8 +318,6 @@ const TraccarMap = ({ devices, positions, geofences }) => {
         return 'bg-green-500';
       case 'offline':
         return 'bg-red-500';
-      case 'unknown':
-        return 'bg-yellow-500';
       default:
         return 'bg-gray-500';
     }
@@ -324,7 +356,7 @@ const TraccarMap = ({ devices, positions, geofences }) => {
         <div class="text-sm" style="color: #000;">
           <div class="font-semibold mb-1">${device.name}</div>
           <div class="text-xs mb-1" style="color: #666;">
-            Status: <span class="${device.status === 'online' ? 'text-green-600' : device.status === 'offline' ? 'text-red-600' : 'text-yellow-600'}">${device.status}</span>
+            Status: <span class="${device.status === 'online' ? 'text-green-600' : device.status === 'offline' ? 'text-red-600' : 'text-gray-500'}">${device.status}</span>
           </div>
           ${speed !== undefined ? `<div class="text-xs" style="color: #666;">Speed: ${Math.round(speed * 1.852)} km/h</div>` : ''}
           ${course !== undefined ? `<div class="text-xs" style="color: #666;">Course: ${Math.round(course)}°</div>` : ''}
