@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { faker } from "@faker-js/faker";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,9 @@ const dummyData = [...new Array(200)].map((_, index) => ({
   lastActive: faker.date.recent().toLocaleString(),
 }));
 
-function DeviceCard() {
+function DeviceCard({ devices = [] }) {
   // state
   const [search, setSearch] = useState("");
-  const [data, setData] = useState(dummyData);
   const [sorting, setSorting] = useState([
     {
       id: "name",
@@ -37,11 +36,19 @@ function DeviceCard() {
 
   // memo
   const filteredData = useMemo(() => {
-    if (!search) return data;
-    return data.filter((item) =>
+    const transformedData = devices.map((item) => ({
+      id: item.id,
+      name: item.name,
+      status: item.status,
+      lastActive: null,
+      uniqueId: item.uniqueId,
+    }));
+
+    if (!search) return transformedData;
+    return transformedData.filter((item) =>
       item.name.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search, data]);
+  }, [search, devices]);
 
   const columns = useMemo(() => {
     return [
@@ -56,9 +63,9 @@ function DeviceCard() {
           const status = row.getValue("status");
           let colorClass = "bg-gray-500";
 
-          if (status === "Online") colorClass = "bg-green-500";
-          else if (status === "Offline") colorClass = "bg-red-500";
-          else if (status === "Idle") colorClass = "bg-yellow-500";
+          if (status === "online") colorClass = "bg-green-500";
+          else if (status === "offline") colorClass = "bg-red-500";
+          else if (status === "idle") colorClass = "bg-yellow-500";
 
           return (
             <div className="flex items-center gap-2">
@@ -82,10 +89,13 @@ function DeviceCard() {
         meta: {
           sortable: true,
         },
-        cell: ({ row }) => fDateTime(row.getValue("lastActive")),
+        cell: ({ row }) =>
+          row.getValue("lastActive")
+            ? fDateTime(row.getValue("lastActive"))
+            : "-",
       },
     ];
-  }, []);
+  }, [devices]);
 
   return (
     <Card className="h-full p-4 overflow-hidden flex flex-col gap-4">
@@ -116,6 +126,7 @@ function DeviceCard() {
 
       <div className="overflow-auto max-h-full flex-1">
         <TableList
+          key={filteredData.length}
           columns={columns}
           data={filteredData}
           setSorting={setSorting}
