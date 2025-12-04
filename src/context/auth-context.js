@@ -53,7 +53,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, {
     user: null,
-    isAuthenticated: false,
+    isAuthenticated: true,
     isLoading: true,
     error: null,
   });

@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import DeviceCard from "../device-card";
 import MapCard from "../map-card";
 import InfoCard from "../info-card";
 import EventCard from "../event-card";
+import { useBoolean } from "@/hooks/use-boolean";
+import axios from "axios";
 
 // Default sizes
 const DEFAULT_SIZES = {
@@ -19,6 +21,7 @@ const DEFAULT_SIZES = {
 const STORAGE_KEY = "dashboard-layout-sizes";
 
 const DashboardView = () => {
+  // hooks
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const topRowRef = useRef(null);
@@ -27,8 +30,12 @@ const DashboardView = () => {
   const bottomRightRef = useRef(null);
   const leftColumnRef = useRef(null);
 
+  const loadingDevices = useBoolean();
+
+  // state
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [devices, setDevices] = useState([]);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -229,6 +236,24 @@ const DashboardView = () => {
     document.addEventListener("mouseup", onMouseUp);
   };
 
+  const fetchDevices = useCallback(async () => {
+    loadingDevices.onTrue();
+
+    try {
+      const { data } = await axios.get("/api/proxy/traccar/devices");
+
+      setDevices(data);
+    } catch (error) {
+      console.error("Error fetching devices:", error);
+    } finally {
+      loadingDevices.onFalse();
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
   return (
     <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
       {/* Left Column */}
@@ -238,7 +263,7 @@ const DashboardView = () => {
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
-          <DeviceCard />
+          <DeviceCard devices={devices} />
         </div>
 
         {/* Horizontal Resize Handle */}
