@@ -11,7 +11,7 @@ function authReducer(state, action) {
       return {
         ...state,
         user: action.payload,
-        token: action.payload.token,
+        token: action.payload?.token,
         isAuthenticated: !!action.payload,
         isLoading: false,
       };
@@ -53,7 +53,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, {
     user: null,
-    isAuthenticated: true,
+    isAuthenticated: false,
     isLoading: true,
     error: null,
   });
@@ -108,7 +108,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user: state.user,
-    tokeb: state.token,
+    token: state.token,
     isLoading: state.isLoading,
     error: state.error,
     isAuthenticated: state.isAuthenticated, // ✅ isAuthenticated state
