@@ -7,6 +7,7 @@ import InfoCard from "../info-card";
 import EventCard from "../event-card";
 import { useBoolean } from "@/hooks/use-boolean";
 import axios from "axios";
+import { endOfDay, startOfDay } from "date-fns";
 
 // Default sizes
 const DEFAULT_SIZES = {
@@ -28,12 +29,16 @@ const DashboardView = () => {
   const leftColumnRef = useRef(null);
   const mapRef = useRef(null);
   const loadingDevices = useBoolean();
+  const loadingEvents = useBoolean();
+  const loadingEventTypes = useBoolean();
 
   // state
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -241,15 +246,62 @@ const DashboardView = () => {
       const { data } = await axios.get("/api/proxy/traccar/devices");
 
       setDevices(data);
+      loadingDevices.onFalse();
+
+      if (data.length) {
+        let listEvents = [];
+
+        for (const device of data) {
+          const today = new Date();
+          const startDay = startOfDay(today);
+          const endDay = endOfDay(today);
+
+          const res = await axios.get(
+            `/api/proxy/traccar/reports/events?deviceId=${
+              device.id
+            }&from=${startDay.toISOString()}&to=${endDay.toISOString()}&type=allEvents`
+          );
+
+          const transformedData = res.data.map((item) => ({
+            ...item,
+            device: {
+              name: device.name,
+              uniqueId: device.uniqueId,
+            },
+          }));
+
+          listEvents = listEvents.concat(transformedData);
+        }
+
+        setEvents(listEvents);
+      }
     } catch (error) {
       console.error("Error fetching devices:", error);
     } finally {
       loadingDevices.onFalse();
+      loadingEvents.onFalse();
+    }
+  }, []);
+
+  const fetchEventTypes = useCallback(async () => {
+    loadingEventTypes.onTrue();
+
+    try {
+      const { data } = await axios.get(
+        "/api/proxy/traccar/notifications/types"
+      );
+
+      setEventTypes(data.sort((a, b) => a.type.localeCompare(b.type)));
+    } catch (error) {
+      console.error("Error fetching event types:", error);
+    } finally {
+      loadingEventTypes.onFalse();
     }
   }, []);
 
   useEffect(() => {
     fetchDevices();
+    fetchEventTypes();
   }, []);
 
   const handleDeviceClick = useCallback((device) => {
@@ -315,7 +367,7 @@ const DashboardView = () => {
 
         {/* Bottom Right Panel */}
         <div ref={bottomRightRef} className="min-h-[150px]">
-          <EventCard />
+          <EventCard events={events} eventTypes={eventTypes} />
         </div>
       </div>
     </div>
