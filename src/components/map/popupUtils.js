@@ -1,20 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-
-const reverseGeocode = async (latitude, longitude) => {
-  try {
-    const response = await fetch(
-      `/api/proxy/traccar/server/geocode?latitude=${latitude}&longitude=${longitude}`
-    );
-    if (response.ok) {
-      const address = await response.text();
-      return address;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error reverse geocoding:', error);
-    return null;
-  }
-};
+import { reverseGeocode } from '@/utils/reverse-geocode';
 
 export const createPopupHtml = (properties) => {
   const { name, status, speed, latitude, longitude, lastUpdate } = properties;
