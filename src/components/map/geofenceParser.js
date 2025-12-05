@@ -1,0 +1,86 @@
+export const calculateCentroid = (coordinates) => {
+  const coords = coordinates[0];
+  let x = 0, y = 0;
+  const numPoints = coords.length - 1;
+  for (let i = 0; i < numPoints; i++) {
+    x += coords[i][0];
+    y += coords[i][1];
+  }
+  return [x / numPoints, y / numPoints];
+};
+
+const parseCircle = (area) => {
+  const match = area.match(/CIRCLE \(([-\d.]+) ([-\d.]+), ([\d.]+)\)/);
+  if (!match) return null;
+
+  const [, lat, lng, radius] = match;
+  const center = [parseFloat(lng), parseFloat(lat)];
+  const points = 64;
+  const coords = [];
+  const latCenter = parseFloat(lat);
+  const radiusInDegreesLat = radius / 111320;
+  const radiusInDegreesLng = radius / (111320 * Math.cos(latCenter * Math.PI / 180));
+
+  for (let i = 0; i <= points; i++) {
+    const angle = (i / points) * 2 * Math.PI;
+    const dx = radiusInDegreesLng * Math.cos(angle);
+    const dy = radiusInDegreesLat * Math.sin(angle);
+    coords.push([center[0] + dx, center[1] + dy]);
+  }
+
+  return {
+    type: 'Polygon',
+    coordinates: [coords],
+    center: center
+  };
+};
+
+const parsePolygon = (area) => {
+  const coordString = area.match(/POLYGON \(\((.*?)\)\)/)?.[1];
+  if (!coordString) return null;
+
+  const coords = coordString.split(', ').map(pair => {
+    const [lat, lng] = pair.split(' ').map(Number);
+    return [lng, lat];
+  });
+
+  return {
+    type: 'Polygon',
+    coordinates: [coords]
+  };
+};
+
+const parseLineString = (area) => {
+  const coordString = area.match(/LINESTRING \((.*?)\)/)?.[1];
+  if (!coordString) return null;
+
+  const coords = coordString.split(', ').map(pair => {
+    const [lat, lng] = pair.split(' ').map(Number);
+    return [lng, lat];
+  });
+
+  // Close the polygon if not already closed
+  if (
+    coords.length > 0 &&
+    (coords[0][0] !== coords[coords.length - 1][0] ||
+      coords[0][1] !== coords[coords.length - 1][1])
+  ) {
+    coords.push([...coords[0]]);
+  }
+
+  return {
+    type: 'Polygon',
+    coordinates: [coords]
+  };
+};
+
+export const parseGeofence = (area) => {
+  if (area.startsWith('CIRCLE')) {
+    return parseCircle(area);
+  } else if (area.startsWith('POLYGON')) {
+    return parsePolygon(area);
+  } else if (area.startsWith('LINESTRING')) {
+    return parseLineString(area);
+  }
+  return null;
+};
