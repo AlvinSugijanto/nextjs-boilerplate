@@ -12,14 +12,34 @@ const dummyData = [...new Array(200)].map((_, index) => ({
   eventName: faker.hacker.phrase(),
 }));
 
-function EventTableListAll() {
+function EventTableListAll({ events = [] }) {
   // state
+  const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([
     {
-      id: "finished",
+      id: "started",
       desc: false,
     },
   ]);
+
+  const filteredData = useMemo(() => {
+    const transformedData = events.map((item) => ({
+      id: item.id,
+      started: item.eventTime,
+      finished: item.finished,
+      deviceName: item.device?.name,
+      duration: item.duration,
+      eventName: item.type,
+    }));
+
+    if (!search) return transformedData;
+
+    return transformedData.filter((event) =>
+      Object.values(event).some((value) =>
+        String(value).toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }, [events, search]);
 
   const columns = useMemo(() => {
     return [
@@ -37,7 +57,10 @@ function EventTableListAll() {
         meta: {
           sortable: true,
         },
-        cell: ({ row }) => fDateTime(row.getValue("finished"), "HH:mm:ss"),
+        cell: ({ row }) =>
+          row.getValue("finished")
+            ? fDateTime(row.getValue("finished"), "HH:mm:ss")
+            : "-",
       },
       {
         accessorKey: "deviceName",
@@ -45,12 +68,29 @@ function EventTableListAll() {
         meta: {
           sortable: true,
         },
+        cell: ({ row }) => row.getValue("deviceName") || "-",
       },
       {
         accessorKey: "duration",
         header: "Duration",
         meta: {
           sortable: true,
+        },
+        cell: ({ row }) => row.getValue("duration") || "-",
+      },
+      {
+        accessorKey: "eventName",
+        header: "Event Name",
+        meta: {
+          sortable: true,
+        },
+        cell: ({ row }) => {
+          const eventName = row.original.eventName;
+          return (
+            <span title={eventName} className="font-bold text-primary">
+              {eventName}
+            </span>
+          );
         },
       },
     ];
@@ -59,12 +99,13 @@ function EventTableListAll() {
   return (
     <>
       <TableList
+        key={filteredData.length}
         columns={columns}
-        data={dummyData}
+        data={filteredData}
         setSorting={setSorting}
         sorting={sorting}
         showPagination={false}
-        pageSize={dummyData.length}
+        pageSize={filteredData.length}
         rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
         onRowClick={(event) => {
           console.log("Clicked event:", event);

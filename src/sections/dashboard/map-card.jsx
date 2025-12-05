@@ -133,4 +133,4 @@ function MapCard({ devices, setDevices, mapRef, selectedDeviceId }) {
   );
 }
 
-export default MapCard;
+export default React.memo(MapCard);
