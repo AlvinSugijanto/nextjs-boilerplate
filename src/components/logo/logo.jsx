@@ -16,7 +16,7 @@ const Logo = () => {
         <Activity className="w-5 h-5 text-white" />
       </div>
       <span className="text font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-        ProjectFlow
+        Teletrace
       </span>
     </div>
   );

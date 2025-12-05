@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import axios from "axios";
 import { NextResponse } from "next/server";
 
@@ -20,8 +21,17 @@ export async function POST(req, { params }) {
     response.cookies.set("T_SESSION", data.token);
     return response;
   } catch (error) {
-    return NextResponse.json(error.response.data, {
-      status: error?.status || 500,
+    const statusCode = error?.response?.status || 500;
+
+    logger.error("Request failed", "AUTH_LOGIN", {
+      status: statusCode,
+      url: `${BASE_API_URL}/login`,
+      message: error?.message,
     });
+
+    return NextResponse.json(
+      error?.response?.data || { error: "Internal server error" },
+      { status: statusCode }
+    );
   }
 }
