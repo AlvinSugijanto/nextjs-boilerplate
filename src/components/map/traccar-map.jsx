@@ -6,7 +6,7 @@ import { DEFAULT_CENTER, DEFAULT_ZOOM, GEOFENCE_LABELS_LAYER_ID } from './consta
 import { addGeofenceLayers, updateGeofenceData } from './geofenceLayers';
 import { buildDeviceFeatures } from './deviceFeatures';
 import { addDeviceLayers, updateDeviceSourceData } from './deviceLayers';
-import { openPopupForDeviceId, closePopup } from './popupUtils';
+import { openPopupForDeviceId, closePopup, updatePopupContent } from './popupUtils';
 
 const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, selectedDeviceId }) => {
   const mapContainerRef = useRef(null);
@@ -18,6 +18,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
   const latestDeviceFeaturesRef = useRef([]);
   const hasFitBounds = useRef(false);
   const currentPopupRef = useRef(null);
+  const focusedDeviceIdRef = useRef(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -46,6 +47,30 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     const features = buildDeviceFeatures(latestDevicesRef.current, latestPositionsRef.current);
     latestDeviceFeaturesRef.current = features;
     updateDeviceSourceData(map, features, hasFitBounds);
+
+    // Update popup if there's a focused device
+    if (focusedDeviceIdRef.current && currentPopupRef.current) {
+      const focusedFeature = features.find(
+        (f) => Number(f.properties.deviceId) === Number(focusedDeviceIdRef.current)
+      );
+
+      if (focusedFeature) {
+        const newCoords = focusedFeature.geometry.coordinates;
+
+        // Update popup position
+        currentPopupRef.current.setLngLat(newCoords);
+
+        // Update popup content
+        updatePopupContent(currentPopupRef.current, focusedFeature.properties);
+
+        // Move camera to follow the device smoothly
+        map.easeTo({
+          center: newCoords,
+          duration: 1000,
+          essential: true
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -73,13 +98,14 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     map.on('load', () => {
       addGeofenceLayers(map, isDark);
       updateGeofenceData(map, geofencesRef.current);
-      addDeviceLayers(map, isDark, currentPopupRef);
+      addDeviceLayers(map, isDark, currentPopupRef, focusedDeviceIdRef);
       updateDeviceData();
       setMapLoaded(true);
     });
 
     return () => {
       closePopup(currentPopupRef);
+      focusedDeviceIdRef.current = null;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -93,6 +119,8 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
 
     const newStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11';
     closePopup(currentPopupRef);
+    focusedDeviceIdRef.current = null;
+
     mapRef.current.setStyle(newStyle);
 
     mapRef.current.once('style.load', () => {
@@ -106,7 +134,8 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
           isDark ? '#1f2937' : '#ffffff'
         );
       }
-      addDeviceLayers(mapRef.current, isDark, currentPopupRef);
+
+      addDeviceLayers(mapRef.current, isDark, currentPopupRef, focusedDeviceIdRef);
       updateDeviceData();
     });
   }, [isDark]);
@@ -132,6 +161,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     if (!feature) return;
 
     closePopup(currentPopupRef);
+    focusedDeviceIdRef.current = deviceId;
 
     mapRef.current.flyTo({
       center: feature.geometry.coordinates,

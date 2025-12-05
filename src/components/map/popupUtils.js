@@ -50,7 +50,7 @@ export const createPopupHtml = (properties) => {
     : '';
 
   return `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px;">
+    <div id="popup-content" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
         <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${statusColor};"></div>
         <div style="font-weight: 600; font-size: 14px; color: #111827;">${name}</div>
@@ -60,6 +60,30 @@ export const createPopupHtml = (properties) => {
       ${updatedLine}
     </div>
   `;
+};
+
+export const updatePopupContent = (popup, properties) => {
+  if (!popup) return;
+
+  const newHtml = createPopupHtml(properties);
+  popup.setHTML(newHtml);
+
+  // Re-attach the event handler
+  window.handleShowAddress = async (event, latitude, longitude) => {
+    event.preventDefault();
+    const linkElement = document.getElementById(`coordinates-${latitude}-${longitude}`);
+    if (!linkElement) return;
+
+    linkElement.innerHTML = '<span style="color: #6b7280;">Address: Loading...</span>';
+
+    const address = await reverseGeocode(latitude, longitude);
+
+    if (address) {
+      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${address}</span>`;
+    } else {
+      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}</span>`;
+    }
+  };
 };
 
 export const openPopupFromFeature = (map, feature, currentPopupRef) => {
@@ -84,7 +108,6 @@ export const openPopupFromFeature = (map, feature, currentPopupRef) => {
   // Attach the event handler to the window object so it can be called from the HTML
   window.handleShowAddress = async (event, latitude, longitude) => {
     event.preventDefault();
-
     const linkElement = document.getElementById(`coordinates-${latitude}-${longitude}`);
     if (!linkElement) return;
 

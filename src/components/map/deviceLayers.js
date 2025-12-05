@@ -11,10 +11,13 @@ import {
 } from './constants';
 import { openPopupFromFeature, closePopup } from './popupUtils';
 
-export const addDeviceLayers = (map, isDark, currentPopupRef) => {
+export const addDeviceLayers = (map, isDark, currentPopupRef, focusedDeviceIdRef) => {
   if (!map) return;
 
   closePopup(currentPopupRef);
+  if (focusedDeviceIdRef) {
+    focusedDeviceIdRef.current = null;
+  }
 
   // Remove existing layers and source
   if (map.getLayer(CLUSTER_LAYER_ID)) map.removeLayer(CLUSTER_LAYER_ID);
@@ -88,10 +91,10 @@ export const addDeviceLayers = (map, isDark, currentPopupRef) => {
   });
 
   // Set up event handlers
-  setupDeviceLayerEvents(map, currentPopupRef);
+  setupDeviceLayerEvents(map, currentPopupRef, focusedDeviceIdRef);
 };
 
-const setupDeviceLayerEvents = (map, currentPopupRef) => {
+const setupDeviceLayerEvents = (map, currentPopupRef, focusedDeviceIdRef) => {
   // Cluster click - zoom in
   map.off('click', CLUSTER_LAYER_ID);
   map.on('click', CLUSTER_LAYER_ID, (event) => {
@@ -100,6 +103,7 @@ const setupDeviceLayerEvents = (map, currentPopupRef) => {
 
     const clusterId = feature.properties.cluster_id;
     const source = map.getSource(DEVICE_SOURCE_ID);
+
     if (!source || typeof clusterId === 'undefined') return;
 
     source.getClusterExpansionZoom(clusterId, (err, zoom) => {
@@ -118,6 +122,10 @@ const setupDeviceLayerEvents = (map, currentPopupRef) => {
     const feature = event.features?.[0];
     if (feature) {
       openPopupFromFeature(map, feature, currentPopupRef);
+      // Set the focused device ID
+      if (focusedDeviceIdRef && feature.properties?.deviceId) {
+        focusedDeviceIdRef.current = Number(feature.properties.deviceId);
+      }
     }
   });
 
