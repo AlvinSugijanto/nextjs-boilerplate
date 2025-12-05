@@ -8,6 +8,7 @@ import EventCard from "../event-card";
 import { useBoolean } from "@/hooks/use-boolean";
 import axios from "axios";
 import { endOfDay, startOfDay } from "date-fns";
+import Cookies from "js-cookie";
 
 // Default sizes
 const DEFAULT_SIZES = {
@@ -28,6 +29,7 @@ const DashboardView = () => {
   const bottomRightRef = useRef(null);
   const leftColumnRef = useRef(null);
   const mapRef = useRef(null);
+  const socketRef = useRef(null);
   const loadingDevices = useBoolean();
   const loadingEvents = useBoolean();
   const loadingEventTypes = useBoolean();
@@ -39,6 +41,9 @@ const DashboardView = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [events, setEvents] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [geofences, setGeofences] = useState([]);
+  const [loadingMap, setLoadingMap] = useState(true);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -239,6 +244,91 @@ const DashboardView = () => {
     document.addEventListener("mouseup", onMouseUp);
   };
 
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const positionsResponse = await fetch("/api/proxy/traccar/positions");
+      if (positionsResponse.ok) {
+        const positionsData = await positionsResponse.json();
+        setPositions(positionsData);
+      }
+
+      const geofencesResponse = await fetch("/api/proxy/traccar/geofences");
+      if (geofencesResponse.ok) {
+        const geofencesData = await geofencesResponse.json();
+        setGeofences(geofencesData);
+      }
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+    } finally {
+      setLoadingMap(false);
+    }
+  }, []);
+
+  const handleWebSocketConnect = useCallback(() => {
+    const traccarUrl = process.env.NEXT_PUBLIC_TRACCAR_WS_URL;
+    const token = Cookies.get("T_SESSION");
+
+    if (!traccarUrl || !token) {
+      console.warn("Missing Traccar URL or token");
+      return;
+    }
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    const wsUrl = `${traccarUrl}?token=${token}`;
+    socketRef.current = new WebSocket(wsUrl);
+
+    socketRef.current.onmessage = (event) => {
+      if (event.data === "{}") return;
+
+      try {
+        const message = JSON.parse(event.data);
+
+        if (message.devices) {
+          setDevices((prev) => {
+            const deviceMap = new Map(prev.map((d) => [d.id, d]));
+            message.devices.forEach((d) => deviceMap.set(d.id, d));
+            return Array.from(deviceMap.values());
+          });
+        }
+
+        if (message.positions) {
+          setPositions((prev) => {
+            const positionMap = new Map(prev.map((p) => [p.deviceId, p]));
+            message.positions.forEach((p) => positionMap.set(p.deviceId, p));
+            return Array.from(positionMap.values());
+          });
+        }
+
+        if (message.geofences) {
+          setGeofences((prev) => {
+            const geofenceMap = new Map(prev.map((g) => [g.id, g]));
+            message.geofences.forEach((g) => geofenceMap.set(g.id, g));
+            return Array.from(geofenceMap.values());
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+
+    socketRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("WebSocket connection closed");
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => {
+        if (socketRef.current?.readyState !== WebSocket.OPEN) {
+          handleWebSocketConnect();
+        }
+      }, 5000);
+    };
+  }, []);
+
   const fetchDevices = useCallback(async () => {
     loadingDevices.onTrue();
 
@@ -257,8 +347,7 @@ const DashboardView = () => {
           const endDay = endOfDay(today);
 
           const res = await axios.get(
-            `/api/proxy/traccar/reports/events?deviceId=${
-              device.id
+            `/api/proxy/traccar/reports/events?deviceId=${device.id
             }&from=${startDay.toISOString()}&to=${endDay.toISOString()}&type=allEvents`
           );
 
@@ -302,6 +391,15 @@ const DashboardView = () => {
   useEffect(() => {
     fetchDevices();
     fetchEventTypes();
+    fetchInitialData().then(() => {
+      handleWebSocketConnect();
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
   }, []);
 
   const handleDeviceClick = useCallback((device) => {
@@ -350,9 +448,11 @@ const DashboardView = () => {
         <div ref={topRightRef} className="min-h-[150px]">
           <MapCard
             devices={devices}
-            setDevices={setDevices}
+            positions={positions}
+            geofences={geofences}
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
+            loading={loadingMap}
           />
         </div>
 

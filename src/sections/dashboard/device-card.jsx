@@ -128,7 +128,6 @@ function DeviceCard({ devices = [], onDeviceClick }) {
           pageSize={filteredData.length}
           rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
           onRowClick={(device) => {
-            console.log("Clicked device:", device);
             if (onDeviceClick) {
               onDeviceClick(device);
             }
