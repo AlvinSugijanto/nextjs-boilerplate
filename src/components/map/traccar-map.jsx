@@ -388,6 +388,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
       } else {
         // Create new marker
         const el = document.createElement('div');
+        el.className = 'device-marker-container cursor-pointer';
         el.innerHTML = `<div class="device-marker w-4 h-4 rounded-full border-2 border-white shadow-lg ${getMarkerColor(device.status)}"></div>`;
 
         const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
