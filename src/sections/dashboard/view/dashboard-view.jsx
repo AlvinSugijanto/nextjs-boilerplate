@@ -8,6 +8,7 @@ import InfoCard from "../info-card";
 import EventCard from "../event-card";
 import { useBoolean } from "@/hooks/use-boolean";
 import axios from "axios";
+import { endOfDay, startOfDay } from "date-fns";
 
 // Default sizes
 const DEFAULT_SIZES = {
@@ -36,6 +37,7 @@ const DashboardView = () => {
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [events, setEvents] = useState([]);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -250,6 +252,23 @@ const DashboardView = () => {
     }
   }, []);
 
+  const fetchEvent = async (id) => {
+    try {
+      const now = new Date();
+
+      const from = startOfDay(now).toISOString();
+      const to = endOfDay(now).toISOString();
+
+      const { data } = await axios.get(
+        `/api/proxy/traccar/positions?deviceId=${id}&from=${from}&to=${to}`
+      );
+      setEvents(data);
+      console.log("Event data:", data);
+    } catch (error) {
+      console.error("Error fetching event data:", error);
+    }
+  };
+
   useEffect(() => {
     fetchDevices();
   }, []);
@@ -263,7 +282,7 @@ const DashboardView = () => {
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
-          <DeviceCard devices={devices} />
+          <DeviceCard devices={devices} fetchEvent={fetchEvent} />
         </div>
 
         {/* Horizontal Resize Handle */}
