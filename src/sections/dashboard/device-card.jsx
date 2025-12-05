@@ -137,6 +137,9 @@ function DeviceCard({ devices = [], fetchEvent }) {
           onRowClick={(device) => {
             fetchEvent(device.id);
             console.log("Clicked device:", device);
+            if (onDeviceClick) {
+              onDeviceClick(device);
+            }
           }}
           tableProps={{
             initialState: {

@@ -5,7 +5,7 @@ stages:
   - rollout
   # - rmi
 variables:
-  IMAGE: 10.1.111.130:5000/fe/dashboard-executive:dev
+  IMAGE: 10.1.111.130:5000/fe/teletrace:dev
 
 build:
   stage: build
@@ -48,6 +48,6 @@ rollout:
   tags:
     - kubectl
   script:
-    - kubectl -n frontend-dev rollout restart deployment/dashboard-executive
+    - kubectl -n frontend-dev rollout restart deployment/teletrace2-deployment
   only:
     - dev
