@@ -24,7 +24,7 @@ const dummyData = [...new Array(200)].map((_, index) => ({
   lastActive: faker.date.recent().toLocaleString(),
 }));
 
-function DeviceCard({ devices = [], fetchEvent }) {
+function DeviceCard({ devices = [], onDeviceClick }) {
   // state
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([
@@ -135,11 +135,7 @@ function DeviceCard({ devices = [], fetchEvent }) {
           pageSize={filteredData.length}
           rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
           onRowClick={(device) => {
-            fetchEvent(device.id);
-            console.log("Clicked device:", device);
-            if (onDeviceClick) {
-              onDeviceClick(device);
-            }
+            onDeviceClick(device);
           }}
           tableProps={{
             initialState: {

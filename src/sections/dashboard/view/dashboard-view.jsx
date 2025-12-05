@@ -36,7 +36,9 @@ const DashboardView = () => {
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [events, setEvents] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -316,7 +318,7 @@ const DashboardView = () => {
 
   useEffect(() => {
     fetchDevices();
-    fetchEventTypes();
+    // fetchEventTypes();
   }, []);
 
   const handleDeviceClick = useCallback((device) => {
@@ -332,7 +334,8 @@ const DashboardView = () => {
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
-          <DeviceCard devices={devices} fetchEvent={fetchEvent} />
+          {/* <DeviceCard devices={devices} fetchEvent={fetchEvent} /> */}
+          <DeviceCard devices={devices} onDeviceClick={handleDeviceClick} />
         </div>
 
         {/* Horizontal Resize Handle */}
