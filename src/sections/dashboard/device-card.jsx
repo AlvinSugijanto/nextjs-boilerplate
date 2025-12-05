@@ -17,7 +17,7 @@ import {
 import { TableList } from "@/components/table";
 import { fDateTime } from "@/utils/format-time";
 
-function DeviceCard({ devices = [], onDeviceClick }) {
+function DeviceCard({ devices = [], onDeviceClick, loading = false }) {
   // state
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([
@@ -29,13 +29,15 @@ function DeviceCard({ devices = [], onDeviceClick }) {
 
   // memo
   const filteredData = useMemo(() => {
-    const transformedData = devices.map((item) => ({
-      id: item.id,
-      name: item.name,
-      status: item.status,
-      lastActive: null,
-      uniqueId: item.uniqueId,
-    }));
+    const transformedData = devices.map((item) => {
+      return {
+        id: item.id,
+        name: item.name,
+        status: item.status,
+        lastActive: item.lastUpdate || null,
+        uniqueId: item.uniqueId,
+      }
+    });
 
     if (!search) return transformedData;
     return transformedData.filter((item) =>
@@ -132,6 +134,7 @@ function DeviceCard({ devices = [], onDeviceClick }) {
               onDeviceClick(device);
             }
           }}
+          loading={loading}
           tableProps={{
             initialState: {
               pagination: { pageIndex: 0, pageSize: filteredData.length },

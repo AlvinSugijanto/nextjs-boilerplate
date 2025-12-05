@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import Iconify from "@/components/iconify";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TableList({
   columns,
@@ -37,6 +38,7 @@ export default function TableList({
   showPagination = true,
   rowClassName = "",
   onRowClick = null,
+  loading = false,
 }) {
   const table = useReactTable({
     data,
@@ -63,11 +65,10 @@ export default function TableList({
                     key={header.id}
                     colSpan={header.colSpan}
                     style={{ width: header.getSize() }}
-                    className={`text-xs font-medium ${
-                      header.column.columnDef.meta?.sortable && setSorting
-                        ? "cursor-pointer select-none"
-                        : ""
-                    }`}
+                    className={`text-xs font-medium ${header.column.columnDef.meta?.sortable && setSorting
+                      ? "cursor-pointer select-none"
+                      : ""
+                      }`}
                     align={header.column.columnDef.meta?.align || "start"}
                     onClick={(e) =>
                       header.column.columnDef.meta?.sortable && setSorting
@@ -78,9 +79,9 @@ export default function TableList({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                     {{
                       asc: (
                         <Iconify icon="mdi:arrow-up" className="h-3 w-3 ml-1" />
@@ -99,7 +100,17 @@ export default function TableList({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
+          {loading ? (
+            [...Array(5)].map((_, i) => (
+              <TableRow key={i}>
+                {columns.map((col, idx) => (
+                  <TableCell key={idx} className="text-xs">
+                    <Skeleton className="h-4 w-full" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => {
               return (
                 <TableRow
