@@ -45,7 +45,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     // Fly to the device location with animation
     mapRef.current.flyTo({
       center: [longitude, latitude],
-      zoom: 16,
+      zoom: 18,
       duration: 1500,
       essential: true
     });
