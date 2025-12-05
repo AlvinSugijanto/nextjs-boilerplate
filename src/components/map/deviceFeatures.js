@@ -1,7 +1,3 @@
-
-/**
- * Build GeoJSON features from devices and positions
- */
 export const buildDeviceFeatures = (devices, positions) => {
   const deviceMap = new Map(devices.map(device => [device.id, device]));
   const positionList = positions || [];

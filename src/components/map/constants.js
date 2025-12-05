@@ -1,5 +1,6 @@
-// src/components/map/constants.js
 import mapboxgl from 'mapbox-gl';
+
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export const DEVICE_SOURCE_ID = 'traccar-device-source';
 export const CLUSTER_LAYER_ID = 'traccar-device-clusters';
@@ -10,10 +11,6 @@ export const GEOFENCES_FILL_LAYER_ID = 'geofences-fill';
 export const GEOFENCES_OUTLINE_LAYER_ID = 'geofences-outline';
 export const GEOFENCE_LABELS_SOURCE_ID = 'geofence-labels';
 export const GEOFENCE_LABELS_LAYER_ID = 'geofence-labels';
-
-export const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-mapboxgl.accessToken = MAPBOX_TOKEN;
-
 export const DEFAULT_CENTER = [106.8, -6.2];
 export const DEFAULT_ZOOM = 2;
 export const CLUSTER_RADIUS = 60;

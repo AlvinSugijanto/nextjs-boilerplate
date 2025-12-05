@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useTheme } from 'next-themes';
-import { MAPBOX_TOKEN, DEFAULT_CENTER, DEFAULT_ZOOM } from './constants';
+import { DEFAULT_CENTER, DEFAULT_ZOOM, GEOFENCE_LABELS_LAYER_ID } from './constants';
 import { addGeofenceLayers, updateGeofenceData } from './geofenceLayers';
 import { buildDeviceFeatures } from './deviceFeatures';
 import { addDeviceLayers, updateDeviceSourceData } from './deviceLayers';
 import { openPopupForDeviceId, closePopup } from './popupUtils';
-import { GEOFENCE_LABELS_LAYER_ID } from './constants';
 
 const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, selectedDeviceId }) => {
   const mapContainerRef = useRef(null);
