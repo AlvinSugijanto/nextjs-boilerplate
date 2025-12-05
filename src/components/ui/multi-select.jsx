@@ -19,6 +19,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const sizeStyles = {
+  xs: {
+    button: "h-7 min-h-7 px-2 text-[10px]",
+    badge: "text-[10px] px-1.5 py-0",
+    icon: "w-3 h-3",
+  },
+  sm: {
+    button: "h-8 min-h-8 px-2 text-xs",
+    badge: "text-xs px-2 py-0.5",
+    icon: "w-3.5 h-3.5",
+  },
+  md: {
+    button: "h-10 min-h-10 px-3 text-sm",
+    badge: "text-sm px-2.5 py-0.5",
+    icon: "w-4 h-4",
+  },
+  lg: {
+    button: "h-12 min-h-12 px-4 text-base",
+    badge: "text-base px-3 py-1",
+    icon: "w-5 h-5",
+  },
+};
+
 export function MultiSelect({
   options,
   onValueChange,
@@ -29,12 +52,16 @@ export function MultiSelect({
   className,
   closeOnSelect = false,
   hideSelectAll = false,
+  maxViewSelected = 1,
+  size = "sm",
 }) {
   const [selectedValues, setSelectedValues] = React.useState(defaultValue);
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
   const isGrouped = options.length > 0 && "heading" in options[0];
+
+  const s = sizeStyles[size] ?? sizeStyles["md"];
 
   const toggleOption = (value) => {
     const newValues = selectedValues.includes(value)
@@ -88,29 +115,46 @@ export function MultiSelect({
         <Button
           type="button"
           variant="outline"
-          className={cn("w-full justify-between h-auto min-h-10", className)}
+          className={cn(
+            "w-full justify-between",
+            s.button, // ⭐ apply size
+            className
+          )}
         >
           <div className="flex flex-wrap items-center gap-1">
             {selectedValues.length > 0 ? (
-              selectedValues.map((value) => {
-                const label =
-                  allOptions.find((opt) => opt.value === value)?.label || value;
-                return (
-                  <Badge
-                    key={value}
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleOption(value);
-                    }}
-                  >
-                    {label}
-                    <XCircle className="w-3 h-3" />
+              <div className="flex items-center flex-wrap gap-1">
+                {/* Ambil hanya maxViewSelected pertama */}
+                {selectedValues.slice(0, maxViewSelected).map((value) => {
+                  const label =
+                    allOptions.find((o) => o.value === value)?.label || value;
+                  return (
+                    <Badge
+                      key={value}
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer",
+                        s.badge
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleOption(value);
+                      }}
+                    >
+                      {label}
+                      <XCircle className="w-3 h-3" />
+                    </Badge>
+                  );
+                })}
+
+                {/* Jika masih ada sisa selected */}
+                {selectedValues.length > maxViewSelected && (
+                  <Badge variant="outline" className={s.badge}>
+                    +{selectedValues.length - maxViewSelected}
                   </Badge>
-                );
-              })
+                )}
+              </div>
             ) : (
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-xs">
                 {placeholder}
               </span>
             )}
