@@ -5,13 +5,21 @@ import { useTheme } from 'next-themes';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
+const DEVICE_SOURCE_ID = 'traccar-device-source';
+const CLUSTER_LAYER_ID = 'traccar-device-clusters';
+const CLUSTER_COUNT_LAYER_ID = 'traccar-device-cluster-count';
+const UNCLUSTERED_LAYER_ID = 'traccar-device-unclustered';
+
 const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, selectedDeviceId }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const markersRef = useRef({});
   const [mapLoaded, setMapLoaded] = useState(false);
   const geofencesRef = useRef(geofences);
+  const latestDevicesRef = useRef(devices);
+  const latestPositionsRef = useRef(positions);
+  const latestDeviceFeaturesRef = useRef([]);
   const hasFitBounds = useRef(false);
+  const currentPopupRef = useRef(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -19,45 +27,26 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     geofencesRef.current = geofences;
   }, [geofences]);
 
-  // Expose map instance to parent via ref
+  useEffect(() => {
+    latestDevicesRef.current = devices;
+  }, [devices]);
+
+  useEffect(() => {
+    latestPositionsRef.current = positions;
+  }, [positions]);
+
   useEffect(() => {
     if (externalMapRef && mapRef.current) {
       externalMapRef.current = mapRef.current;
     }
   }, [externalMapRef, mapRef.current]);
 
-  // Focus on selected device
-  useEffect(() => {
-    if (!selectedDeviceId || !mapRef.current || !mapLoaded) return;
-
-    const position = positions.find(p => p.deviceId === selectedDeviceId);
-    if (!position) return;
-
-    const { latitude, longitude } = position;
-
-    // Close all open popups first
-    Object.values(markersRef.current).forEach(marker => {
-      if (marker.getPopup().isOpen()) {
-        marker.togglePopup();
-      }
-    });
-
-    // Fly to the device location with animation
-    mapRef.current.flyTo({
-      center: [longitude, latitude],
-      zoom: 18,
-      duration: 1500,
-      essential: true
-    });
-
-    // Open the popup for the selected device only
-    setTimeout(() => {
-      const marker = markersRef.current[selectedDeviceId];
-      if (marker && !marker.getPopup().isOpen()) {
-        marker.togglePopup();
-      }
-    }, 1600);
-  }, [selectedDeviceId, positions, mapLoaded]);
+  const closeCurrentPopup = () => {
+    if (currentPopupRef.current) {
+      currentPopupRef.current.remove();
+      currentPopupRef.current = null;
+    }
+  };
 
   // Calculate centroid of a polygon
   const calculateCentroid = (coordinates) => {
@@ -118,9 +107,11 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
           const [lat, lng] = pair.split(' ').map(Number);
           return [lng, lat];
         });
-        if (coords.length > 0 &&
+        if (
+          coords.length > 0 &&
           (coords[0][0] !== coords[coords.length - 1][0] ||
-            coords[0][1] !== coords[coords.length - 1][1])) {
+            coords[0][1] !== coords[coords.length - 1][1])
+        ) {
           coords.push([...coords[0]]);
         }
         return {
@@ -251,6 +242,254 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     }
   };
 
+  const buildDeviceFeatures = () => {
+    const deviceMap = new Map(latestDevicesRef.current.map(device => [device.id, device]));
+    const positionList = latestPositionsRef.current || [];
+    const latestPositions = new Map();
+    positionList.forEach(position => {
+      const deviceId = Number(position.deviceId);
+      if (!Number.isFinite(deviceId) || latestPositions.has(deviceId)) return;
+      latestPositions.set(deviceId, position);
+    });
+    const features = [];
+    latestPositions.forEach((position, deviceId) => {
+      const device = deviceMap.get(deviceId);
+      if (!device) return;
+      const latitude = Number(position.latitude);
+      const longitude = Number(position.longitude);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+      const speedValue = Number(position.speed);
+      const courseValue = Number(position.course);
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        },
+        properties: {
+          deviceId,
+          name: device.name || 'Unknown device',
+          status: device.status || 'unknown',
+          speed: Number.isFinite(speedValue) ? speedValue : null,
+          course: Number.isFinite(courseValue) ? courseValue : null,
+          address: position.address || '',
+          lastUpdate: device.lastUpdate || null,
+          latitude,
+          longitude
+        }
+      });
+    });
+    return features;
+  };
+
+  const createPopupHtml = (properties) => {
+    const {
+      name,
+      status,
+      speed,
+      course,
+      address,
+      latitude,
+      longitude,
+      lastUpdate
+    } = properties;
+    const statusColor = status === 'online' ? '#16a34a' : status === 'offline' ? '#dc2626' : '#6b7280';
+    const speedLine =
+      typeof speed === 'number'
+        ? `<div style="color:#555;font-size:0.7rem;margin-bottom:2px;">Speed: ${Math.round(
+          speed * 1.852 || 0
+        )} km/h</div>`
+        : '';
+    const courseLine =
+      typeof course === 'number'
+        ? `<div style="color:#555;font-size:0.7rem;margin-bottom:2px;">Course: ${Math.round(course)}°</div>`
+        : '';
+    const addressLine = address ? `<div style="color:#555;font-size:0.7rem;margin-bottom:2px;">${address}</div>` : '';
+    const latLonLine =
+      Number.isFinite(latitude) && Number.isFinite(longitude)
+        ? `<div style="color:#777;font-size:0.65rem;margin-top:4px;">${latitude.toFixed(5)}, ${longitude.toFixed(5)}</div>`
+        : '';
+    const updatedLine = lastUpdate
+      ? `<div style="color:#777;font-size:0.65rem;">Updated: ${new Date(lastUpdate).toLocaleString()}</div>`
+      : '';
+    return `
+      <div style="font-size:0.75rem;color:#111;min-width:200px">
+        <div style="font-weight:600;margin-bottom:4px;">${name}</div>
+        <div style="color:#555;font-size:0.7rem;margin-bottom:4px;">
+          Status: <span style="color:${statusColor};font-weight:600;">${status || 'Unknown'}</span>
+        </div>
+        ${speedLine}
+        ${courseLine}
+        ${addressLine}
+        ${latLonLine}
+        ${updatedLine}
+      </div>
+    `;
+  };
+
+  const openPopupFromFeature = (feature) => {
+    const map = mapRef.current;
+    if (!map) return;
+    closeCurrentPopup();
+    const coordinates = feature.geometry.coordinates.slice();
+    const html = createPopupHtml(feature.properties);
+    const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+      .setLngLat(coordinates)
+      .setHTML(html)
+      .addTo(map);
+    currentPopupRef.current = popup;
+  };
+
+  const openPopupForDeviceId = (deviceId) => {
+    const normalizedId = Number(deviceId);
+    const feature = latestDeviceFeaturesRef.current.find(
+      (candidate) => Number(candidate.properties.deviceId) === normalizedId
+    );
+    if (feature) {
+      openPopupFromFeature(feature);
+    }
+  };
+
+  const updateDeviceSourceData = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const source = map.getSource(DEVICE_SOURCE_ID);
+    if (!source) return;
+    const features = buildDeviceFeatures();
+    latestDeviceFeaturesRef.current = features;
+    source.setData({
+      type: 'FeatureCollection',
+      features
+    });
+    if (!hasFitBounds.current && features.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      features.forEach(feature => bounds.extend(feature.geometry.coordinates));
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, {
+          padding: 60,
+          maxZoom: 16,
+          duration: 500
+        });
+        hasFitBounds.current = true;
+      }
+    }
+  };
+
+  const addDeviceLayers = (map) => {
+    if (!map) return;
+    closeCurrentPopup();
+    if (map.getLayer(CLUSTER_LAYER_ID)) map.removeLayer(CLUSTER_LAYER_ID);
+    if (map.getLayer(CLUSTER_COUNT_LAYER_ID)) map.removeLayer(CLUSTER_COUNT_LAYER_ID);
+    if (map.getLayer(UNCLUSTERED_LAYER_ID)) map.removeLayer(UNCLUSTERED_LAYER_ID);
+    if (map.getSource(DEVICE_SOURCE_ID)) map.removeSource(DEVICE_SOURCE_ID);
+
+    map.addSource(DEVICE_SOURCE_ID, {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+      cluster: true,
+      clusterRadius: 60,
+      clusterMaxZoom: 14
+    });
+
+    map.addLayer({
+      id: CLUSTER_LAYER_ID,
+      type: 'circle',
+      source: DEVICE_SOURCE_ID,
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': isDark ? '#2563eb' : '#1d4ed8',
+        'circle-radius': ['step', ['get', 'point_count'], 15, 5, 20, 25, 25],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.8
+      }
+    });
+
+    map.addLayer({
+      id: CLUSTER_COUNT_LAYER_ID,
+      type: 'symbol',
+      source: DEVICE_SOURCE_ID,
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-size': 12
+      },
+      paint: {
+        'text-color': '#e0f2fe'
+      }
+    });
+
+    map.addLayer({
+      id: UNCLUSTERED_LAYER_ID,
+      type: 'circle',
+      source: DEVICE_SOURCE_ID,
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': [
+          'match',
+          ['get', 'status'],
+          'online',
+          '#16a34a',
+          'offline',
+          '#dc2626',
+          '#a1a1aa'
+        ],
+        'circle-radius': 8,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 2,
+      }
+    });
+
+    map.off('click', CLUSTER_LAYER_ID);
+    map.on('click', CLUSTER_LAYER_ID, (event) => {
+      const feature = event.features?.[0];
+      if (!feature) return;
+      const clusterId = feature.properties.cluster_id;
+      const source = map.getSource(DEVICE_SOURCE_ID);
+      if (!source || typeof clusterId === 'undefined') return;
+      source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err) return;
+        map.easeTo({
+          center: feature.geometry.coordinates,
+          zoom,
+          duration: 500
+        });
+      });
+    });
+
+    map.off('click', UNCLUSTERED_LAYER_ID);
+    map.on('click', UNCLUSTERED_LAYER_ID, (event) => {
+      const feature = event.features?.[0];
+      if (feature) {
+        openPopupFromFeature(feature);
+      }
+    });
+
+    map.off('mouseenter', CLUSTER_LAYER_ID);
+    map.on('mouseenter', CLUSTER_LAYER_ID, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.off('mouseleave', CLUSTER_LAYER_ID);
+    map.on('mouseleave', CLUSTER_LAYER_ID, () => {
+      map.getCanvas().style.cursor = '';
+    });
+
+    map.off('mouseenter', UNCLUSTERED_LAYER_ID);
+    map.on('mouseenter', UNCLUSTERED_LAYER_ID, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.off('mouseleave', UNCLUSTERED_LAYER_ID);
+    map.on('mouseleave', UNCLUSTERED_LAYER_ID, () => {
+      map.getCanvas().style.cursor = '';
+    });
+  };
+
   useEffect(() => {
     if (mapboxgl.accessToken === '') {
       console.error("Mapbox token is not set. Please add NEXT_PUBLIC_MAPBOX_TOKEN to your .env.local file.");
@@ -262,14 +501,14 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
       container: mapContainerRef.current,
       style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
       center: [106.8, -6.2],
-      zoom: 10,
+      zoom: 10
     });
 
     mapRef.current = map;
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
     map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-    map.removeControl(map._controls.find(c => c instanceof mapboxgl.AttributionControl));
+    map.removeControl(map._controls.find((c) => c instanceof mapboxgl.AttributionControl));
     map.addControl(
       new mapboxgl.AttributionControl({
         compact: true
@@ -280,10 +519,13 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     map.on('load', () => {
       addGeofenceLayers(map);
       updateGeofenceData(map, geofencesRef.current);
+      addDeviceLayers(map);
+      updateDeviceSourceData();
       setMapLoaded(true);
     });
 
     return () => {
+      closeCurrentPopup();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -296,6 +538,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     if (!mapRef.current || !mapLoaded) return;
 
     const newStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11';
+    closeCurrentPopup();
     mapRef.current.setStyle(newStyle);
 
     mapRef.current.once('style.load', () => {
@@ -309,6 +552,8 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
           isDark ? '#1f2937' : '#ffffff'
         );
       }
+      addDeviceLayers(mapRef.current);
+      updateDeviceSourceData();
     });
   }, [isDark]);
 
@@ -318,109 +563,34 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     updateGeofenceData(mapRef.current, geofences);
   }, [geofences, mapLoaded]);
 
-  // Get marker color based on device status
-  const getMarkerColor = (status) => {
-    switch (status) {
-      case 'online':
-        return 'bg-green-500';
-      case 'offline':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  // Update markers when devices/positions change
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
-
-    const deviceMap = new Map();
-    devices.forEach(d => deviceMap.set(d.id, d));
-
-    const latestPositions = new Map();
-    positions.forEach(p => {
-      if (!latestPositions.has(p.deviceId)) {
-        latestPositions.set(p.deviceId, p);
-      }
-    });
-
-    // Remove markers for devices that no longer have positions
-    Object.keys(markersRef.current).forEach(deviceId => {
-      if (!latestPositions.has(parseInt(deviceId))) {
-        markersRef.current[deviceId].remove();
-        delete markersRef.current[deviceId];
-      }
-    });
-
-    latestPositions.forEach(position => {
-      const device = deviceMap.get(position.deviceId);
-      if (!device) return;
-
-      const { latitude, longitude, speed, course, address } = position;
-      const lngLat = [longitude, latitude];
-
-      const popupHtml = `
-        <div class="text-sm" style="color: #000;">
-          <div class="font-semibold mb-1">${device.name}</div>
-          <div class="text-xs mb-1" style="color: #666;">
-            Status: <span class="${device.status === 'online' ? 'text-green-600' : device.status === 'offline' ? 'text-red-600' : 'text-gray-500'}">${device.status}</span>
-          </div>
-          ${speed !== undefined ? `<div class="text-xs" style="color: #666;">Speed: ${Math.round(speed * 1.852)} km/h</div>` : ''}
-          ${course !== undefined ? `<div class="text-xs" style="color: #666;">Course: ${Math.round(course)}°</div>` : ''}
-          ${address ? `<div class="text-xs mt-1" style="color: #666;">${address}</div>` : ''}
-          <div class="text-xs mt-1" style="color: #999;">
-            ${latitude.toFixed(5)}, ${longitude.toFixed(5)}
-          </div>
-          ${device.lastUpdate ? `<div class="text-xs" style="color: #999;">Updated: ${new Date(device.lastUpdate).toLocaleString()}</div>` : ''}
-        </div>
-      `;
-
-      if (markersRef.current[device.id]) {
-        // Update existing marker
-        markersRef.current[device.id].setLngLat(lngLat);
-        markersRef.current[device.id].getPopup().setHTML(popupHtml);
-
-        // Update marker color if status changed
-        const el = markersRef.current[device.id].getElement().querySelector('.device-marker');
-        if (el) {
-          el.className = `device-marker w-4 h-4 rounded-full border-2 border-white shadow-lg ${getMarkerColor(device.status)}`;
-        }
-      } else {
-        // Create new marker
-        const el = document.createElement('div');
-        el.className = 'device-marker-container cursor-pointer';
-        el.innerHTML = `<div class="device-marker w-4 h-4 rounded-full border-2 border-white shadow-lg ${getMarkerColor(device.status)}"></div>`;
-
-        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(popupHtml);
-
-        const newMarker = new mapboxgl.Marker(el)
-          .setLngLat(lngLat)
-          .setPopup(popup)
-          .addTo(mapRef.current);
-
-        markersRef.current[device.id] = newMarker;
-      }
-    });
-
-    // Fit bounds to show all markers on first load
-    if (!hasFitBounds.current) {
-      if (Object.keys(markersRef.current).length > 0 && positions.length > 0) {
-        const bounds = new mapboxgl.LngLatBounds();
-        Object.values(markersRef.current).forEach(marker => {
-          bounds.extend(marker.getLngLat());
-        });
-
-        if (!bounds.isEmpty()) {
-          mapRef.current.fitBounds(bounds, {
-            padding: 60,
-            maxZoom: 16,
-            duration: 500
-          });
-          hasFitBounds.current = true;
-        }
-      }
-    }
+    updateDeviceSourceData();
   }, [devices, positions, mapLoaded]);
+
+  useEffect(() => {
+    if (!selectedDeviceId || !mapRef.current || !mapLoaded) return;
+    const deviceId = selectedDeviceId;
+    const feature = latestDeviceFeaturesRef.current.find(
+      (candidate) => Number(candidate.properties.deviceId) === Number(deviceId)
+    );
+    if (!feature) return;
+
+    closeCurrentPopup();
+
+    mapRef.current.flyTo({
+      center: feature.geometry.coordinates,
+      zoom: 18,
+      duration: 1500,
+      essential: true
+    });
+
+    setTimeout(() => {
+      if (mapRef.current && deviceId === selectedDeviceId) {
+        openPopupForDeviceId(deviceId);
+      }
+    }, 1600);
+  }, [selectedDeviceId, mapLoaded]);
 
   if (mapboxgl.accessToken === '') {
     return (
