@@ -11,8 +11,15 @@ import { addDeviceLayers, updateDeviceSourceData } from './deviceLayers';
 import { openPopupForDeviceId, closePopup, updatePopupContent } from './popupUtils';
 import { convertDrawFeatureToTraccarArea } from './drawUtils';
 import GeofenceNameDialog from './geofence-name-dialog';
+import RadiusMode from './radiusMode';
 
-const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, selectedDeviceId }) => {
+const TraccarMap = ({
+  devices,
+  positions,
+  geofences,
+  mapRef: externalMapRef,
+  selectedDeviceId
+}) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const drawRef = useRef(null);
@@ -26,6 +33,7 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
   const focusedDeviceIdRef = useRef(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [pendingFeature, setPendingFeature] = useState(null);
+
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -139,8 +147,11 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
       controls: {
         polygon: true,
         line_string: true,
-        point: true,
         trash: true
+      },
+      modes: {
+        ...MapboxDraw.modes,
+        draw_radius: RadiusMode,
       },
       styles: [
         {
@@ -197,6 +208,24 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
     drawRef.current = draw;
     map.addControl(draw, 'top-left');
 
+    map.on('load', () => {
+      const drawControls = document.querySelector('.mapboxgl-ctrl-group');
+      if (drawControls) {
+        const radiusButton = document.createElement('button');
+        const svgIcon =
+          "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E";
+        radiusButton.className = 'mapbox-gl-draw_ctrl-draw-btn';
+        radiusButton.title = 'Draw circle by radius';
+        radiusButton.style.backgroundImage = `url("${svgIcon}")`;
+        radiusButton.style.backgroundPosition = 'center';
+        radiusButton.style.backgroundSize = '18px 18px';
+        radiusButton.addEventListener('click', () => {
+          draw.changeMode('draw_radius');
+        });
+        drawControls.insertBefore(radiusButton, drawControls.firstChild.nextSibling);
+      }
+    });
+
     map.on('draw.create', (e) => {
       const feature = e.features[0];
       setPendingFeature(feature);
@@ -205,11 +234,10 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
     map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+
     map.removeControl(map._controls.find((c) => c instanceof mapboxgl.AttributionControl));
     map.addControl(
-      new mapboxgl.AttributionControl({
-        compact: true
-      }),
+      new mapboxgl.AttributionControl({ compact: true }),
       'bottom-right'
     );
 
@@ -239,7 +267,10 @@ const TraccarMap = ({ devices, positions, geofences, mapRef: externalMapRef, sel
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    const newStyle = isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11';
+    const newStyle = isDark
+      ? 'mapbox://styles/mapbox/dark-v11'
+      : 'mapbox://styles/mapbox/light-v11';
+
     closePopup(currentPopupRef);
     focusedDeviceIdRef.current = null;
 

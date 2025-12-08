@@ -4,22 +4,24 @@ export const convertDrawFeatureToTraccarArea = (feature) => {
   }
 
   const { type, coordinates } = feature.geometry;
+  const { radius, center } = feature.properties || {};
 
   switch (type) {
-    case 'Point':
-      return convertPointToTraccar(coordinates);
     case 'LineString':
       return convertLineStringToTraccar(coordinates);
     case 'Polygon':
+      if (radius && center) {
+        return convertCircleToTraccar(center, radius);
+      }
       return convertPolygonToTraccar(coordinates);
     default:
       throw new Error(`Unsupported geometry type: ${type}`);
   }
 };
 
-const convertPointToTraccar = (coordinates) => {
-  const [lng, lat] = coordinates;
-  const radius = 50;
+const convertCircleToTraccar = (center, radius) => {
+  const [lng, lat] = center;
+
   return `CIRCLE (${lat} ${lng}, ${radius})`;
 };
 
