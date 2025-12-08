@@ -10,8 +10,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 
 export const metadata = {
-  title: "ProjectFlow",
-  description: "Project management made simple and efficient.",
+  title: "Teletrace",
+  description: "Teletrace made simple and efficient.",
   icons: [
     { rel: "icon", url: "/favicon.ico" },
     { rel: "icon", url: "/favicon.png", type: "image/png" },

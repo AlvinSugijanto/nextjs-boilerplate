@@ -36,13 +36,15 @@ function DeviceCard({ devices = [], onDeviceClick }) {
 
   // memo
   const filteredData = useMemo(() => {
-    const transformedData = devices.map((item) => ({
-      id: item.id,
-      name: item.name,
-      status: item.status,
-      lastActive: null,
-      uniqueId: item.uniqueId,
-    }));
+    const transformedData = devices.map((item) => {
+      return {
+        id: item.id,
+        name: item.name,
+        status: item.status,
+        lastActive: item.lastUpdate || null,
+        uniqueId: item.uniqueId,
+      };
+    });
 
     if (!search) return transformedData;
     return transformedData.filter((item) =>
@@ -106,9 +108,10 @@ function DeviceCard({ devices = [], onDeviceClick }) {
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="p-0"
           />
           <InputGroupAddon>
-            <Search />
+            <Search className="w-3! h-3!" />
           </InputGroupAddon>
         </InputGroup>
 
@@ -133,12 +136,16 @@ function DeviceCard({ devices = [], onDeviceClick }) {
           sorting={sorting}
           showPagination={false}
           pageSize={filteredData.length}
-          rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+          rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+          rowClassNameProps={(device) =>
+            device.id === selectedDeviceId ? "bg-gray-200 dark:bg-gray-700" : ""
+          }
           onRowClick={(device) => {
             if (onDeviceClick) {
               onDeviceClick(device);
             }
           }}
+          loading={loading}
           tableProps={{
             initialState: {
               pagination: { pageIndex: 0, pageSize: filteredData.length },

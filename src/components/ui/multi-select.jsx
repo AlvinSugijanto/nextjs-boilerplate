@@ -21,22 +21,22 @@ import { cn } from "@/lib/utils";
 
 const sizeStyles = {
   xs: {
-    button: "h-7 min-h-7 px-2 text-[10px]",
+    button: "min-h-7 px-2 text-[10px]",
     badge: "text-[10px] px-1.5 py-0",
     icon: "w-3 h-3",
   },
   sm: {
-    button: "h-8 min-h-8 px-2 text-xs",
+    button: "min-h-8 px-2 text-xs",
     badge: "text-xs px-2 py-0.5",
     icon: "w-3.5 h-3.5",
   },
   md: {
-    button: "h-10 min-h-10 px-3 text-sm",
+    button: "min-h-10 px-3 text-sm",
     badge: "text-sm px-2.5 py-0.5",
     icon: "w-4 h-4",
   },
   lg: {
-    button: "h-12 min-h-12 px-4 text-base",
+    button: "min-h-12 px-4 text-base",
     badge: "text-base px-3 py-1",
     icon: "w-5 h-5",
   },
@@ -120,8 +120,9 @@ export function MultiSelect({
             s.button, // ⭐ apply size
             className
           )}
+
         >
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-start gap-1">
             {selectedValues.length > 0 ? (
               <div className="flex items-center flex-wrap gap-1">
                 {/* Ambil hanya maxViewSelected pertama */}
@@ -209,59 +210,59 @@ export function MultiSelect({
 
             {isGrouped
               ? filteredOptions.map((group) => (
-                  <CommandGroup
-                    key={group.heading}
-                    heading={group.heading}
-                    className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-                  >
-                    {group.options.map((opt) => {
-                      const isSelected = selectedValues.includes(opt.value);
-                      return (
-                        <CommandItem
-                          key={opt.value}
-                          disabled={opt.disabled}
-                          onSelect={() => toggleOption(opt.value)}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <div
-                            className={cn(
-                              "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "opacity-50"
-                            )}
-                          >
-                            <CheckIcon className="h-3 w-3" />
-                          </div>
-                          {opt.label}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                ))
-              : filteredOptions.map((opt) => {
-                  const isSelected = selectedValues.includes(opt.value);
-                  return (
-                    <CommandItem
-                      key={opt.value}
-                      disabled={opt.disabled}
-                      onSelect={() => toggleOption(opt.value)}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <div
-                        className={cn(
-                          "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                          isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "opacity-50"
-                        )}
+                <CommandGroup
+                  key={group.heading}
+                  heading={group.heading}
+                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+                >
+                  {group.options.map((opt) => {
+                    const isSelected = selectedValues.includes(opt.value);
+                    return (
+                      <CommandItem
+                        key={opt.value}
+                        disabled={opt.disabled}
+                        onSelect={() => toggleOption(opt.value)}
+                        className="flex items-center gap-2 cursor-pointer"
                       >
-                        <CheckIcon className="h-3 w-3" />
-                      </div>
-                      {opt.label}
-                    </CommandItem>
-                  );
-                })}
+                        <div
+                          className={cn(
+                            "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "opacity-50"
+                          )}
+                        >
+                          <CheckIcon className="h-3 w-3" />
+                        </div>
+                        {opt.label}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              ))
+              : filteredOptions.map((opt) => {
+                const isSelected = selectedValues.includes(opt.value);
+                return (
+                  <CommandItem
+                    key={opt.value}
+                    disabled={opt.disabled}
+                    onSelect={() => toggleOption(opt.value)}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50"
+                      )}
+                    >
+                      <CheckIcon className="h-3 w-3" />
+                    </div>
+                    {opt.label}
+                  </CommandItem>
+                );
+              })}
 
             {selectedValues.length > 0 && (
               <CommandGroup>
