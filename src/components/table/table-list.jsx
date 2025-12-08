@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Iconify from "@/components/iconify";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export default function TableList({
   columns,
@@ -37,6 +38,7 @@ export default function TableList({
   sorting,
   showPagination = true,
   rowClassName = "",
+  rowClassNameProps = () => ({}),
   onRowClick = null,
   loading = false,
 }) {
@@ -65,10 +67,11 @@ export default function TableList({
                     key={header.id}
                     colSpan={header.colSpan}
                     style={{ width: header.getSize() }}
-                    className={`text-xs font-medium ${header.column.columnDef.meta?.sortable && setSorting
-                      ? "cursor-pointer select-none"
-                      : ""
-                      }`}
+                    className={`text-xs font-medium ${
+                      header.column.columnDef.meta?.sortable && setSorting
+                        ? "cursor-pointer select-none"
+                        : ""
+                    }`}
                     align={header.column.columnDef.meta?.align || "start"}
                     onClick={(e) =>
                       header.column.columnDef.meta?.sortable && setSorting
@@ -79,9 +82,9 @@ export default function TableList({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     {{
                       asc: (
                         <Iconify icon="mdi:arrow-up" className="h-3 w-3 ml-1" />
@@ -100,7 +103,45 @@ export default function TableList({
           ))}
         </TableHeader>
         <TableBody>
-          {loading ? (
+          {table.getRowModel().rows?.length
+            ? table.getRowModel().rows.map((row) => {
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={cn(
+                      rowClassName,
+                      rowClassNameProps(row.original)
+                    )}
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="text-xs"
+                        align={cell.column.columnDef.meta?.align || "start"}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            : !loading && (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+
+          {loading &&
             [...Array(5)].map((_, i) => (
               <TableRow key={i}>
                 {columns.map((col, idx) => (
@@ -109,38 +150,7 @@ export default function TableList({
                   </TableCell>
                 ))}
               </TableRow>
-            ))
-          ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => {
-              return (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={rowClassName}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="text-xs"
-                      align={cell.column.columnDef.meta?.align || "start"}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
+            ))}
         </TableBody>
       </Table>
 
