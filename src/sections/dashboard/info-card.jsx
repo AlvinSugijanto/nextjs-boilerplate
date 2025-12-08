@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { use, useCallback, useMemo, useRef, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,7 @@ import axios from "axios";
 import InfoSummary from "./info-summary";
 import InfoDevice from "./info-device";
 import { useBoolean } from "@/hooks/use-boolean";
+import InfoTrack from "./info-track";
 
 const listTabs = [
   {
@@ -26,13 +27,18 @@ const listTabs = [
 function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
   // hooks
   const loadingSummary = useBoolean();
-  const controllerRef = useRef(null);
+  const loadingTracks = useBoolean();
+  const controllerRefSummary = useRef(null);
+  const controllerRefTracks = useRef(null);
 
   // state
   const [activeTab, setActiveTab] = useState(1);
   const [selectedDeviceIdsSummary, setSelectedDeviceIdsSummary] = useState([]);
+  const [selectedDeviceIdsTracks, setSelectedDeviceIdsTracks] = useState([]);
   const [dataSummary, setDataSummary] = useState([]);
-  const [dateRange, setDateRange] = useState({
+  const [dataTracks, setDataTracks] = useState([]);
+  const [dateTrack, setDateTrack] = useState(new Date());
+  const [dateRangeSummary, setDateRangeSummary] = useState({
     from: new Date(),
     to: new Date(),
   });
@@ -56,27 +62,45 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
     }
 
     loadingSummary.onTrue();
-    fetchDataSummary(dateRange.from, dateRange.to, values);
+    fetchDataSummary(dateRangeSummary.from, dateRangeSummary.to, values);
   };
 
   const handleDateRangeChangeSummary = (range) => {
-    setDateRange(range);
+    setDateRangeSummary(range);
     fetchDataSummary(range.from, range.to, selectedDeviceIdsSummary);
+  };
+
+  const handleChangeDevicesTracks = (values) => {
+    setSelectedDeviceIdsTracks(values);
+    if (values.length === 0) {
+      setDataTracks([]);
+      return;
+    }
+
+    loadingTracks.onTrue();
+    fetchDataTracks(dateTrack, dateTrack, values);
+  };
+
+  const handleChangeDateTracks = (date) => {
+    // For tracks, we only use a single date, so we can ignore the range end
+    setDateTrack(date);
+    fetchDataTracks(date, date, selectedDeviceIdsTracks);
   };
 
   const fetchDataSummary = useCallback(
     async (from, to, selectedDeviceIds) => {
+      setDataSummary([]);
+
       if (selectedDeviceIds.length === 0) return;
 
       // if any previous request is ongoing, cancel it
-      if (controllerRef.current) {
-        controllerRef.current.abort();
+      if (controllerRefSummary.current) {
+        controllerRefSummary.current.abort();
       }
 
       const controller = new AbortController();
-      controllerRef.current = controller;
+      controllerRefSummary.current = controller;
 
-      setDataSummary([]);
       loadingSummary.onTrue();
 
       if (!from || !to) {
@@ -122,6 +146,67 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
     [devices]
   );
 
+  const fetchDataTracks = useCallback(
+    async (from, to, selectedDeviceIds) => {
+      if (selectedDeviceIds.length === 0) return;
+
+      // if any previous request is ongoing, cancel it
+      if (controllerRefTracks.current) {
+        controllerRefTracks.current.abort();
+      }
+
+      const controller = new AbortController();
+      controllerRefTracks.current = controller;
+
+      setDataTracks([]);
+      loadingTracks.onTrue();
+
+      if (!from || !to) {
+        loadingTracks.onFalse();
+        return;
+      }
+
+      let startFrom = startOfDay(from);
+      let endTo = endOfDay(to);
+
+      try {
+        for (const deviceId of selectedDeviceIds) {
+          const { data: fetchedData } = await axios.get(
+            `/api/proxy/traccar/positions?deviceId=${deviceId}&from=${startFrom.toISOString()}&to=${endTo.toISOString()}`,
+            {
+              signal: controller.signal,
+            }
+          );
+
+          const cleanedData = cleansePositions(fetchedData);
+
+          const transformedData = cleanedData.map((item) => ({
+            ...item,
+            date: new Date(item.deviceTime),
+            time: new Date(item.deviceTime).toTimeString().split(" ")[0],
+            deviceName:
+              devices.find((device) => device.id === item.deviceId)?.name ||
+              "Unknown Device",
+          }));
+
+          setDataTracks((prevData) => [...prevData, ...transformedData]);
+        }
+
+        loadingTracks.onFalse();
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log("Request canceled");
+          loadingTracks.onTrue();
+          return;
+        }
+
+        console.error("Error fetching data:", error);
+        loadingTracks.onFalse();
+      }
+    },
+    [devices]
+  );
+
   return (
     <Card className="h-full p-0 overflow-hidden">
       <Tabs
@@ -148,9 +233,8 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
             devices={devices}
             onChangeDateRange={handleDateRangeChangeSummary}
             onChangeDevices={handleChangeDevicesSummary}
+            selectedDeviceIds={selectedDeviceIdsSummary}
             data={dataSummary}
-            from={dateRange.from}
-            to={dateRange.to}
             loading={loadingSummary.value}
             onRowClick={(device) => {
               console.log("Clicked device summary:", device);
@@ -158,7 +242,18 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
           />
         </TabsContent>
         <TabsContent value={2} className="overflow-auto h-full">
-          <div className="p-4">Tracks Content</div>
+          <InfoTrack
+            devices={devices}
+            onChangeDevices={handleChangeDevicesTracks}
+            selectedDeviceIds={selectedDeviceIdsTracks}
+            data={dataTracks}
+            date={dateTrack}
+            onChangeDate={handleChangeDateTracks}
+            loading={loadingTracks.value}
+            onRowClick={(device) => {
+              console.log("Clicked device summary:", device);
+            }}
+          />
         </TabsContent>
         <TabsContent value={3} className="overflow-auto h-full pb-2">
           <InfoDevice device={deviceSelectData} />
@@ -169,3 +264,40 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
 }
 
 export default InfoCard;
+
+function cleansePositions(data) {
+  let cleaned = [];
+  let lastValid = null;
+
+  for (const item of data) {
+    const lat = item.latitude;
+    const lon = item.longitude;
+
+    // ❌ Skip jika lat/lon kosong atau invalid
+    if (
+      lat == null ||
+      lon == null ||
+      lat === 0 ||
+      lon === 0 ||
+      isNaN(lat) ||
+      isNaN(lon)
+    ) {
+      continue;
+    }
+
+    // ❌ Skip jika sama dengan data sebelumnya
+    if (
+      lastValid &&
+      lastValid.latitude === lat &&
+      lastValid.longitude === lon
+    ) {
+      continue;
+    }
+
+    // ✔ Valid → push
+    cleaned.push(item);
+    lastValid = item;
+  }
+
+  return cleaned;
+}
