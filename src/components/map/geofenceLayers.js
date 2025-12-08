@@ -21,6 +21,7 @@ export const addGeofenceLayers = (map, isDark) => {
       id: GEOFENCES_FILL_LAYER_ID,
       type: 'fill',
       source: GEOFENCES_SOURCE_ID,
+      filter: ['==', ['geometry-type'], 'Polygon'],
       paint: {
         'fill-color': '#3b82f6',
         'fill-opacity': 0.2
