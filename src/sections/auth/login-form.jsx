@@ -46,6 +46,7 @@ export function LoginForm({ className, ...props }) {
   const { login, loginSSO } = useAuth();
 
   const showPassword = useBoolean();
+  const loadingLoginSso = useBoolean();
 
   // state
   const [errorMessage, setErrorMessage] = useState("");
@@ -89,11 +90,15 @@ export function LoginForm({ className, ...props }) {
   };
 
   const handleLoginSSO = async () => {
+    loadingLoginSso.onTrue();
+
     try {
       await loginSSO("google");
     } catch (error) {
       console.error("SSO Login Error:", error);
       toast.error("SSO login failed. Please try again.");
+    } finally {
+      loadingLoginSso.onFalse();
     }
   };
 
@@ -115,9 +120,10 @@ export function LoginForm({ className, ...props }) {
                     type="button"
                     className="flex items-center gap-2"
                     onClick={handleLoginSSO}
+                    disabled={loadingLoginSso.value}
                   >
                     <Iconify icon="flat-color-icons:google" width={20} />
-                    Login with Google
+                    {loadingLoginSso.value ? "Continuing with Google..." : "Continue with Google"}
                   </Button>
                 </Field>
 

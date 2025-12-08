@@ -347,7 +347,8 @@ const DashboardView = () => {
           const endDay = endOfDay(today);
 
           const res = await axios.get(
-            `/api/proxy/traccar/reports/events?deviceId=${device.id
+            `/api/proxy/traccar/reports/events?deviceId=${
+              device.id
             }&from=${startDay.toISOString()}&to=${endDay.toISOString()}&type=allEvents`
           );
 
@@ -415,7 +416,12 @@ const DashboardView = () => {
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
-          <DeviceCard devices={devices} onDeviceClick={handleDeviceClick} />
+          <DeviceCard
+            devices={devices}
+            selectedDeviceId={selectedDeviceId}
+            onDeviceClick={handleDeviceClick}
+            loading={loadingDevices.value}
+          />
         </div>
 
         {/* Horizontal Resize Handle */}
@@ -429,7 +435,12 @@ const DashboardView = () => {
 
         {/* Bottom Left Panel */}
         <div ref={bottomRowRef} className="min-h-[150px]">
-          <InfoCard />
+          <InfoCard
+            devices={devices}
+            width={bottomRowRef.current?.offsetWidth}
+            selectedDeviceId={selectedDeviceId}
+            positions={positions}
+          />
         </div>
       </div>
 
