@@ -73,6 +73,10 @@ RadiusMode.onStop = function(state) {
   this.updateUIClasses({ mouse: 'none' });
   this.activateUIButton();
 
+  document
+    .querySelectorAll(".mapbox-gl-draw_ctrl-draw-btn")
+    .forEach(btn => btn.classList.remove("active"));
+
   // Re-enable double click zoom
   if (this.map && this.map.doubleClickZoom) {
     setTimeout(() => {

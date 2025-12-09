@@ -43,6 +43,19 @@ export class ExtendedMapboxDraw extends MapboxDraw {
     }
 
     button.addEventListener("click", () => {
+      const isActive = button.classList.contains("active");
+
+      if (isActive) {
+        button.classList.remove("active");
+        this.changeMode("simple_select");
+        return;
+      }
+
+      document
+        .querySelectorAll(".mapbox-gl-draw_ctrl-draw-btn")
+        .forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
       if (config.action) {
         config.action(this);
       }
