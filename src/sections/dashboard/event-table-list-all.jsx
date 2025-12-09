@@ -3,7 +3,7 @@ import { fDate, fDateTime } from "@/utils/format-time";
 import { TableList } from "@/components/table";
 import { LocateFixed, Waypoints } from "lucide-react";
 
-function EventTableListAll({ events = [] }) {
+function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
   const [sorting, setSorting] = useState([
     {
       id: "eventTime",
@@ -50,7 +50,7 @@ function EventTableListAll({ events = [] }) {
           return (
             <div className="space-y-1">
               {hasAttributes && (
-                <p className="text-sm">
+                <p>
                   {Object.entries(attributes).map(([key, value], index) => (
                     <span key={key}>
                       {value}
@@ -71,14 +71,25 @@ function EventTableListAll({ events = [] }) {
         size: 20,
         cell: ({ row }) => {
           const position = row.original.positionId;
-          if (position) {
-            return <LocateFixed className="size-4 shrink-0" />;
-          }
-          return "";
+          const id = row.original.id;
+
+          if (!position) return "";
+
+          const isSelected = selectedEvents === id;
+
+          return (
+            <LocateFixed
+              className={`
+          size-4 shrink-0 transition
+          ${isSelected ? "text-blue-600 scale-110" : "text-gray-400"}
+          group-hover:text-blue-500 group-hover:scale-110
+        `}
+            />
+          );
         },
       },
     ];
-  }, []);
+  }, [selectedEvents]);
 
   return (
     <>
@@ -92,7 +103,10 @@ function EventTableListAll({ events = [] }) {
         pageSize={events.length}
         rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
         onRowClick={(event) => {
-          console.log("Clicked event:", event);
+          console.log(event);
+          if (event.positionId > 0) {
+            fetchPosition(event.positionId, event.id);
+          }
         }}
         tableProps={{
           initialState: {

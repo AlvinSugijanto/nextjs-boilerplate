@@ -39,11 +39,11 @@ const DashboardView = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [events, setEvents] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [positions, setPositions] = useState([]);
   const [geofences, setGeofences] = useState([]);
   const [loadingMap, setLoadingMap] = useState(true);
+  const [isSelectingEvent, setIsSelectingEvent] = useState(false);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -245,6 +245,7 @@ const DashboardView = () => {
   };
 
   const fetchInitialData = useCallback(async () => {
+    console.log("position changed");
     try {
       const positionsResponse = await fetch("/api/proxy/traccar/positions");
       if (positionsResponse.ok) {
@@ -361,23 +362,6 @@ const DashboardView = () => {
     }
   }, []);
 
-  // const fetchEvent = async (id) => {
-  //   try {
-  //     const now = new Date();
-
-  //     const from = startOfDay(now).toISOString();
-  //     const to = endOfDay(now).toISOString();
-
-  //     const { data } = await axios.get(
-  //       `/api/proxy/traccar/positions?deviceId=${id}&from=${from}&to=${to}`
-  //     );
-  //     setEvents(data);
-  //     console.log("Event data:", data);
-  //   } catch (error) {
-  //     console.error("Error fetching event data:", error);
-  //   }
-  // };
-
   useEffect(() => {
     fetchDevices();
     fetchEventTypes();
@@ -453,6 +437,7 @@ const DashboardView = () => {
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
             loading={loadingMap}
+            isSelectingEvent={isSelectingEvent}
           />
         </div>
 
@@ -467,12 +452,17 @@ const DashboardView = () => {
 
         {/* Bottom Right Panel */}
         <div ref={bottomRightRef} className="min-h-[150px]">
-          <EventCard
-            // events={events}
-            eventTypes={eventTypes}
-            geofences={geofences}
-            selectedDeviceId={selectedDeviceId}
-          />
+          {!loadingMap && (
+            <EventCard
+              eventTypes={eventTypes}
+              geofences={geofences}
+              selectedDeviceId={selectedDeviceId}
+              positions={positions}
+              setPositions={setPositions}
+              setIsSelectingEvent={setIsSelectingEvent}
+              fetchInitialData={fetchInitialData}
+            />
+          )}
         </div>
       </div>
     </div>

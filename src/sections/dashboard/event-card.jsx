@@ -28,16 +28,25 @@ const listTabs = [
   },
 ];
 
-function EventCard({ eventTypes, geofences, selectedDeviceId = null }) {
+function EventCard({
+  eventTypes,
+  geofences,
+  selectedDeviceId = null,
+  positions,
+  setPositions,
+  setIsSelectingEvent,
+  fetchInitialData,
+}) {
   // state
   const [activeTab, setActiveTab] = useState(1);
   const [selectedEventTypes, setSelectedEventTypes] = useState([]);
+  const [selectedEvents, setSelectedEvents] = useState("");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [dateRange, setDateRange] = useState({
-    from: startOfDay(new Date()), // Default: Hari Ini
+    from: startOfDay(new Date()),
     to: endOfDay(new Date()),
   });
 
@@ -83,6 +92,59 @@ function EventCard({ eventTypes, geofences, selectedDeviceId = null }) {
     }
   };
 
+  const fetchPosition = async (positionId, eventId) => {
+    if (!positionId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      setIsSelectingEvent(false);
+      if (eventId === selectedEvents) {
+        setSelectedEvents("");
+        await fetchInitialData();
+
+        console.log("is this run");
+        return;
+      }
+
+      const { data } = await axios.get(
+        `/api/proxy/traccar/positions?id=${positionId}`
+      );
+
+      if (data && data.length > 0) {
+        const newPosition = data[0];
+
+        setPositions((prevPositions) => {
+          const existingIndex = prevPositions.findIndex(
+            (item) => item.deviceId === selectedDeviceId
+          );
+
+          if (existingIndex !== -1) {
+            const updatedPositions = [...prevPositions];
+            updatedPositions[existingIndex] = {
+              ...updatedPositions[existingIndex],
+              ...newPosition,
+            };
+            return updatedPositions;
+          }
+        });
+        setSelectedEvents(eventId);
+
+        setTimeout(() => {
+          setIsSelectingEvent(true);
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Error fetching position data:", error);
+      setError("Failed to fetch position. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChangeDateRange = (range) => {
     if (range?.from && range?.to) {
       // Update state date range
@@ -120,42 +182,26 @@ function EventCard({ eventTypes, geofences, selectedDeviceId = null }) {
   return (
     <Card className="h-full p-0">
       <div className="px-4 py-3 overflow-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap">
-            <div className="flex items-center gap-2 flex-1">
-              <TabsList className="">
-                {listTabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="text-xs"
-                  >
-                    {tab.icon}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+        <div className="h-full">
+          <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap mb-4">
+            <div className="flex items-center gap-2 flex-wrap flex-1">
+              <MultiSelect
+                options={eventTypes.map(({ type }) => ({
+                  label: type,
+                  value: type,
+                }))}
+                className="w-fit min-w-[180px]"
+                placeholder="Filter by Event Type"
+                onValueChange={setSelectedEventTypes}
+                value={selectedEventTypes}
+              />
 
-              {activeTab === 2 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <MultiSelect
-                    options={eventTypes.map(({ type }) => ({
-                      label: type,
-                      value: type,
-                    }))}
-                    className="w-fit min-w-[180px]"
-                    placeholder="Filter by Event Type"
-                    onValueChange={setSelectedEventTypes}
-                    value={selectedEventTypes}
-                  />
-
-                  <RangeDatePicker
-                    dateRange={dateRange}
-                    onChange={handleChangeDateRange}
-                    loading={loading}
-                    selectedDeviceId={selectedDeviceId}
-                  />
-                </div>
-              )}
+              <RangeDatePicker
+                dateRange={dateRange}
+                onChange={handleChangeDateRange}
+                loading={loading}
+                selectedDeviceId={selectedDeviceId}
+              />
             </div>
           </div>
 
@@ -186,24 +232,23 @@ function EventCard({ eventTypes, geofences, selectedDeviceId = null }) {
 
           {/* Content */}
           {!loading && !error && (
-            <>
-              <TabsContent value={1}>
-                <div className="px-2 py-4">GRID CARD</div>
-              </TabsContent>
-              <TabsContent value={2} className="h-full overflow-auto relative!">
-                <div className="mb-2 text-xs text-muted-foreground">
-                  Showing {filteredEvents.length} of {events.length} events
-                  {dateRange.from && dateRange.to && (
-                    <span className="ml-2">
-                      ({fDate(dateRange.from)} - {fDate(dateRange.to)})
-                    </span>
-                  )}
-                </div>
-                <EventTableListAll events={filteredEvents} />
-              </TabsContent>
-            </>
+            <div className="h-full overflow-auto">
+              <div className="mb-2 text-xs text-muted-foreground">
+                Showing {filteredEvents.length} of {events.length} events
+                {dateRange.from && dateRange.to && (
+                  <span className="ml-2">
+                    ({fDate(dateRange.from)} - {fDate(dateRange.to)})
+                  </span>
+                )}
+              </div>
+              <EventTableListAll
+                events={filteredEvents}
+                selectedEvents={selectedEvents}
+                fetchPosition={fetchPosition}
+              />
+            </div>
           )}
-        </Tabs>
+        </div>
       </div>
     </Card>
   );
