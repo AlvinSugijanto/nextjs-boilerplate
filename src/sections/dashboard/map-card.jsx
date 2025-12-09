@@ -9,7 +9,8 @@ function MapCard({
   geofences,
   mapRef,
   selectedDeviceId,
-  loading
+  loading,
+  isSelectingEvent,
 }) {
   return (
     <Card className="h-full p-0 overflow-hidden">
@@ -29,6 +30,7 @@ function MapCard({
               geofences={geofences}
               mapRef={mapRef}
               selectedDeviceId={selectedDeviceId}
+              isSelectingEvent={isSelectingEvent}
             />
           </ClientOnly>
         )}
