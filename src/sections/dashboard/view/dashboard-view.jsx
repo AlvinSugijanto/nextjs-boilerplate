@@ -40,11 +40,11 @@ const DashboardView = () => {
   const [devices, setDevices] = useState([]);
   const [deviceTracks, setDeviceTracks] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [events, setEvents] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [positions, setPositions] = useState([]);
   const [geofences, setGeofences] = useState([]);
   const [loadingMap, setLoadingMap] = useState(true);
+  const [isSelectingEvent, setIsSelectingEvent] = useState(false);
 
   // Load sizes from localStorage on mount
   useEffect(() => {
@@ -246,6 +246,7 @@ const DashboardView = () => {
   };
 
   const fetchInitialData = useCallback(async () => {
+    console.log("position changed");
     try {
       const positionsResponse = await fetch("/api/proxy/traccar/positions");
       if (positionsResponse.ok) {
@@ -338,34 +339,6 @@ const DashboardView = () => {
 
       setDevices(data);
       loadingDevices.onFalse();
-
-      if (data.length) {
-        let listEvents = [];
-
-        for (const device of data) {
-          const today = new Date();
-          const startDay = startOfDay(today);
-          const endDay = endOfDay(today);
-
-          const res = await axios.get(
-            `/api/proxy/traccar/reports/events?deviceId=${
-              device.id
-            }&from=${startDay.toISOString()}&to=${endDay.toISOString()}&type=allEvents`
-          );
-
-          const transformedData = res.data.map((item) => ({
-            ...item,
-            device: {
-              name: device.name,
-              uniqueId: device.uniqueId,
-            },
-          }));
-
-          listEvents = listEvents.concat(transformedData);
-        }
-
-        setEvents(listEvents);
-      }
     } catch (error) {
       console.error("Error fetching devices:", error);
     } finally {
@@ -408,6 +381,10 @@ const DashboardView = () => {
     setSelectedDeviceId(device.id);
   }, []);
 
+  const handleChangeInfoPosition = useCallback((value) => {
+    console.log({ value });
+  }, []);
+
   return (
     <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
       {/* Left Column */}
@@ -442,6 +419,7 @@ const DashboardView = () => {
             selectedDeviceId={selectedDeviceId}
             positions={positions}
             onTrackChanges={setDeviceTracks}
+            onChangePosition={handleChangeInfoPosition}
           />
         </div>
       </div>
@@ -467,6 +445,7 @@ const DashboardView = () => {
             selectedDeviceId={selectedDeviceId}
             loading={loadingMap}
             tracks={deviceTracks}
+            isSelectingEvent={isSelectingEvent}
           />
         </div>
 
@@ -481,7 +460,17 @@ const DashboardView = () => {
 
         {/* Bottom Right Panel */}
         <div ref={bottomRightRef} className="min-h-[150px]">
-          <EventCard events={events} eventTypes={eventTypes} />
+          {!loadingMap && (
+            <EventCard
+              eventTypes={eventTypes}
+              geofences={geofences}
+              selectedDeviceId={selectedDeviceId}
+              positions={positions}
+              setPositions={setPositions}
+              setIsSelectingEvent={setIsSelectingEvent}
+              fetchInitialData={fetchInitialData}
+            />
+          )}
         </div>
       </div>
     </div>

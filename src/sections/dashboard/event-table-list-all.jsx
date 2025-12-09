@@ -1,118 +1,116 @@
 import React, { useMemo, useState } from "react";
-import { faker } from "@faker-js/faker";
 import { fDate, fDateTime } from "@/utils/format-time";
 import { TableList } from "@/components/table";
+import { LocateFixed, Waypoints } from "lucide-react";
 
-const dummyData = [...new Array(200)].map((_, index) => ({
-  id: index + 1,
-  started: faker.date.recent().toLocaleString(),
-  finished: faker.date.recent().toLocaleString(),
-  deviceName: faker.commerce.productName(),
-  duration: faker.number.int({ min: 1, max: 120 }) + " mins",
-  eventName: faker.hacker.phrase(),
-}));
-
-function EventTableListAll({ events = [] }) {
-  // state
-  const [search, setSearch] = useState("");
+function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
   const [sorting, setSorting] = useState([
     {
-      id: "started",
+      id: "eventTime",
       desc: false,
     },
   ]);
 
-  const filteredData = useMemo(() => {
-    const transformedData = events.map((item) => ({
-      id: item.id,
-      started: item.eventTime,
-      finished: item.finished,
-      deviceName: item.device?.name,
-      duration: item.duration,
-      eventName: item.type,
-    }));
-
-    if (!search) return transformedData;
-
-    return transformedData.filter((event) =>
-      Object.values(event).some((value) =>
-        String(value).toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [events, search]);
-
   const columns = useMemo(() => {
     return [
       {
-        accessorKey: "started",
-        header: "Started",
-        meta: {
-          sortable: true,
-        },
-        cell: ({ row }) => fDateTime(row.getValue("started"), "HH:mm:ss"),
-      },
-      {
-        accessorKey: "finished",
-        header: "Finished",
+        accessorKey: "eventTime",
+        header: "Date",
         meta: {
           sortable: true,
         },
         cell: ({ row }) =>
-          row.getValue("finished")
-            ? fDateTime(row.getValue("finished"), "HH:mm:ss")
-            : "-",
+          fDateTime(row.getValue("eventTime"), "d MMM, HH:mm:ss a"),
       },
       {
-        accessorKey: "deviceName",
-        header: "Device Name",
-        meta: {
-          sortable: true,
-        },
-        cell: ({ row }) => row.getValue("deviceName") || "-",
-      },
-      {
-        accessorKey: "duration",
-        header: "Duration",
-        meta: {
-          sortable: true,
-        },
-        cell: ({ row }) => row.getValue("duration") || "-",
-      },
-      {
-        accessorKey: "eventName",
+        accessorKey: "type",
         header: "Event Name",
         meta: {
           sortable: true,
         },
         cell: ({ row }) => {
-          const eventName = row.original.eventName;
+          const type = row.original.type;
           return (
-            <span title={eventName} className="font-bold text-primary">
-              {eventName}
+            <span title={type} className="font-bold text-primary">
+              {type}
             </span>
           );
         },
       },
+      {
+        accessorKey: "description",
+        header: "Description",
+        cell: ({ row }) => {
+          const attributes = row.original.attributes;
+          const geofenceName = row.original.geofenceName;
+
+          const hasAttributes =
+            attributes && Object.keys(attributes).length > 0;
+
+          return (
+            <div className="space-y-1">
+              {hasAttributes && (
+                <p>
+                  {Object.entries(attributes).map(([key, value], index) => (
+                    <span key={key}>
+                      {value}
+                      {index < Object.entries(attributes).length - 1 && ", "}
+                    </span>
+                  ))}
+                </p>
+              )}
+
+              {geofenceName && <p>{geofenceName}</p>}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "icon",
+        header: "",
+        size: 20,
+        cell: ({ row }) => {
+          const position = row.original.positionId;
+          const id = row.original.id;
+
+          if (!position) return "";
+
+          const isSelected = selectedEvents === id;
+
+          return (
+            <LocateFixed
+              className={`
+          size-4 shrink-0 transition
+          ${isSelected ? "text-blue-600 scale-110" : "text-gray-400"}
+          group-hover:text-blue-500 group-hover:scale-110
+        `}
+            />
+          );
+        },
+      },
     ];
-  }, []);
+  }, [selectedEvents]);
 
   return (
     <>
       <TableList
-        key={filteredData.length}
+        key={events.length}
         columns={columns}
-        data={filteredData}
+        data={events}
         setSorting={setSorting}
         sorting={sorting}
-        showPagination={false}
-        pageSize={filteredData.length}
+        showPagination={true}
+        pageSize={events.length}
         rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
         onRowClick={(event) => {
-          console.log("Clicked event:", event);
+          console.log(event);
+          if (event.positionId > 0) {
+            fetchPosition(event.positionId, event.id);
+          }
         }}
         tableProps={{
           initialState: {
-            pagination: { pageIndex: 0, pageSize: dummyData.length },
+            pagination: { pageIndex: 0, pageSize: 5 },
           },
         }}
       />

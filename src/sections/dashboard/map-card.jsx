@@ -10,7 +10,8 @@ function MapCard({
   mapRef,
   selectedDeviceId,
   loading,
-  tracks
+  tracks,
+  isSelectingEvent,
 }) {
   return (
     <Card className="h-full p-0 overflow-hidden">
@@ -31,6 +32,7 @@ function MapCard({
               mapRef={mapRef}
               selectedDeviceId={selectedDeviceId}
               tracks={tracks}
+              isSelectingEvent={isSelectingEvent}
             />
           </ClientOnly>
         )}

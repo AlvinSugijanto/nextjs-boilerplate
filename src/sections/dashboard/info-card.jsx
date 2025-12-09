@@ -38,6 +38,7 @@ function InfoCard({
   positions = [],
   selectedDeviceId,
   onTrackChanges,
+  onChangePosition,
 }) {
   // hooks
   const loadingSummary = useBoolean();
@@ -110,7 +111,7 @@ function InfoCard({
       ...item,
       tracks:
         item.id === deviceId
-          ? transformedDataFullTrack(data, item.name)
+          ? transformedDataFullTrack(data, item)
           : item.tracks,
       showRoute: item.id === deviceId ? true : item.showRoute,
     }));
@@ -241,7 +242,7 @@ function InfoCard({
           const finalData = {
             ...findDevice,
             color: color,
-            tracks: transformedDataFullTrack(fetchedData, findDevice?.name),
+            tracks: transformedDataFullTrack(fetchedData, findDevice),
             trips:
               fetchTrips.map((trip) => ({
                 ...trip,
@@ -325,6 +326,7 @@ function InfoCard({
             loading={loadingTracks.value}
             onChangeHide={handleHideTrack}
             onClickRoute={handleClickRoute}
+            onRowClick={onChangePosition}
           />
         </TabsContent>
         <TabsContent value={3} className="overflow-auto h-full pb-2">
@@ -337,17 +339,18 @@ function InfoCard({
 
 export default InfoCard;
 
-const transformedDataFullTrack = (data, deviceName) => {
+const transformedDataFullTrack = (data, device) => {
   const cleanedData = cleansePositions(data);
 
   return cleanedData.map((item) => ({
     id: item.id,
+    deviceId: device?.id,
     latitude: item.latitude,
     longitude: item.longitude,
     date: new Date(item.deviceTime),
     time: new Date(item.deviceTime).toTimeString().split(" ")[0],
     speed: item.speed,
-    deviceName: deviceName || null,
+    deviceName: device?.name || null,
   }));
 };
 
