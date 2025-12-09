@@ -224,7 +224,7 @@ const TraccarMap = ({
       ],
       customButtons: [
         {
-          title: "Draw circle by radius",
+          title: "Circle tool",
           svg: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E",
           position: 0,
           action: (drawInstance) => {
