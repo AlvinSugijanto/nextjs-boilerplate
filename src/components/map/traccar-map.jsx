@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
@@ -20,6 +19,7 @@ import {
 import { convertDrawFeatureToTraccarArea } from "./drawUtils";
 import GeofenceNameDialog from "./geofence-name-dialog";
 import RadiusMode from "./radiusMode";
+import { ExtendedMapboxDraw } from "./ExtendedMapboxDraw";
 
 const TraccarMap = ({
   devices,
@@ -117,7 +117,6 @@ const TraccarMap = ({
 
       if (response.ok) {
         const newGeofence = await response.json();
-        console.log("Geofence created:", newGeofence);
 
         // Update geofences immediately in the map
         if (mapRef.current && mapLoaded) {
@@ -158,7 +157,7 @@ const TraccarMap = ({
 
     mapRef.current = map;
 
-    const draw = new MapboxDraw({
+    const draw = new ExtendedMapboxDraw({
       displayControlsDefault: false,
       controls: {
         polygon: true,
@@ -166,7 +165,7 @@ const TraccarMap = ({
         trash: true,
       },
       modes: {
-        ...MapboxDraw.modes,
+        ...ExtendedMapboxDraw.modes,
         draw_radius: RadiusMode,
       },
       styles: [
@@ -223,31 +222,20 @@ const TraccarMap = ({
           },
         },
       ],
+      customButtons: [
+        {
+          title: "Draw circle by radius",
+          svg: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E",
+          position: 0,
+          action: (drawInstance) => {
+            drawInstance.changeMode("draw_radius");
+          },
+        },
+      ],
     });
 
     drawRef.current = draw;
     map.addControl(draw, "top-left");
-
-    map.on("load", () => {
-      const drawControls = document.querySelector(".mapboxgl-ctrl-group");
-      if (drawControls) {
-        const radiusButton = document.createElement("button");
-        const svgIcon =
-          "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E";
-        radiusButton.className = "mapbox-gl-draw_ctrl-draw-btn";
-        radiusButton.title = "Draw circle by radius";
-        radiusButton.style.backgroundImage = `url("${svgIcon}")`;
-        radiusButton.style.backgroundPosition = "center";
-        radiusButton.style.backgroundSize = "18px 18px";
-        radiusButton.addEventListener("click", () => {
-          draw.changeMode("draw_radius");
-        });
-        drawControls.insertBefore(
-          radiusButton,
-          drawControls.firstChild.nextSibling
-        );
-      }
-    });
 
     map.on("draw.create", (e) => {
       const feature = e.features[0];
