@@ -59,18 +59,17 @@ const parseLineString = (area) => {
     return [lng, lat];
   });
 
-  // Close the polygon if not already closed
-  if (
-    coords.length > 0 &&
-    (coords[0][0] !== coords[coords.length - 1][0] ||
-      coords[0][1] !== coords[coords.length - 1][1])
-  ) {
-    coords.push([...coords[0]]);
-  }
+  let x = 0, y = 0;
+  coords.forEach(coord => {
+    x += coord[0];
+    y += coord[1];
+  });
+  const center = [x / coords.length, y / coords.length];
 
   return {
-    type: 'Polygon',
-    coordinates: [coords]
+    type: 'LineString',
+    coordinates: coords,
+    center: center
   };
 };
 
