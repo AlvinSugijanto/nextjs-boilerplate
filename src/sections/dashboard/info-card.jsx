@@ -8,6 +8,7 @@ import InfoSummary from "./info-summary";
 import InfoDevice from "./info-device";
 import { useBoolean } from "@/hooks/use-boolean";
 import InfoTrack from "./info-track";
+import { uuidv4 } from "@/utils/uuid";
 
 const listTabs = [
   {
@@ -24,7 +25,20 @@ const listTabs = [
   },
 ];
 
-function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
+function brightRgbaColor(alpha = 0.7) {
+  const r = Math.floor(100 + Math.random() * 155);
+  const g = Math.floor(100 + Math.random() * 155);
+  const b = Math.floor(100 + Math.random() * 155);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function InfoCard({
+  devices = [],
+  positions = [],
+  selectedDeviceId,
+  onTrackChanges,
+}) {
   // hooks
   const loadingSummary = useBoolean();
   const loadingTracks = useBoolean();
@@ -37,6 +51,7 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
   const [selectedDeviceIdsTracks, setSelectedDeviceIdsTracks] = useState([]);
   const [dataSummary, setDataSummary] = useState([]);
   const [dataTracks, setDataTracks] = useState([]);
+  const [dataAllTracks, setDataAllTracks] = useState([]);
   const [dateTrack, setDateTrack] = useState(new Date());
   const [dateRangeSummary, setDateRangeSummary] = useState({
     from: new Date(),
@@ -74,6 +89,7 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
     setSelectedDeviceIdsTracks(values);
     if (values.length === 0) {
       setDataTracks([]);
+      onTrackChanges?.([]);
       return;
     }
 
@@ -85,6 +101,36 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
     // For tracks, we only use a single date, so we can ignore the range end
     setDateTrack(date);
     fetchDataTracks(date, date, selectedDeviceIdsTracks);
+  };
+
+  const handleClickRoute = ({ deviceId, data }) => {
+    const newData = [...dataTracks];
+
+    const filteredTracks = newData.map((item) => ({
+      ...item,
+      tracks:
+        item.id === deviceId ? transformedDataFullTrack(data) : item.tracks,
+      showRoute: item.id === deviceId ? true : item.showRoute,
+    }));
+
+    setDataTracks(filteredTracks);
+    onTrackChanges?.(filteredTracks);
+  };
+
+  const handleHideTrack = ({ id, hide }) => {
+    const newData = [...dataTracks];
+
+    const findTrip = dataAllTracks.find((f) => f.id === id);
+
+    const filteredTracks = newData.map((item) => ({
+      ...item,
+      hideTrack: item.id === id ? hide : item.hideTrack,
+      showRoute: item.id === id ? false : item.showRoute,
+      tracks: item.id === id ? findTrip?.tracks : item.tracks,
+    }));
+
+    setDataTracks(filteredTracks);
+    onTrackChanges?.(filteredTracks);
   };
 
   const fetchDataSummary = useCallback(
@@ -170,6 +216,8 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
       let endTo = endOfDay(to);
 
       try {
+        let historyPositionDevices = [];
+
         for (const deviceId of selectedDeviceIds) {
           const { data: fetchedData } = await axios.get(
             `/api/proxy/traccar/positions?deviceId=${deviceId}&from=${startFrom.toISOString()}&to=${endTo.toISOString()}`,
@@ -178,19 +226,39 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
             }
           );
 
-          const cleanedData = cleansePositions(fetchedData);
+          const { data: fetchTrips } = await axios.get(
+            `/api/proxy/traccar/reports/trips?deviceId=${deviceId}&from=${startFrom.toISOString()}&to=${endTo.toISOString()}`,
+            {
+              signal: controller.signal,
+            }
+          );
 
-          const transformedData = cleanedData.map((item) => ({
-            ...item,
-            date: new Date(item.deviceTime),
-            time: new Date(item.deviceTime).toTimeString().split(" ")[0],
-            deviceName:
-              devices.find((device) => device.id === item.deviceId)?.name ||
-              "Unknown Device",
-          }));
+          const color = brightRgbaColor();
+          const findDevice = devices.find((f) => f.id === deviceId);
 
-          setDataTracks((prevData) => [...prevData, ...transformedData]);
+          const finalData = {
+            ...findDevice,
+            color: color,
+            tracks: transformedDataFullTrack(fetchedData, findDevice?.name),
+            trips:
+              fetchTrips.map((trip) => ({
+                ...trip,
+                id: uuidv4(),
+              })) || [],
+            hideTrack: false,
+            showRoute: false,
+          };
+
+          historyPositionDevices.push(finalData);
+
+          setDataTracks((prevData) => [...prevData, finalData]);
+          setDataAllTracks((prevData) => [
+            ...prevData,
+            { id: finalData.id, tracks: finalData.tracks },
+          ]);
         }
+
+        onTrackChanges?.(historyPositionDevices);
 
         loadingTracks.onFalse();
       } catch (error) {
@@ -235,6 +303,8 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
             onChangeDevices={handleChangeDevicesSummary}
             selectedDeviceIds={selectedDeviceIdsSummary}
             data={dataSummary}
+            from={dateRangeSummary.from}
+            to={dateRangeSummary.to}
             loading={loadingSummary.value}
             onRowClick={(device) => {
               console.log("Clicked device summary:", device);
@@ -250,9 +320,8 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
             date={dateTrack}
             onChangeDate={handleChangeDateTracks}
             loading={loadingTracks.value}
-            onRowClick={(device) => {
-              console.log("Clicked device summary:", device);
-            }}
+            onChangeHide={handleHideTrack}
+            onClickRoute={handleClickRoute}
           />
         </TabsContent>
         <TabsContent value={3} className="overflow-auto h-full pb-2">
@@ -264,6 +333,20 @@ function InfoCard({ devices = [], positions = [], selectedDeviceId }) {
 }
 
 export default InfoCard;
+
+const transformedDataFullTrack = (data, deviceName) => {
+  const cleanedData = cleansePositions(data);
+
+  return cleanedData.map((item) => ({
+    id: item.id,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    date: new Date(item.deviceTime),
+    time: new Date(item.deviceTime).toTimeString().split(" ")[0],
+    speed: item.speed,
+    deviceName: deviceName || null,
+  }));
+};
 
 function cleansePositions(data) {
   let cleaned = [];

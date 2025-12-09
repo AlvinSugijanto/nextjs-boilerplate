@@ -113,6 +113,7 @@ const InfoSummary = ({
               to={to}
               onChange={onChangeDateRange}
               showDescription
+              disabled={{ after: new Date() }}
             />
           </div>
 

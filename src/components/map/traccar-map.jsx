@@ -12,13 +12,15 @@ import { openPopupForDeviceId, closePopup, updatePopupContent } from './popupUti
 import { convertDrawFeatureToTraccarArea } from './drawUtils';
 import GeofenceNameDialog from './geofence-name-dialog';
 import RadiusMode from './radiusMode';
+import { addTrackLayers, updateTrackData } from './trackLayers';
 
 const TraccarMap = ({
   devices,
   positions,
   geofences,
   mapRef: externalMapRef,
-  selectedDeviceId
+  selectedDeviceId,
+  tracks: tracksData
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -28,6 +30,7 @@ const TraccarMap = ({
   const latestDevicesRef = useRef(devices);
   const latestPositionsRef = useRef(positions);
   const latestDeviceFeaturesRef = useRef([]);
+  const tracksRef = useRef(tracksData);
   const hasFitBounds = useRef(false);
   const currentPopupRef = useRef(null);
   const focusedDeviceIdRef = useRef(null);
@@ -48,6 +51,10 @@ const TraccarMap = ({
   useEffect(() => {
     latestPositionsRef.current = positions;
   }, [positions]);
+
+  useEffect(() => {
+    tracksRef.current = tracksData;
+  }, [tracksData]);
 
   useEffect(() => {
     if (externalMapRef && mapRef.current) {
@@ -246,6 +253,8 @@ const TraccarMap = ({
       updateGeofenceData(map, geofencesRef.current);
       addDeviceLayers(map, isDark, currentPopupRef, focusedDeviceIdRef);
       updateDeviceData();
+      addTrackLayers(map, isDark);
+      updateTrackData(map, tracksRef.current);
       setMapLoaded(true);
     });
 
@@ -302,6 +311,11 @@ const TraccarMap = ({
     if (!mapLoaded || !mapRef.current) return;
     updateDeviceData();
   }, [devices, positions, mapLoaded]);
+
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+    updateTrackData(mapRef.current, tracksRef.current);
+  }, [tracksData, mapLoaded]);
 
   useEffect(() => {
     if (!selectedDeviceId || !mapRef.current || !mapLoaded) return;

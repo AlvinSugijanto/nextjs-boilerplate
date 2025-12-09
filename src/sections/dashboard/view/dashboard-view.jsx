@@ -38,6 +38,7 @@ const DashboardView = () => {
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [deviceTracks, setDeviceTracks] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [events, setEvents] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
@@ -440,6 +441,7 @@ const DashboardView = () => {
             width={bottomRowRef.current?.offsetWidth}
             selectedDeviceId={selectedDeviceId}
             positions={positions}
+            onTrackChanges={setDeviceTracks}
           />
         </div>
       </div>
@@ -464,6 +466,7 @@ const DashboardView = () => {
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
             loading={loadingMap}
+            tracks={deviceTracks}
           />
         </div>
 
