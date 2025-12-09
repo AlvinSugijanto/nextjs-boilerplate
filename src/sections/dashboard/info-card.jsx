@@ -51,7 +51,7 @@ function InfoCard({
   const [selectedDeviceIdsTracks, setSelectedDeviceIdsTracks] = useState([]);
   const [dataSummary, setDataSummary] = useState([]);
   const [dataTracks, setDataTracks] = useState([]);
-  const [dataAllTracks, setDataAllTracks] = useState([]);
+  const [dataAllTracks, setDataAllTracks] = useState(new Map());
   const [dateTrack, setDateTrack] = useState(new Date());
   const [dateRangeSummary, setDateRangeSummary] = useState({
     from: new Date(),
@@ -109,7 +109,9 @@ function InfoCard({
     const filteredTracks = newData.map((item) => ({
       ...item,
       tracks:
-        item.id === deviceId ? transformedDataFullTrack(data) : item.tracks,
+        item.id === deviceId
+          ? transformedDataFullTrack(data, item.name)
+          : item.tracks,
       showRoute: item.id === deviceId ? true : item.showRoute,
     }));
 
@@ -120,7 +122,7 @@ function InfoCard({
   const handleHideTrack = ({ id, hide }) => {
     const newData = [...dataTracks];
 
-    const findTrip = dataAllTracks.find((f) => f.id === id);
+    const findTrip = dataAllTracks.get(id);
 
     const filteredTracks = newData.map((item) => ({
       ...item,
@@ -252,10 +254,11 @@ function InfoCard({
           historyPositionDevices.push(finalData);
 
           setDataTracks((prevData) => [...prevData, finalData]);
-          setDataAllTracks((prevData) => [
-            ...prevData,
-            { id: finalData.id, tracks: finalData.tracks },
-          ]);
+          setDataAllTracks((prevData) => {
+            const newData = new Map(prevData);
+            newData.set(finalData.id, { tracks: finalData.tracks });
+            return newData;
+          });
         }
 
         onTrackChanges?.(historyPositionDevices);
