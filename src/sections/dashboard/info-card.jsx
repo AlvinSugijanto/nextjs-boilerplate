@@ -1,4 +1,11 @@
-import React, { use, useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -278,6 +285,10 @@ function InfoCard({
     },
     [devices]
   );
+
+  useEffect(() => {
+    onChangePosition?.(null);
+  }, [activeTab]);
 
   return (
     <Card className="h-full p-0 overflow-hidden">

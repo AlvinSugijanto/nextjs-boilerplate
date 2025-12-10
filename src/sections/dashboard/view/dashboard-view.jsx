@@ -40,6 +40,7 @@ const DashboardView = () => {
   const [devices, setDevices] = useState([]);
   const [deviceTracks, setDeviceTracks] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedTrackDetail, setSelectedTrackDetail] = useState(null);
   const [eventTypes, setEventTypes] = useState([]);
   const [positions, setPositions] = useState([]);
   const [geofences, setGeofences] = useState([]);
@@ -382,7 +383,7 @@ const DashboardView = () => {
   }, []);
 
   const handleChangeInfoPosition = useCallback((value) => {
-    console.log({ value });
+    setSelectedTrackDetail(value);
   }, []);
 
   return (
@@ -443,6 +444,7 @@ const DashboardView = () => {
             geofences={geofences}
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
+            selectedTrackDetail={selectedTrackDetail}
             loading={loadingMap}
             tracks={deviceTracks}
             isSelectingEvent={isSelectingEvent}
