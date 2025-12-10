@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
@@ -18,8 +29,10 @@ import {
   updatePopupContent,
 } from "./popupUtils";
 import { convertDrawFeatureToTraccarArea } from "./drawUtils";
+import { parseGeofence } from "./geofenceParser";
 import GeofenceNameDialog from "./geofence-name-dialog";
 import RadiusMode from "./radiusMode";
+import { ExtendedMapboxDraw } from "./ExtendedMapboxDraw";
 import { addTrackLayers, updateTrackData } from "./trackLayers";
 import {
   addTrackLayerHistory,
@@ -52,7 +65,12 @@ const TraccarMap = ({
   const focusedDeviceIdRef = useRef(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [pendingFeature, setPendingFeature] = useState(null);
-
+  const [editMode, setEditMode] = useState(false);
+  const [selectedGeofence, setSelectedGeofence] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [geofenceToDelete, setGeofenceToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -136,7 +154,6 @@ const TraccarMap = ({
 
       if (response.ok) {
         const newGeofence = await response.json();
-        console.log("Geofence created:", newGeofence);
 
         // Update geofences immediately in the map
         if (mapRef.current && mapLoaded) {
@@ -163,6 +180,172 @@ const TraccarMap = ({
     }
   };
 
+  const applyGeofenceChanges = async () => {
+    if (!drawRef.current || !selectedGeofence) return;
+
+    const features = drawRef.current.getAll();
+    if (features.features.length === 0) return;
+
+    const feature = features.features[0];
+
+    setIsUpdating(true);
+
+    try {
+      const traccarArea = convertDrawFeatureToTraccarArea(feature);
+      const response = await fetch(
+        `/api/proxy/traccar/geofences/${selectedGeofence.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...selectedGeofence,
+            area: traccarArea,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const updatedGeofence = await response.json();
+        if (mapRef.current && mapLoaded) {
+          const updatedGeofences = geofencesRef.current.map((g) =>
+            g.id === updatedGeofence.id ? updatedGeofence : g
+          );
+          geofencesRef.current = updatedGeofences;
+          updateGeofenceData(mapRef.current, updatedGeofences);
+        }
+
+        drawRef.current.deleteAll();
+        setSelectedGeofence(null);
+      } else {
+        const error = await response.text();
+        console.error("Failed to update geofence:", error);
+        alert("Failed to update geofence: " + error);
+      }
+    } catch (error) {
+      console.error("Error updating geofence:", error);
+      alert("Error updating geofence: " + error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleGeofenceDelete = async () => {
+    if (!geofenceToDelete) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(
+        `/api/proxy/traccar/geofences/${geofenceToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        if (mapRef.current && mapLoaded) {
+          const updatedGeofences = geofencesRef.current.filter(
+            (g) => g.id !== geofenceToDelete.id
+          );
+          geofencesRef.current = updatedGeofences;
+          updateGeofenceData(mapRef.current, updatedGeofences);
+        }
+        if (drawRef.current) {
+          drawRef.current.deleteAll();
+        }
+        setSelectedGeofence(null);
+      } else {
+        const error = await response.text();
+        console.error("Failed to delete geofence:", error);
+        alert("Failed to delete geofence: " + error);
+      }
+    } catch (error) {
+      console.error("Error deleting geofence:", error);
+      alert("Error deleting geofence: " + error.message);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      setGeofenceToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (geofence) => {
+    setGeofenceToDelete(geofence);
+    setShowDeleteDialog(true);
+  };
+
+  const toggleEditMode = () => {
+    if (!drawRef.current || !mapRef.current) return;
+
+    setEditMode((prevEditMode) => {
+      if (prevEditMode) {
+        drawRef.current.deleteAll();
+        setSelectedGeofence(null);
+        updateGeofenceData(mapRef.current, geofencesRef.current);
+        return false;
+      } else {
+        drawRef.current.changeMode("simple_select");
+        return true;
+      }
+    });
+  };
+
+  const loadGeofenceForEditing = (geofence) => {
+    if (!drawRef.current || !mapRef.current) return;
+
+    const geometryData = parseGeofence(geofence.area);
+    if (!geometryData) {
+      console.error("Failed to parse geofence geometry");
+      return;
+    }
+
+    drawRef.current.deleteAll();
+
+    // hapus geofence yang lagi diedit biar gak duplikat
+    const filteredGeofences = geofencesRef.current.filter(
+      (g) => g.id !== geofence.id
+    );
+    updateGeofenceData(mapRef.current, filteredGeofences);
+
+    const feature = {
+      type: "Feature",
+      properties: {
+        id: geofence.id,
+      },
+      geometry: {
+        type: geometryData.type,
+        coordinates: geometryData.coordinates,
+      },
+    };
+
+    const featureIds = drawRef.current.add(feature);
+
+    if (featureIds && featureIds.length > 0) {
+      drawRef.current.changeMode("direct_select", {
+        featureId: featureIds[0],
+      });
+
+      setSelectedGeofence(geofence);
+
+      // Zoom to the geofence
+      const bounds = new mapboxgl.LngLatBounds();
+      if (geometryData.type === "Polygon") {
+        geometryData.coordinates[0].forEach((coord) => bounds.extend(coord));
+      } else if (geometryData.type === "LineString") {
+        geometryData.coordinates.forEach((coord) => bounds.extend(coord));
+      }
+
+      if (!bounds.isEmpty()) {
+        mapRef.current.fitBounds(bounds, {
+          padding: 100,
+          duration: 1000,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
@@ -177,7 +360,7 @@ const TraccarMap = ({
 
     mapRef.current = map;
 
-    const draw = new MapboxDraw({
+    const draw = new ExtendedMapboxDraw({
       displayControlsDefault: false,
       controls: {
         polygon: true,
@@ -185,7 +368,7 @@ const TraccarMap = ({
         trash: true,
       },
       modes: {
-        ...MapboxDraw.modes,
+        ...ExtendedMapboxDraw.modes,
         draw_radius: RadiusMode,
       },
       styles: [
@@ -242,31 +425,29 @@ const TraccarMap = ({
           },
         },
       ],
+      customButtons: [
+        {
+          title: "Circle tool",
+          svg: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E",
+          position: 0,
+          action: (drawInstance) => {
+            drawInstance.changeMode("draw_radius");
+          },
+        },
+        {
+          title: "Edit geofences",
+          svg:
+            "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='2'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E",
+          position: 3,
+          action: () => {
+            toggleEditMode();
+          },
+        },
+      ],
     });
 
     drawRef.current = draw;
     map.addControl(draw, "top-left");
-
-    map.on("load", () => {
-      const drawControls = document.querySelector(".mapboxgl-ctrl-group");
-      if (drawControls) {
-        const radiusButton = document.createElement("button");
-        const svgIcon =
-          "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E";
-        radiusButton.className = "mapbox-gl-draw_ctrl-draw-btn";
-        radiusButton.title = "Draw circle by radius";
-        radiusButton.style.backgroundImage = `url("${svgIcon}")`;
-        radiusButton.style.backgroundPosition = "center";
-        radiusButton.style.backgroundSize = "18px 18px";
-        radiusButton.addEventListener("click", () => {
-          draw.changeMode("draw_radius");
-        });
-        drawControls.insertBefore(
-          radiusButton,
-          drawControls.firstChild.nextSibling
-        );
-      }
-    });
 
     map.on("draw.create", (e) => {
       const feature = e.features[0];
@@ -310,6 +491,51 @@ const TraccarMap = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!drawRef.current) return;
+
+    const container = drawRef.current._container;
+    if (!container) return;
+
+    const editButton = container.querySelector('[title="Edit geofences"]');
+    if (editButton) {
+      if (editMode) {
+        editButton.classList.add('active');
+      } else {
+        editButton.classList.remove('active');
+      }
+    }
+  }, [editMode]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+
+    const handleGeofenceClick = (e) => {
+      if (!editMode) return;
+
+      const features = mapRef.current.queryRenderedFeatures(e.point, {
+        layers: ["geofences-fill", "geofences-outline"],
+      });
+
+      if (features.length > 0) {
+        const geofenceId = features[0].properties.id;
+        const geofence = geofencesRef.current.find((g) => g.id === geofenceId);
+
+        if (geofence) {
+          loadGeofenceForEditing(geofence);
+        }
+      }
+    };
+
+    mapRef.current.on("click", handleGeofenceClick);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off("click", handleGeofenceClick);
+      }
+    };
+  }, [editMode, mapLoaded]);
 
   // Update map style when theme changes
   useEffect(() => {
@@ -410,6 +636,38 @@ const TraccarMap = ({
   return (
     <>
       <div ref={mapContainerRef} className="w-full h-full" />
+      {editMode && selectedGeofence && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-800 p-2 rounded-md shadow-[0_0_0_2px_rgba(0,0,0,0.1)] z-10 flex items-center gap-2">
+          <span className="text-xs font-medium pr-2 text-gray-900 dark:text-gray-100">
+            {selectedGeofence.name}
+          </span>
+          <button
+            onClick={applyGeofenceChanges}
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <p>Apply</p>}
+          </button>
+          <button
+            onClick={() => openDeleteDialog(selectedGeofence)}
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <p>Delete</p>}
+          </button>
+          <button
+            onClick={() => {
+              drawRef.current.deleteAll();
+              setSelectedGeofence(null);
+              updateGeofenceData(mapRef.current, geofencesRef.current);
+            }}
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
       <GeofenceNameDialog
         open={showNameDialog}
         onOpenChange={(open) => {
@@ -421,6 +679,27 @@ const TraccarMap = ({
         }}
         onSubmit={handleGeofenceCreate}
       />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Geofence</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{geofenceToDelete?.name}"? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleGeofenceDelete}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <p>Delete</p>}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
