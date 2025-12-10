@@ -4,6 +4,18 @@ import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+
+import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
   GEOFENCE_LABELS_LAYER_ID,
@@ -55,6 +67,10 @@ const TraccarMap = ({
   const [pendingFeature, setPendingFeature] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedGeofence, setSelectedGeofence] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [geofenceToDelete, setGeofenceToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -172,6 +188,8 @@ const TraccarMap = ({
 
     const feature = features.features[0];
 
+    setIsUpdating(true);
+
     try {
       const traccarArea = convertDrawFeatureToTraccarArea(feature);
       const response = await fetch(
@@ -208,15 +226,19 @@ const TraccarMap = ({
     } catch (error) {
       console.error("Error updating geofence:", error);
       alert("Error updating geofence: " + error.message);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleGeofenceDelete = async (geofenceId) => {
-    if (!confirm("Are you sure you want to delete this geofence?")) return;
+  const handleGeofenceDelete = async () => {
+    if (!geofenceToDelete) return;
+
+    setIsDeleting(true);
 
     try {
       const response = await fetch(
-        `/api/proxy/traccar/geofences/${geofenceId}`,
+        `/api/proxy/traccar/geofences/${geofenceToDelete.id}`,
         {
           method: "DELETE",
         }
@@ -225,7 +247,7 @@ const TraccarMap = ({
       if (response.ok) {
         if (mapRef.current && mapLoaded) {
           const updatedGeofences = geofencesRef.current.filter(
-            (g) => g.id !== geofenceId
+            (g) => g.id !== geofenceToDelete.id
           );
           geofencesRef.current = updatedGeofences;
           updateGeofenceData(mapRef.current, updatedGeofences);
@@ -242,7 +264,16 @@ const TraccarMap = ({
     } catch (error) {
       console.error("Error deleting geofence:", error);
       alert("Error deleting geofence: " + error.message);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      setGeofenceToDelete(null);
     }
+  };
+
+  const openDeleteDialog = (geofence) => {
+    setGeofenceToDelete(geofence);
+    setShowDeleteDialog(true);
   };
 
   const toggleEditMode = () => {
@@ -606,23 +637,23 @@ const TraccarMap = ({
     <>
       <div ref={mapContainerRef} className="w-full h-full" />
       {editMode && selectedGeofence && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white p-2 rounded-md shadow-[0_0_0_2px_rgba(0,0,0,0.1)] z-10 flex items-center gap-2">
-          <span className="text-xs font-medium pr-2 text-gray-900">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-800 p-2 rounded-md shadow-[0_0_0_2px_rgba(0,0,0,0.1)] z-10 flex items-center gap-2">
+          <span className="text-xs font-medium pr-2 text-gray-900 dark:text-gray-100">
             {selectedGeofence.name}
           </span>
           <button
             onClick={applyGeofenceChanges}
-            className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
-            Apply
+            {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <p>Apply</p>}
           </button>
           <button
-            onClick={() => {
-              handleGeofenceDelete(selectedGeofence.id);
-            }}
-            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+            onClick={() => openDeleteDialog(selectedGeofence)}
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Delete
+            {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <p>Delete</p>}
           </button>
           <button
             onClick={() => {
@@ -630,7 +661,8 @@ const TraccarMap = ({
               setSelectedGeofence(null);
               updateGeofenceData(mapRef.current, geofencesRef.current);
             }}
-            className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
+            disabled={isUpdating || isDeleting}
+            className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
@@ -647,6 +679,27 @@ const TraccarMap = ({
         }}
         onSubmit={handleGeofenceCreate}
       />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Geofence</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{geofenceToDelete?.name}"? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleGeofenceDelete}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <p>Delete</p>}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
