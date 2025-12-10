@@ -22,6 +22,11 @@ import GeofenceNameDialog from "./geofence-name-dialog";
 import RadiusMode from "./radiusMode";
 import { ExtendedMapboxDraw } from "./ExtendedMapboxDraw";
 import { addTrackLayers, updateTrackData } from "./trackLayers";
+import {
+  addTrackLayerHistory,
+  clearTrackHistory,
+  updateTrackDataHistory,
+} from "./trackLayerHistory";
 
 const TraccarMap = ({
   devices,
@@ -29,6 +34,7 @@ const TraccarMap = ({
   geofences,
   mapRef: externalMapRef,
   selectedDeviceId,
+  selectedTrackDetail,
   tracks: tracksData,
   isSelectingEvent,
 }) => {
@@ -41,6 +47,7 @@ const TraccarMap = ({
   const latestPositionsRef = useRef(positions);
   const latestDeviceFeaturesRef = useRef([]);
   const tracksRef = useRef(tracksData);
+  const trackHistoryRef = useRef(selectedTrackDetail);
   const hasFitBounds = useRef(false);
   const currentPopupRef = useRef(null);
   const focusedDeviceIdRef = useRef(null);
@@ -66,6 +73,10 @@ const TraccarMap = ({
   useEffect(() => {
     tracksRef.current = tracksData;
   }, [tracksData]);
+
+  useEffect(() => {
+    trackHistoryRef.current = selectedTrackDetail;
+  }, [selectedTrackDetail]);
 
   useEffect(() => {
     if (externalMapRef && mapRef.current) {
@@ -431,6 +442,8 @@ const TraccarMap = ({
       updateDeviceData();
       addTrackLayers(map, isDark);
       updateTrackData(map, tracksRef.current);
+      addTrackLayerHistory(map);
+      updateTrackDataHistory(map, trackHistoryRef.current, currentPopupRef);
       setMapLoaded(true);
     });
 
@@ -542,6 +555,20 @@ const TraccarMap = ({
     if (!mapLoaded || !mapRef.current) return;
     updateTrackData(mapRef.current, tracksRef.current);
   }, [tracksData, mapLoaded]);
+
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current || !selectedTrackDetail) {
+      clearTrackHistory(mapRef.current);
+      closePopup(currentPopupRef);
+      return;
+    }
+
+    updateTrackDataHistory(
+      mapRef.current,
+      trackHistoryRef.current,
+      currentPopupRef
+    );
+  }, [selectedTrackDetail, mapLoaded]);
 
   useEffect(() => {
     if (!selectedDeviceId || !mapRef.current || !mapLoaded) return;

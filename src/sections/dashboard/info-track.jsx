@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
@@ -43,6 +43,11 @@ const InfoTrack = ({
     onChangeDate?.(newDate);
     openPopover.onFalse();
   };
+
+  // INITIAL FETCH
+  useEffect(() => {
+    onRowClick?.(null);
+  }, []);
 
   return (
     <div className="w-full">
