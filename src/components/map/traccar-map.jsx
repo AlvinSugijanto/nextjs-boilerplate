@@ -200,6 +200,40 @@ const TraccarMap = ({
     }
   };
 
+  const handleGeofenceDelete = async (geofenceId) => {
+    if (!confirm("Are you sure you want to delete this geofence?")) return;
+
+    try {
+      const response = await fetch(
+        `/api/proxy/traccar/geofences/${geofenceId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        if (mapRef.current && mapLoaded) {
+          const updatedGeofences = geofencesRef.current.filter(
+            (g) => g.id !== geofenceId
+          );
+          geofencesRef.current = updatedGeofences;
+          updateGeofenceData(mapRef.current, updatedGeofences);
+        }
+        if (drawRef.current) {
+          drawRef.current.deleteAll();
+        }
+        setSelectedGeofence(null);
+      } else {
+        const error = await response.text();
+        console.error("Failed to delete geofence:", error);
+        alert("Failed to delete geofence: " + error);
+      }
+    } catch (error) {
+      console.error("Error deleting geofence:", error);
+      alert("Error deleting geofence: " + error.message);
+    }
+  };
+
   const toggleEditMode = () => {
     if (!drawRef.current || !mapRef.current) return;
 
@@ -547,13 +581,21 @@ const TraccarMap = ({
       {editMode && selectedGeofence && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white p-2 rounded-md shadow-[0_0_0_2px_rgba(0,0,0,0.1)] z-10 flex items-center gap-2">
           <span className="text-xs font-medium pr-2 text-gray-900">
-            Editing: {selectedGeofence.name}
+            {selectedGeofence.name}
           </span>
           <button
             onClick={applyGeofenceChanges}
             className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
           >
             Apply
+          </button>
+          <button
+            onClick={() => {
+              handleGeofenceDelete(selectedGeofence.id);
+            }}
+            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+          >
+            Delete
           </button>
           <button
             onClick={() => {
