@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  ChartLine,
   ChevronDown,
   ChevronUp,
   CircleDot,
@@ -9,6 +10,7 @@ import {
   EyeClosed,
   Flag,
   Gauge,
+  History,
   LoaderCircle,
   LocateFixed,
   Navigation,
@@ -26,6 +28,7 @@ import {
 import { intervalToDuration } from "date-fns";
 import { useBoolean } from "@/hooks/use-boolean";
 import axios from "axios";
+import { TrackSpeedChart } from "@/components/chart";
 
 const InfoTrackList = ({ data, loading, onChangeHide, onClickRoute }) => {
   const renderLoading = (
@@ -78,6 +81,7 @@ export default InfoTrackList;
 const InfoTrackListCard = ({ device, onChangeHide, onClickRoute }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHideTrack, setIsHideTrack] = useState(false);
+  const [showChartTrack, setShowChartTrack] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState(null);
 
   const toggleExpand = () => {
@@ -142,7 +146,9 @@ const InfoTrackListCard = ({ device, onChangeHide, onClickRoute }) => {
         {/* Trip Details - Collapsible */}
         {isExpanded && (
           <div className="flex flex-col">
-            {device.trips.length ? (
+            {showChartTrack ? (
+              <TrackSpeedChart data={device.tracks} />
+            ) : device.trips.length ? (
               device.trips.map((trip, index) => (
                 <InfoTrackListItem
                   key={index}
@@ -192,6 +198,16 @@ const InfoTrackListCard = ({ device, onChangeHide, onClickRoute }) => {
             </span>
 
             <div className="flex items-center gap-1">
+              {device?.tracks.length ? (
+                <button
+                  className={`p-1.5 hover:bg-primary rounded-full duration-150 cursor-pointer ${
+                    showChartTrack ? "bg-primary" : ""
+                  }`}
+                  onClick={() => setShowChartTrack(!showChartTrack)}
+                >
+                  <ChartLine className="w-3 h-3" />
+                </button>
+              ) : null}
               <button
                 className="p-1.5 hover:bg-primary rounded-full duration-150 cursor-pointer"
                 onClick={toggleTrack}
@@ -202,10 +218,10 @@ const InfoTrackListCard = ({ device, onChangeHide, onClickRoute }) => {
                   <Eye className="w-3 h-3" />
                 )}
               </button>
-              <Tooltip>
+              <Tooltip className="">
                 <TooltipTrigger asChild>
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full ml-1.5"
                     style={{
                       background: device?.color,
                     }}
@@ -257,77 +273,75 @@ const InfoTrackListItem = ({ device, trip, onClickRoute, selectedRouteId }) => {
 
   return (
     <>
-      <>
-        <div className="transition-colors shadow px-4 py-2 border">
-          <div className="mb-3 space-y-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold" style={{ fontSize: "11px" }}>
-                  {trip?.startTime
-                    ? fDateTime(trip?.startTime, "dd MMM yyyy HH:mm")
-                    : "-"}
-                </span>
-                <span className="text-gray-500" style={{ fontSize: "11px" }}>
-                  →
-                </span>
-                <span className="font-semibold" style={{ fontSize: "11px" }}>
-                  {trip?.endTime ? fDateTime(trip?.endTime, "HH:mm") : "-"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  className={`p-1.5 hover:bg-primary rounded-full duration-150 cursor-pointer ${
-                    selectedRouteId === trip.id ? "bg-primary" : ""
-                  }`}
-                  onClick={handleClickRoute}
-                  disabled={loadingFetch.value}
-                >
-                  {loadingFetch.value ? (
-                    <LoaderCircle className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Route className="w-3 h-3" />
-                  )}
-                </button>
-              </div>
+      <div className="transition-colors shadow px-4 py-2 border">
+        <div className="mb-3 space-y-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold" style={{ fontSize: "11px" }}>
+                {trip?.startTime
+                  ? fDateTime(trip?.startTime, "dd MMM yyyy HH:mm")
+                  : "-"}
+              </span>
+              <span className="text-gray-500" style={{ fontSize: "11px" }}>
+                →
+              </span>
+              <span className="font-semibold" style={{ fontSize: "11px" }}>
+                {trip?.endTime ? fDateTime(trip?.endTime, "HH:mm") : "-"}
+              </span>
             </div>
 
-            <div
-              className="flex items-center gap-3 text-muted-foreground"
-              style={{ fontSize: "10px" }}
-            >
-              <div className="flex items-center gap-1">
-                <Gauge className="w-[10px] h-[10px]" />
-                <span className="font-semibold">{distance} km</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-[10px] h-[10px]" />
-                <span className="font-semibold">{duration}</span>
-              </div>
+            <div className="flex items-center gap-1">
+              <button
+                className={`p-1.5 hover:bg-primary rounded-full duration-150 cursor-pointer ${
+                  selectedRouteId === trip.id ? "bg-primary" : ""
+                }`}
+                onClick={handleClickRoute}
+                disabled={loadingFetch.value}
+              >
+                {loadingFetch.value ? (
+                  <LoaderCircle className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Route className="w-3 h-3" />
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-col justify-between gap-1 min-h-12">
-            <div className="flex items-center gap-2">
-              <CircleDot className="w-4 h-4 text-green-500 dark:text-green-400" />
-
-              <p className="text-muted-foreground text-[11px] font-medium">
-                {trip?.startAddress || "-"}
-              </p>
+          <div
+            className="flex items-center gap-3 text-muted-foreground"
+            style={{ fontSize: "10px" }}
+          >
+            <div className="flex items-center gap-1">
+              <Gauge className="w-[10px] h-[10px]" />
+              <span className="font-semibold">{distance} km</span>
             </div>
-
-            <div className="h-full border-l-2 mx-1.5 flex-1" />
-
-            <div className="flex items-center gap-2">
-              <Flag className="w-4 h-4 text-red-500 dark:text-red-400" />
-
-              <p className="text-muted-foreground text-[11px] font-medium">
-                {trip?.endAddress || "-"}
-              </p>
+            <div className="flex items-center gap-1">
+              <Clock className="w-[10px] h-[10px]" />
+              <span className="font-semibold">{duration}</span>
             </div>
           </div>
         </div>
-      </>
+
+        <div className="flex flex-col justify-between gap-1 min-h-12">
+          <div className="flex items-center gap-2">
+            <CircleDot className="w-4 h-4 text-green-500 dark:text-green-400" />
+
+            <p className="text-muted-foreground text-[11px] font-medium">
+              {trip?.startAddress || "-"}
+            </p>
+          </div>
+
+          <div className="h-full border-l-2 mx-1.5 flex-1" />
+
+          <div className="flex items-center gap-2">
+            <Flag className="w-4 h-4 text-red-500 dark:text-red-400" />
+
+            <p className="text-muted-foreground text-[11px] font-medium">
+              {trip?.endAddress || "-"}
+            </p>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

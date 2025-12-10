@@ -9,6 +9,7 @@ function MapCard({
   geofences,
   mapRef,
   selectedDeviceId,
+  selectedTrackDetail,
   loading,
   tracks,
   isSelectingEvent,
@@ -31,6 +32,7 @@ function MapCard({
               geofences={geofences}
               mapRef={mapRef}
               selectedDeviceId={selectedDeviceId}
+              selectedTrackDetail={selectedTrackDetail}
               tracks={tracks}
               isSelectingEvent={isSelectingEvent}
             />
