@@ -428,7 +428,7 @@ const TraccarMap = ({
       customButtons: [
         {
           title: "Circle tool",
-          svg: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E",
+          svg: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3C/svg%3E",
           position: 0,
           action: (drawInstance) => {
             drawInstance.changeMode("draw_radius");
@@ -437,7 +437,7 @@ const TraccarMap = ({
         {
           title: "Edit geofences",
           svg:
-            "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='2'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E",
+            "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E",
           position: 3,
           action: () => {
             toggleEditMode();
