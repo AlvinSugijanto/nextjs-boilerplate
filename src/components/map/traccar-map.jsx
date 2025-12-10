@@ -17,6 +17,7 @@ import {
   updatePopupContent,
 } from "./popupUtils";
 import { convertDrawFeatureToTraccarArea } from "./drawUtils";
+import { parseGeofence } from "./geofenceParser";
 import GeofenceNameDialog from "./geofence-name-dialog";
 import RadiusMode from "./radiusMode";
 import { ExtendedMapboxDraw } from "./ExtendedMapboxDraw";
@@ -45,7 +46,8 @@ const TraccarMap = ({
   const focusedDeviceIdRef = useRef(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [pendingFeature, setPendingFeature] = useState(null);
-
+  const [editMode, setEditMode] = useState(false);
+  const [selectedGeofence, setSelectedGeofence] = useState(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -151,6 +153,123 @@ const TraccarMap = ({
     }
   };
 
+  const applyGeofenceChanges = async () => {
+    if (!drawRef.current || !selectedGeofence) return;
+
+    const features = drawRef.current.getAll();
+    if (features.features.length === 0) return;
+
+    const feature = features.features[0];
+
+    try {
+      const traccarArea = convertDrawFeatureToTraccarArea(feature);
+      const response = await fetch(
+        `/api/proxy/traccar/geofences/${selectedGeofence.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...selectedGeofence,
+            area: traccarArea,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const updatedGeofence = await response.json();
+        if (mapRef.current && mapLoaded) {
+          const updatedGeofences = geofencesRef.current.map((g) =>
+            g.id === updatedGeofence.id ? updatedGeofence : g
+          );
+          geofencesRef.current = updatedGeofences;
+          updateGeofenceData(mapRef.current, updatedGeofences);
+        }
+
+        drawRef.current.deleteAll();
+        setSelectedGeofence(null);
+      } else {
+        const error = await response.text();
+        console.error("Failed to update geofence:", error);
+        alert("Failed to update geofence: " + error);
+      }
+    } catch (error) {
+      console.error("Error updating geofence:", error);
+      alert("Error updating geofence: " + error.message);
+    }
+  };
+
+  const toggleEditMode = () => {
+    if (!drawRef.current || !mapRef.current) return;
+
+    setEditMode((prevEditMode) => {
+      if (prevEditMode) {
+        drawRef.current.deleteAll();
+        setSelectedGeofence(null);
+        updateGeofenceData(mapRef.current, geofencesRef.current);
+        return false;
+      } else {
+        drawRef.current.changeMode("simple_select");
+        return true;
+      }
+    });
+  };
+
+  const loadGeofenceForEditing = (geofence) => {
+    if (!drawRef.current || !mapRef.current) return;
+
+    const geometryData = parseGeofence(geofence.area);
+    if (!geometryData) {
+      console.error("Failed to parse geofence geometry");
+      return;
+    }
+
+    drawRef.current.deleteAll();
+
+    // hapus geofence yang lagi diedit biar gak duplikat
+    const filteredGeofences = geofencesRef.current.filter(
+      (g) => g.id !== geofence.id
+    );
+    updateGeofenceData(mapRef.current, filteredGeofences);
+
+    const feature = {
+      type: "Feature",
+      properties: {
+        id: geofence.id,
+      },
+      geometry: {
+        type: geometryData.type,
+        coordinates: geometryData.coordinates,
+      },
+    };
+
+    const featureIds = drawRef.current.add(feature);
+
+    if (featureIds && featureIds.length > 0) {
+      drawRef.current.changeMode("direct_select", {
+        featureId: featureIds[0],
+      });
+
+      setSelectedGeofence(geofence);
+
+      // Zoom to the geofence
+      const bounds = new mapboxgl.LngLatBounds();
+      if (geometryData.type === "Polygon") {
+        geometryData.coordinates[0].forEach((coord) => bounds.extend(coord));
+      } else if (geometryData.type === "LineString") {
+        geometryData.coordinates.forEach((coord) => bounds.extend(coord));
+      }
+
+      if (!bounds.isEmpty()) {
+        mapRef.current.fitBounds(bounds, {
+          padding: 100,
+          duration: 1000,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
@@ -239,6 +358,15 @@ const TraccarMap = ({
             drawInstance.changeMode("draw_radius");
           },
         },
+        {
+          title: "Edit geofences",
+          svg:
+            "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23404040' stroke-width='2'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E",
+          position: 3,
+          action: () => {
+            toggleEditMode();
+          },
+        },
       ],
     });
 
@@ -285,6 +413,51 @@ const TraccarMap = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!drawRef.current) return;
+
+    const container = drawRef.current._container;
+    if (!container) return;
+
+    const editButton = container.querySelector('[title="Edit geofences"]');
+    if (editButton) {
+      if (editMode) {
+        editButton.classList.add('active');
+      } else {
+        editButton.classList.remove('active');
+      }
+    }
+  }, [editMode]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+
+    const handleGeofenceClick = (e) => {
+      if (!editMode) return;
+
+      const features = mapRef.current.queryRenderedFeatures(e.point, {
+        layers: ["geofences-fill", "geofences-outline"],
+      });
+
+      if (features.length > 0) {
+        const geofenceId = features[0].properties.id;
+        const geofence = geofencesRef.current.find((g) => g.id === geofenceId);
+
+        if (geofence) {
+          loadGeofenceForEditing(geofence);
+        }
+      }
+    };
+
+    mapRef.current.on("click", handleGeofenceClick);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off("click", handleGeofenceClick);
+      }
+    };
+  }, [editMode, mapLoaded]);
 
   // Update map style when theme changes
   useEffect(() => {
@@ -371,6 +544,29 @@ const TraccarMap = ({
   return (
     <>
       <div ref={mapContainerRef} className="w-full h-full" />
+      {editMode && selectedGeofence && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white p-2 rounded-md shadow-[0_0_0_2px_rgba(0,0,0,0.1)] z-10 flex items-center gap-2">
+          <span className="text-xs font-medium pr-2 text-gray-900">
+            Editing: {selectedGeofence.name}
+          </span>
+          <button
+            onClick={applyGeofenceChanges}
+            className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
+          >
+            Apply
+          </button>
+          <button
+            onClick={() => {
+              drawRef.current.deleteAll();
+              setSelectedGeofence(null);
+              updateGeofenceData(mapRef.current, geofencesRef.current);
+            }}
+            className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
       <GeofenceNameDialog
         open={showNameDialog}
         onOpenChange={(open) => {

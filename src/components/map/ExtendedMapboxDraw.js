@@ -43,6 +43,11 @@ export class ExtendedMapboxDraw extends MapboxDraw {
     }
 
     button.addEventListener("click", () => {
+      if (config.title === "Edit geofences") {
+        config.action();
+        return;
+      }
+
       const isActive = button.classList.contains("active");
 
       if (isActive) {
