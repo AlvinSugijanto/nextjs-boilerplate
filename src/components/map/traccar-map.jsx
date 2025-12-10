@@ -627,7 +627,8 @@ const TraccarMap = ({
           mapRef.current,
           deviceId,
           latestDeviceFeaturesRef.current,
-          currentPopupRef
+          currentPopupRef,
+          focusedDeviceIdRef
         );
       }
     }, 1600);
