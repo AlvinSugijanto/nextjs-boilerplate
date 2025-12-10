@@ -37,6 +37,7 @@ export default function TableList({
   setSorting,
   sorting,
   showPagination = true,
+  paginationType = "large",
   rowClassName = "",
   rowClassNameProps = () => ({}),
   onRowClick = null,
@@ -154,84 +155,183 @@ export default function TableList({
         </TableBody>
       </Table>
 
-      {showPagination && (
-        <div className="flex items-center justify-between px-4 py-2 border-t">
-          <div className="text-muted-foreground hidden flex-1 text-xs lg:flex">
-            {table.getFilteredRowModel().rows.length} Results
+      {paginationType === "small" ? (
+        <PaginationSmall table={table} />
+      ) : (
+        showPagination && (
+          <div className="flex items-center justify-between px-4 py-2 border-t">
+            <div className="text-muted-foreground hidden flex-1 text-xs lg:flex">
+              {table.getFilteredRowModel().rows.length} Results
+            </div>
+            <div className="flex w-full items-center gap-8 lg:w-fit">
+              <div className="hidden items-center gap-2 lg:flex">
+                <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                  Rows per page
+                </Label>
+                <Select
+                  value={`${table.getState().pagination.pageSize}`}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value));
+                  }}
+                >
+                  <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                    <SelectValue
+                      placeholder={table.getState().pagination.pageSize}
+                    />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[5, 10, 25, 50].map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex w-fit items-center justify-center text-sm font-medium">
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </div>
+              <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <Iconify icon="material-symbols:first-page" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8"
+                  size="icon"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <Iconify icon="weui:arrow-filled" className="rotate-180" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="size-8"
+                  size="icon"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <Iconify icon="weui:arrow-filled" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden size-8 lg:flex"
+                  size="icon"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <Iconify icon="material-symbols:last-page" />
+                </Button>
+              </div>
+            </div>
           </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[5, 10, 25, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <Iconify icon="material-symbols:first-page" />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <Iconify icon="weui:arrow-filled" className="rotate-180" />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <Iconify icon="weui:arrow-filled" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <Iconify icon="material-symbols:last-page" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        )
       )}
     </div>
   );
 }
+
+const PaginationSmall = ({ table }) => {
+  const pageCount = table.getPageCount();
+  const currentPage = table.getState().pagination.pageIndex;
+
+  // Generate smart pagination numbers
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 7; // Maximum number of page buttons to show
+
+    if (pageCount <= maxVisible) {
+      // Show all pages if total is small
+      return Array.from({ length: pageCount }, (_, i) => i);
+    }
+
+    // Always show first page
+    pages.push(0);
+
+    if (currentPage <= 3) {
+      // Near the beginning
+      for (let i = 1; i < 5; i++) pages.push(i);
+      pages.push("ellipsis");
+      pages.push(pageCount - 1);
+    } else if (currentPage >= pageCount - 4) {
+      // Near the end
+      pages.push("ellipsis");
+      for (let i = pageCount - 5; i < pageCount - 1; i++) pages.push(i);
+      pages.push(pageCount - 1);
+    } else {
+      // In the middle
+      pages.push("ellipsis");
+      pages.push(currentPage - 1);
+      pages.push(currentPage);
+      pages.push(currentPage + 1);
+      pages.push("ellipsis");
+      pages.push(pageCount - 1);
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
+  return (
+    <div className="flex items-center justify-end px-2 py-4 border-t">
+      <div className="flex items-center gap-1">
+        {/* Previous Button */}
+        <button
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="px-2 py-1 text-[10px] border rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+
+        {/* Page Numbers */}
+        {pageNumbers.map((page, idx) => {
+          if (page === "ellipsis") {
+            return (
+              <span
+                key={`ellipsis-${idx}`}
+                className="px-1 text-[10px] text-gray-500"
+              >
+                ...
+              </span>
+            );
+          }
+
+          return (
+            <button
+              key={page}
+              onClick={() => table.setPageIndex(page)}
+              className={`px-2 py-1 text-[10px] border rounded hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                currentPage === page
+                  ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+                  : ""
+              }`}
+            >
+              {page + 1}
+            </button>
+          );
+        })}
+
+        {/* Next Button */}
+        <button
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="px-2 py-1 text-[10px] border rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};

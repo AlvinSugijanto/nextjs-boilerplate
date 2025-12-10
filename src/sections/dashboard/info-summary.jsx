@@ -10,6 +10,7 @@ import { TableList } from "@/components/table";
 
 const InfoSummary = ({
   devices = [],
+  selectedDeviceIds = [],
   onChangeDateRange,
   onChangeDevices,
   onRowClick,
@@ -98,6 +99,7 @@ const InfoSummary = ({
             label: name,
             value: id,
           }))}
+          defaultValue={selectedDeviceIds}
           className="w-full h-full"
           placeholder="Select Devices..."
           maxViewSelected={2}
@@ -111,6 +113,7 @@ const InfoSummary = ({
               to={to}
               onChange={onChangeDateRange}
               showDescription
+              disabled={{ after: new Date() }}
             />
           </div>
 

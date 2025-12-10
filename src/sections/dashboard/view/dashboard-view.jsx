@@ -38,6 +38,7 @@ const DashboardView = () => {
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [deviceTracks, setDeviceTracks] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [eventTypes, setEventTypes] = useState([]);
   const [positions, setPositions] = useState([]);
@@ -380,6 +381,10 @@ const DashboardView = () => {
     setSelectedDeviceId(device.id);
   }, []);
 
+  const handleChangeInfoPosition = useCallback((value) => {
+    console.log({ value });
+  }, []);
+
   return (
     <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
       {/* Left Column */}
@@ -413,6 +418,8 @@ const DashboardView = () => {
             width={bottomRowRef.current?.offsetWidth}
             selectedDeviceId={selectedDeviceId}
             positions={positions}
+            onTrackChanges={setDeviceTracks}
+            onChangePosition={handleChangeInfoPosition}
           />
         </div>
       </div>
@@ -437,6 +444,7 @@ const DashboardView = () => {
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
             loading={loadingMap}
+            tracks={deviceTracks}
             isSelectingEvent={isSelectingEvent}
           />
         </div>
