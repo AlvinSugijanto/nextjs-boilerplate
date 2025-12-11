@@ -348,18 +348,18 @@ const DashboardView = () => {
   };
 
   const handleDeviceAdd = (newDevice) => {
-		setDevices((prev) => [...prev, newDevice]);
-	};
+    setDevices((prev) => [...prev, newDevice]);
+  };
 
-	const handleDeviceUpdate = (updatedDevice) => {
-		setDevices((prev) =>
-			prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
-		);
-	};
+  const handleDeviceUpdate = (updatedDevice) => {
+    setDevices((prev) =>
+      prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
+    );
+  };
 
-	const handleDeviceDelete = (deviceId) => {
-		setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-	};
+  const handleDeviceDelete = (deviceId) => {
+    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+  };
 
   const fetchEventTypes = useCallback(async () => {
     loadingEventTypes.onTrue();
@@ -404,7 +404,7 @@ const DashboardView = () => {
       {/* Left Column */}
       <div
         ref={leftColumnRef}
-        className="flex-shrink-0 flex flex-col gap-1 h-full overflow-hidden"
+        className="shrink-0 flex flex-col gap-1 h-full overflow-hidden"
       >
         {/* Top Left Panel */}
         <div ref={topRowRef} className="min-h-[150px]">
@@ -422,7 +422,7 @@ const DashboardView = () => {
         {/* Horizontal Resize Handle */}
         <div
           onMouseDown={handleVerticalResize}
-          className="h-0.5 cursor-row-resize group flex items-center justify-center relative flex-shrink-0"
+          className="h-0.5 cursor-row-resize group flex items-center justify-center relative shrink-0"
         >
           <div className="absolute inset-x-0 -inset-y-4 z-10"></div>
           <div className="h-1 min-w-[30px] max-w-[100px] bg-gray-200/0 dark:bg-gray-700/0 group-hover:bg-primary dark:group-hover:bg-primary/50 transition-all duration-200 rounded-full group-hover:shadow-lg group-hover:shadow-blue-500/50"></div>
@@ -444,10 +444,10 @@ const DashboardView = () => {
       {/* Vertical Resize Handle */}
       <div
         onMouseDown={handleHorizontalResize}
-        className="w-1 cursor-col-resize group flex items-center justify-center relative flex-shrink-0"
+        className="w-1 cursor-col-resize group flex items-center justify-center relative shrink-0"
       >
         <div className="absolute inset-y-0 -inset-x-4 z-10"></div>
-        <div className="w-1 min-h-[40px] max-h-[100px] bg-gray-200/0 dark:bg-gray-700/0 group-hover:bg-primary dark:group-hover:bg-primary/50 transition-all duration-200 rounded-full group-hover:shadow-lg group-hover:shadow-blue-500/50"></div>
+        <div className="w-1 min-h-10 max-h-[100px] bg-gray-200/0 dark:bg-gray-700/0 group-hover:bg-primary dark:group-hover:bg-primary/50 transition-all duration-200 rounded-full group-hover:shadow-lg group-hover:shadow-blue-500/50"></div>
       </div>
 
       {/* Right Column */}
@@ -470,7 +470,7 @@ const DashboardView = () => {
         {/* Horizontal Resize Handle for Right Column */}
         <div
           onMouseDown={handleVerticalResizeRight}
-          className="h-0.5 cursor-row-resize group flex items-center justify-center relative flex-shrink-0"
+          className="h-0.5 cursor-row-resize group flex items-center justify-center relative shrink-0"
         >
           <div className="absolute inset-x-0 -inset-y-4 z-10"></div>
           <div className="h-1 min-w-[30px] max-w-[100px] bg-gray-200/0 dark:bg-gray-700/0 group-hover:bg-primary dark:group-hover:bg-primary/50 transition-all duration-200 rounded-full group-hover:shadow-lg group-hover:shadow-blue-500/50"></div>

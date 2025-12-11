@@ -20,11 +20,9 @@ const ReportView = () => {
   const openDrawer = useBoolean();
   const isLoading = useBoolean();
 
-  const { data: vehicle } = useGetDataDb("/api/collection/vehicle", {
+  const { data: vehicleData } = useGetDataDb("/api/collection/vehicle", {
     type: "getfulllist",
   });
-
-  console.log(vehicle);
 
   const [sorting, setSorting] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
@@ -333,6 +331,7 @@ const ReportView = () => {
             // setEditData(null);
           }}
           geoFencesData={geoFencesData}
+          vehicleData={vehicleData}
           // editData={editData}
         />
       </Drawer>
