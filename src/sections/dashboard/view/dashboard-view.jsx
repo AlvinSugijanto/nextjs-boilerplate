@@ -303,14 +303,6 @@ const DashboardView = () => {
             return Array.from(positionMap.values());
           });
         }
-
-        if (message.geofences) {
-          setGeofences((prev) => {
-            const geofenceMap = new Map(prev.map((g) => [g.id, g]));
-            message.geofences.forEach((g) => geofenceMap.set(g.id, g));
-            return Array.from(geofenceMap.values());
-          });
-        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -348,18 +340,18 @@ const DashboardView = () => {
   };
 
   const handleDeviceAdd = (newDevice) => {
-		setDevices((prev) => [...prev, newDevice]);
-	};
+    setDevices((prev) => [...prev, newDevice]);
+  };
 
-	const handleDeviceUpdate = (updatedDevice) => {
-		setDevices((prev) =>
-			prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
-		);
-	};
+  const handleDeviceUpdate = (updatedDevice) => {
+    setDevices((prev) =>
+      prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
+    );
+  };
 
-	const handleDeviceDelete = (deviceId) => {
-		setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-	};
+  const handleDeviceDelete = (deviceId) => {
+    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+  };
 
   const fetchEventTypes = useCallback(async () => {
     loadingEventTypes.onTrue();
