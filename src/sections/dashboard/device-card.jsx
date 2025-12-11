@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { faker } from "@faker-js/faker";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import {
@@ -16,9 +14,12 @@ import {
 } from "@/components/ui/tooltip";
 import { TableList } from "@/components/table";
 import { fDateTime } from "@/utils/format-time";
+import { useBoolean } from "@/hooks/use-boolean";
+import { DeviceAddDialog } from "./device-add-dialog";
 
 function DeviceCard({
   devices = [],
+  setDevices,
   onDeviceClick,
   loading = false,
   selectedDeviceId,
@@ -31,6 +32,8 @@ function DeviceCard({
       desc: false,
     },
   ]);
+
+  const isOpen = useBoolean();
 
   // memo
   const filteredData = useMemo(() => {
@@ -98,60 +101,74 @@ function DeviceCard({
   }, [devices]);
 
   return (
-    <Card className="h-full p-4 overflow-hidden flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        {/* search input */}
-        <InputGroup>
-          <InputGroupInput
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="p-0"
-          />
-          <InputGroupAddon>
-            <Search className="w-3! h-3!" />
-          </InputGroupAddon>
-        </InputGroup>
+    <>
+      <Card className="h-full p-4 overflow-hidden flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          {/* search input */}
+          <InputGroup>
+            <InputGroupInput
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="p-0"
+            />
+            <InputGroupAddon>
+              <Search className="w-3! h-3!" />
+            </InputGroupAddon>
+          </InputGroup>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Submit">
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Add a new device</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Submit"
+                onClick={isOpen.onTrue}
+              >
+                <Plus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add a new device</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-      <div className="overflow-auto max-h-full flex-1">
-        <TableList
-          key={filteredData.length}
-          columns={columns}
-          data={filteredData}
-          setSorting={setSorting}
-          sorting={sorting}
-          showPagination={false}
-          pageSize={filteredData.length}
-          rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-          rowClassNameProps={(device) =>
-            device.id === selectedDeviceId ? "bg-gray-200 dark:bg-gray-700" : ""
-          }
-          onRowClick={(device) => {
-            if (onDeviceClick) {
-              onDeviceClick(device);
+        <div className="overflow-auto max-h-full flex-1">
+          <TableList
+            key={filteredData.length}
+            columns={columns}
+            data={filteredData}
+            setSorting={setSorting}
+            sorting={sorting}
+            showPagination={false}
+            pageSize={filteredData.length}
+            rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+            rowClassNameProps={(device) =>
+              device.id === selectedDeviceId
+                ? "bg-gray-200 dark:bg-gray-700"
+                : ""
             }
-          }}
-          loading={loading}
-          tableProps={{
-            initialState: {
-              pagination: { pageIndex: 0, pageSize: filteredData.length },
-            },
-          }}
-        />
-      </div>
-    </Card>
+            onRowClick={(device) => {
+              if (onDeviceClick) {
+                onDeviceClick(device);
+              }
+            }}
+            loading={loading}
+            tableProps={{
+              initialState: {
+                pagination: { pageIndex: 0, pageSize: filteredData.length },
+              },
+            }}
+          />
+        </div>
+      </Card>
+      <DeviceAddDialog
+        open={isOpen.value}
+        onClose={isOpen.onFalse}
+        setDevices={setDevices}
+      />
+    </>
   );
 }
 

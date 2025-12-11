@@ -397,6 +397,7 @@ const DashboardView = () => {
         <div ref={topRowRef} className="min-h-[150px]">
           <DeviceCard
             devices={devices}
+            setDevices={setDevices}
             selectedDeviceId={selectedDeviceId}
             onDeviceClick={handleDeviceClick}
             loading={loadingDevices.value}
