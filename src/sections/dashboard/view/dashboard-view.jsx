@@ -245,7 +245,6 @@ const DashboardView = () => {
   };
 
   const fetchInitialData = useCallback(async () => {
-    console.log("position changed");
     try {
       const positionsResponse = await fetch("/api/proxy/traccar/positions");
       if (positionsResponse.ok) {
