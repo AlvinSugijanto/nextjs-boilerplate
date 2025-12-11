@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Search, Trash } from "lucide-react";
+import { Edit, Play, Plus, Search, Trash } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -17,6 +17,7 @@ import { fDateTime } from "@/utils/format-time";
 import { useBoolean } from "@/hooks/use-boolean";
 import { DeviceAddDialog } from "./device-add-dialog";
 import { DeviceEditDialog } from "./device-edit-dialog";
+import { DeviceSimulationDialog } from "./device-simulation-dialog";
 import ConfirmDialog from "@/components/dialog/dialog-confirm";
 import { useAuth } from "@/context/auth-context";
 import axios from "axios";
@@ -32,12 +33,13 @@ function DeviceCard({
   onDeviceDelete,
 }) {
   const { token } = useAuth();
-  // state
+
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([{ id: "name", desc: false }]);
   const [selectedDevice, setSelectedDevice] = useState(null);
 
   const addDeviceDialog = useBoolean();
+  const playSimulationDialog = useBoolean();
   const editDeviceDialog = useBoolean();
   const deleteDeviceDialog = useBoolean();
 
@@ -202,6 +204,21 @@ function DeviceCard({
               <p>Add a new device</p>
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Submit"
+                onClick={playSimulationDialog.onTrue}
+              >
+                <Play />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Play simulation</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="overflow-auto max-h-full flex-1">
@@ -243,6 +260,12 @@ function DeviceCard({
         onClose={editDeviceDialog.onFalse}
         device={selectedDevice}
         onDeviceUpdate={onDeviceUpdate}
+      />
+      <DeviceSimulationDialog
+        open={playSimulationDialog.value}
+        onClose={playSimulationDialog.onFalse}
+        devices={devices}
+        selectedDeviceId={selectedDeviceId}
       />
       <ConfirmDialog
         open={deleteDeviceDialog.value}
