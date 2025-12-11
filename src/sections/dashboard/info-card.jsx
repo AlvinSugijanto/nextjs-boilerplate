@@ -303,7 +303,7 @@ function InfoCard({
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="text-xs"
+                className="text-xs rounded-lg"
               >
                 {tab.title}
               </TabsTrigger>

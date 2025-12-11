@@ -387,7 +387,7 @@ const DashboardView = () => {
   }, []);
 
   return (
-    <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
+    <div className="h-full flex gap-1 max-h-[calc(100vh-100px)]">
       {/* Left Column */}
       <div
         ref={leftColumnRef}
