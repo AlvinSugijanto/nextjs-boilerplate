@@ -27,7 +27,9 @@ function DeviceCard({
   onDeviceClick,
   loading = false,
   selectedDeviceId,
-  onRefresh,
+  onDeviceAdd,
+  onDeviceUpdate,
+  onDeviceDelete,
 }) {
   const { token } = useAuth();
   // state
@@ -55,7 +57,7 @@ function DeviceCard({
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Device deleted successfully");
-      onRefresh();
+      onDeviceDelete(selectedDevice.id);
       deleteDeviceDialog.onFalse();
     } catch (error) {
       console.error(error);
@@ -233,13 +235,13 @@ function DeviceCard({
       <DeviceAddDialog
         open={addDeviceDialog.value}
         onClose={addDeviceDialog.onFalse}
-        onRefresh={onRefresh}
+        onDeviceAdd={onDeviceAdd}
       />
       <DeviceEditDialog
         open={editDeviceDialog.value}
         onClose={editDeviceDialog.onFalse}
         device={selectedDevice}
-        onRefresh={onRefresh}
+        onDeviceUpdate={onDeviceUpdate}
       />
       <ConfirmDialog
         open={deleteDeviceDialog.value}

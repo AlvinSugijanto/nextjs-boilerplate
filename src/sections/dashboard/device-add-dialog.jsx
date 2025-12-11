@@ -20,7 +20,7 @@ const schema = Yup.object().shape({
   uniqueId: Yup.string().required("Identifier is required"),
 });
 
-export function DeviceAddDialog({ open, onClose, onRefresh }) {
+export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
   const { token } = useAuth();
 
   const methods = useForm({
@@ -39,13 +39,13 @@ export function DeviceAddDialog({ open, onClose, onRefresh }) {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post("/api/proxy/traccar/devices", data, {
+      const response = await axios.post("/api/proxy/traccar/devices", data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       toast.success("Device added successfully");
-      onRefresh();
+      onDeviceAdd(response.data);
       reset();
       onClose();
     } catch (error) {

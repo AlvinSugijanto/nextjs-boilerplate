@@ -332,7 +332,7 @@ const DashboardView = () => {
     };
   }, []);
 
-  const fetchDevices = useCallback(async () => {
+  const fetchDevices = async () => {
     loadingDevices.onTrue();
 
     try {
@@ -346,7 +346,21 @@ const DashboardView = () => {
       loadingDevices.onFalse();
       loadingEvents.onFalse();
     }
-  }, []);
+  };
+
+  const handleDeviceAdd = (newDevice) => {
+		setDevices((prev) => [...prev, newDevice]);
+	};
+
+	const handleDeviceUpdate = (updatedDevice) => {
+		setDevices((prev) =>
+			prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
+		);
+	};
+
+	const handleDeviceDelete = (deviceId) => {
+		setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+	};
 
   const fetchEventTypes = useCallback(async () => {
     loadingEventTypes.onTrue();
@@ -400,7 +414,9 @@ const DashboardView = () => {
             selectedDeviceId={selectedDeviceId}
             onDeviceClick={handleDeviceClick}
             loading={loadingDevices.value}
-            onRefresh={fetchDevices}
+            onDeviceAdd={handleDeviceAdd}
+            onDeviceUpdate={handleDeviceUpdate}
+            onDeviceDelete={handleDeviceDelete}
           />
         </div>
 

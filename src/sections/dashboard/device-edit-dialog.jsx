@@ -22,7 +22,7 @@ const schema = Yup.object().shape({
   uniqueId: Yup.string().required("Identifier is required"),
 });
 
-export function DeviceEditDialog({ open, onClose, device, onRefresh }) {
+export function DeviceEditDialog({ open, onClose, device, onDeviceUpdate }) {
   const { token } = useAuth();
 
   const methods = useForm({
@@ -50,13 +50,17 @@ export function DeviceEditDialog({ open, onClose, device, onRefresh }) {
 
   const onSubmit = async (data) => {
     try {
-      await axios.put(`/api/proxy/traccar/devices/${device.id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.put(
+        `/api/proxy/traccar/devices/${device.id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       toast.success("Device updated successfully");
-      onRefresh();
+      onDeviceUpdate(response.data);
       onClose();
     } catch (error) {
       console.error(error);
