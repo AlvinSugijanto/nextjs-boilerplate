@@ -93,7 +93,7 @@ const InfoSummary = ({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-2 bg-muted p-2 rounded-md">
+      <div className="flex flex-col gap-2 bg-muted p-2 rounded-b-md">
         <MultiSelect
           options={devices.map(({ id, name }) => ({
             label: name,

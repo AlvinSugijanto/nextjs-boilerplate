@@ -51,7 +51,7 @@ const InfoTrack = ({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-2 bg-muted p-2 rounded-md">
+      <div className="flex flex-col gap-2 bg-muted p-2 rounded-b-md">
         <div className="flex items-center gap-2 flex-col flex-wrap">
           <MultiSelect
             options={devices.map(({ id, name }) => ({
