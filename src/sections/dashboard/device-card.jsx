@@ -42,7 +42,8 @@ function DeviceCard({
   const deleteDeviceDialog = useBoolean();
 
   const handleEdit = (device) => {
-    setSelectedDevice(device);
+    const originalDevice = devices.find((d) => d.id === device.id);
+    setSelectedDevice(originalDevice);
     editDeviceDialog.onTrue();
   };
 

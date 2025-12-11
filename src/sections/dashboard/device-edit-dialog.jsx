@@ -49,10 +49,11 @@ export function DeviceEditDialog({ open, onClose, device, onDeviceUpdate }) {
   }, [device, reset]);
 
   const onSubmit = async (data) => {
+    const updatedDevice = { ...device, ...data };
     try {
       const response = await axios.put(
         `/api/proxy/traccar/devices/${device.id}`,
-        data,
+        updatedDevice,
         {
           headers: {
             Authorization: `Bearer ${token}`,
