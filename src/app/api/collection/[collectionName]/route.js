@@ -63,7 +63,8 @@ export async function GET(req, { params }) {
 
 // POST Method
 export async function POST(req, { params }) {
-  const collection = params.collectionName;
+  const { collectionName } = await params;
+  const collection = collectionName;
 
   const cookie = req.headers.get("cookie");
   const token = getAccessToken(cookie);
