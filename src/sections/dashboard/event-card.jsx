@@ -180,7 +180,7 @@ function EventCard({
   }, [selectedDeviceId]);
 
   return (
-    <Card className="h-full p-0">
+    <Card className="h-full p-0 overflow-hidden">
       <div className="px-4 py-3 overflow-auto">
         <div className="h-full">
           <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap mb-4">
