@@ -1,89 +1,46 @@
 // Referensi dari https://gist.github.com/chriswhong/694779bc1f1e5d926e47bab7205fa559
 
-import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import * as turf from '@turf/turf';
 
-const RadiusMode = { ...MapboxDraw.modes.draw_line_string };
+const RadiusMode = {};
 
-function createVertex(parentId, coordinates, path, selected) {
-  return {
-    type: 'Feature',
-    properties: {
-      meta: 'vertex',
-      parent: parentId,
-      coord_path: path,
-      active: selected ? 'true' : 'false',
-    },
-    geometry: {
-      type: 'Point',
-      coordinates,
-    },
+// Setup when mode is activated
+RadiusMode.onSetup = function(opts) {
+  const state = {
+    line: this.newFeature({
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: []
+      }
+    }),
+    currentVertexPosition: 0
   };
-}
 
-// Create a circle-like polygon given a center point and radius
-function createGeoJSONCircle(center, radiusInMeters, parentId, points = 64) {
-  const options = { steps: points, units: 'meters' };
-  const circle = turf.circle(center, radiusInMeters, options);
+  this.addFeature(state.line);
+  this.clearSelectedFeatures();
+  this.updateUIClasses({ mouse: 'add' });
+  this.activateUIButton();
 
-  return {
-    type: 'Feature',
-    geometry: circle.geometry,
-    properties: {
-      parent: parentId,
-      meta: 'radius',
-    },
-  };
-}
+  // Disable double click zoom
+  this.setActionableState({
+    trash: false,
+    combineFeatures: false,
+    uncombineFeatures: false
+  });
 
-function getDisplayMeasurements(radiusInMeters) {
-  let metricUnits = 'm';
-  let metricMeasurement = radiusInMeters;
-
-  if (radiusInMeters >= 1000) {
-    metricMeasurement = radiusInMeters / 1000;
-    metricUnits = 'km';
-  }
-
-  const feet = radiusInMeters * 3.28084;
-  let standardUnits = 'ft';
-  let standardMeasurement = feet;
-
-  if (feet >= 5280) {
-    standardMeasurement = feet / 5280;
-    standardUnits = 'mi';
-  }
-
-  return {
-    metric: `${metricMeasurement.toFixed(2)} ${metricUnits}`,
-    standard: `${standardMeasurement.toFixed(2)} ${standardUnits}`,
-  };
-}
-
-const doubleClickZoom = {
-  enable: (ctx) => {
-    setTimeout(() => {
-      if (
-        !ctx.map ||
-        !ctx.map.doubleClickZoom ||
-        !ctx._ctx ||
-        !ctx._ctx.store ||
-        !ctx._ctx.store.getInitialConfigValue
-      )
-        return;
-      if (!ctx._ctx.store.getInitialConfigValue('doubleClickZoom')) return;
-      ctx.map.doubleClickZoom.enable();
-    }, 0);
-  },
+  return state;
 };
 
-// Override clickAnywhere to end drawing after second click
-RadiusMode.clickAnywhere = function(state, e) {
+// First click: set center point
+// Second click: confirm radius and finish
+RadiusMode.onClick = function(state, e) {
   // First click: set center point
   if (state.currentVertexPosition === 0) {
     state.line.updateCoordinate(0, e.lngLat.lng, e.lngLat.lat);
     state.currentVertexPosition = 1;
-    state.line.addCoordinate(1, e.lngLat.lng, e.lngLat.lat);
+    state.line.updateCoordinate(1, e.lngLat.lng, e.lngLat.lat);
     return null;
   }
 
@@ -96,27 +53,50 @@ RadiusMode.clickAnywhere = function(state, e) {
   return null;
 };
 
-// Override onMouseMove to update the radius point dynamically
+// Update the radius point dynamically as mouse moves
 RadiusMode.onMouseMove = function(state, e) {
   if (state.currentVertexPosition === 1) {
     state.line.updateCoordinate(1, e.lngLat.lng, e.lngLat.lat);
-
-    // Force a re-render
-    if (this.map && this.map._update) {
-      this.map._update();
-    }
   }
 };
 
-// Create the final geojson circle feature
+// Handle keyboard events
+RadiusMode.onKeyUp = function(state, e) {
+  if (e.keyCode === 27) { // Escape key
+    this.deleteFeature([state.line.id], { silent: true });
+    this.changeMode('simple_select');
+  }
+};
+
+// Create the final geojson circle feature when done
 RadiusMode.onStop = function(state) {
-  doubleClickZoom.enable(this);
+  this.updateUIClasses({ mouse: 'none' });
   this.activateUIButton();
+
+  document
+    .querySelectorAll(".mapbox-gl-draw_ctrl-draw-btn")
+    .forEach(btn => btn.classList.remove("active"));
+
+  // Re-enable double click zoom
+  if (this.map && this.map.doubleClickZoom) {
+    setTimeout(() => {
+      if (
+        !this.map ||
+        !this.map.doubleClickZoom ||
+        !this._ctx ||
+        !this._ctx.store ||
+        !this._ctx.store.getInitialConfigValue
+      ) return;
+
+      if (!this._ctx.store.getInitialConfigValue('doubleClickZoom')) return;
+      this.map.doubleClickZoom.enable();
+    }, 0);
+  }
 
   // Check if feature was deleted
   if (this.getFeature(state.line.id) === undefined) return;
 
-  // Remove the line coordinate
+  // Create circle if we have both points
   if (state.line.coordinates.length > 1) {
     const lineGeoJson = state.line.toGeoJSON();
     const center = lineGeoJson.geometry.coordinates[0];
@@ -127,17 +107,22 @@ RadiusMode.onStop = function(state) {
     const to = turf.point(radiusPoint);
     const radiusInMeters = turf.distance(from, to, { units: 'meters' });
 
-    // Create a circle feature that will be converted to Traccar format
-    const circleFeature = createGeoJSONCircle(center, radiusInMeters, state.line.id);
+    // Create a circle feature
+    const options = { steps: 64, units: 'meters' };
+    const circle = turf.circle(center, radiusInMeters, options);
 
-    // Add radius as a property for later conversion
-    circleFeature.properties.radius = radiusInMeters;
-    circleFeature.properties.center = center;
+    const circleFeature = {
+      type: 'Feature',
+      geometry: circle.geometry,
+      properties: {
+        radius: radiusInMeters,
+        center: center
+      }
+    };
 
     this.deleteFeature([state.line.id], { silent: true });
-
     this.map.fire('draw.create', {
-      features: [circleFeature],
+      features: [circleFeature]
     });
   } else {
     this.deleteFeature([state.line.id], { silent: true });
@@ -159,9 +144,19 @@ RadiusMode.toDisplayFeatures = function(state, geojson, display) {
   const radiusPoint = geojson.geometry.coordinates[1];
 
   // Display center vertex
-  display(
-    createVertex(state.line.id, center, '0', false)
-  );
+  display({
+    type: 'Feature',
+    properties: {
+      meta: 'vertex',
+      parent: state.line.id,
+      coord_path: '0',
+      active: 'false'
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: center
+    }
+  });
 
   // Calculate radius
   const from = turf.point(center);
@@ -171,28 +166,50 @@ RadiusMode.toDisplayFeatures = function(state, geojson, display) {
   // Display radius line
   display(geojson);
 
+  // Get display measurements
+  let metricUnits = 'm';
+  let metricMeasurement = radiusInMeters;
+  if (radiusInMeters >= 1000) {
+    metricMeasurement = radiusInMeters / 1000;
+    metricUnits = 'km';
+  }
+
   // Display current radius point with measurements
-  const displayMeasurements = getDisplayMeasurements(radiusInMeters);
   const currentVertex = {
     type: 'Feature',
     properties: {
       meta: 'currentPosition',
-      radiusMetric: displayMeasurements.metric,
-      radiusStandard: displayMeasurements.standard,
-      parent: state.line.id,
+      radiusMetric: `${metricMeasurement.toFixed(2)} ${metricUnits}`,
+      parent: state.line.id
     },
     geometry: {
       type: 'Point',
-      coordinates: radiusPoint,
-    },
+      coordinates: radiusPoint
+    }
   };
   display(currentVertex);
 
   // Display circle preview
-  const circleFeature = createGeoJSONCircle(center, radiusInMeters, state.line.id);
+  const options = { steps: 64, units: 'meters' };
+  const circle = turf.circle(center, radiusInMeters, options);
+
+  const circleFeature = {
+    type: 'Feature',
+    geometry: circle.geometry,
+    properties: {
+      parent: state.line.id,
+      meta: 'radius'
+    }
+  };
   display(circleFeature);
 
   return null;
+};
+
+// Handle trash action
+RadiusMode.onTrash = function(state) {
+  this.deleteFeature([state.line.id], { silent: true });
+  this.changeMode('simple_select');
 };
 
 export default RadiusMode;

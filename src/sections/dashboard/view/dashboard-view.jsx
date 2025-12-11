@@ -38,7 +38,9 @@ const DashboardView = () => {
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [isLoaded, setIsLoaded] = useState(false);
   const [devices, setDevices] = useState([]);
+  const [deviceTracks, setDeviceTracks] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedTrackDetail, setSelectedTrackDetail] = useState(null);
   const [eventTypes, setEventTypes] = useState([]);
   const [positions, setPositions] = useState([]);
   const [geofences, setGeofences] = useState([]);
@@ -329,7 +331,7 @@ const DashboardView = () => {
     };
   }, []);
 
-  const fetchDevices = useCallback(async () => {
+  const fetchDevices = async () => {
     loadingDevices.onTrue();
 
     try {
@@ -343,7 +345,21 @@ const DashboardView = () => {
       loadingDevices.onFalse();
       loadingEvents.onFalse();
     }
-  }, []);
+  };
+
+  const handleDeviceAdd = (newDevice) => {
+		setDevices((prev) => [...prev, newDevice]);
+	};
+
+	const handleDeviceUpdate = (updatedDevice) => {
+		setDevices((prev) =>
+			prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
+		);
+	};
+
+	const handleDeviceDelete = (deviceId) => {
+		setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+	};
 
   const fetchEventTypes = useCallback(async () => {
     loadingEventTypes.onTrue();
@@ -379,8 +395,12 @@ const DashboardView = () => {
     setSelectedDeviceId(device.id);
   }, []);
 
+  const handleChangeInfoPosition = useCallback((value) => {
+    setSelectedTrackDetail(value);
+  }, []);
+
   return (
-    <div className="h-full flex gap-1 max-h-[calc(100vh-112px)]">
+    <div className="h-full flex gap-1 max-h-[calc(100vh-96px)]">
       {/* Left Column */}
       <div
         ref={leftColumnRef}
@@ -393,6 +413,9 @@ const DashboardView = () => {
             selectedDeviceId={selectedDeviceId}
             onDeviceClick={handleDeviceClick}
             loading={loadingDevices.value}
+            onDeviceAdd={handleDeviceAdd}
+            onDeviceUpdate={handleDeviceUpdate}
+            onDeviceDelete={handleDeviceDelete}
           />
         </div>
 
@@ -412,6 +435,8 @@ const DashboardView = () => {
             width={bottomRowRef.current?.offsetWidth}
             selectedDeviceId={selectedDeviceId}
             positions={positions}
+            onTrackChanges={setDeviceTracks}
+            onChangePosition={handleChangeInfoPosition}
           />
         </div>
       </div>
@@ -435,7 +460,9 @@ const DashboardView = () => {
             geofences={geofences}
             mapRef={mapRef}
             selectedDeviceId={selectedDeviceId}
+            selectedTrackDetail={selectedTrackDetail}
             loading={loadingMap}
+            tracks={deviceTracks}
             isSelectingEvent={isSelectingEvent}
           />
         </div>

@@ -1,18 +1,22 @@
-import mapboxgl from 'mapbox-gl';
-import { reverseGeocode } from '@/utils/reverse-geocode';
+import mapboxgl from "mapbox-gl";
+import { reverseGeocode } from "@/utils/reverse-geocode";
 
 export const createPopupHtml = (properties) => {
-  const { name, status, speed, latitude, longitude, lastUpdate } = properties;
+  const { name, status, speed, latitude, longitude, lastUpdate, totalDistance } = properties;
 
   const statusColor =
-    status === 'online' ? '#16a34a' : status === 'offline' ? '#dc2626' : '#6b7280';
+    status === "online"
+      ? "#16a34a"
+      : status === "offline"
+        ? "#dc2626"
+        : "#6b7280";
 
   const speedLine =
-    typeof speed === 'number'
+    typeof speed === "number"
       ? `<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280;">
          <span>Speed: ${Math.round(speed * 1.852 || 0)} km/h</span>
        </div>`
-      : '';
+      : "";
 
   const addressLine =
     Number.isFinite(latitude) && Number.isFinite(longitude)
@@ -26,13 +30,19 @@ export const createPopupHtml = (properties) => {
            </a>
          </span>
        </div>`
-      : '';
+      : "";
 
   const updatedLine = lastUpdate
     ? `<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280;">
          <span>Updated: ${new Date(lastUpdate).toLocaleString()}</span>
        </div>`
-    : '';
+    : "";
+
+  const totalDistanceLine = totalDistance
+    ? `<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280;">
+         <span>Total Distance: ${(totalDistance / 1000).toFixed(2)} km</span>
+       </div>`
+    : "";
 
   return `
     <div id="popup-content" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px;">
@@ -43,6 +53,7 @@ export const createPopupHtml = (properties) => {
       ${speedLine}
       ${addressLine}
       ${updatedLine}
+      ${totalDistanceLine}
     </div>
   `;
 };
@@ -56,22 +67,27 @@ export const updatePopupContent = (popup, properties) => {
   // Re-attach the event handler
   window.handleShowAddress = async (event, latitude, longitude) => {
     event.preventDefault();
-    const linkElement = document.getElementById(`coordinates-${latitude}-${longitude}`);
+    const linkElement = document.getElementById(
+      `coordinates-${latitude}-${longitude}`
+    );
     if (!linkElement) return;
 
-    linkElement.innerHTML = '<span style="color: #6b7280;">Address: Loading...</span>';
+    linkElement.innerHTML =
+      '<span style="color: #6b7280;">Address: Loading...</span>';
 
     const address = await reverseGeocode(latitude, longitude);
 
     if (address) {
       linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${address}</span>`;
     } else {
-      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}</span>`;
+      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${latitude.toFixed(
+        5
+      )}, ${longitude.toFixed(5)}</span>`;
     }
   };
 };
 
-export const openPopupFromFeature = (map, feature, currentPopupRef) => {
+export const openPopupFromFeature = (map, feature, currentPopupRef, focusedDeviceIdRef) => {
   if (!map) return;
 
   // Close existing popup
@@ -88,34 +104,52 @@ export const openPopupFromFeature = (map, feature, currentPopupRef) => {
     .setHTML(html)
     .addTo(map);
 
+  popup.on('close', () => {
+    if (focusedDeviceIdRef) {
+      focusedDeviceIdRef.current = null;
+    }
+    currentPopupRef.current = null;
+  });
+
   currentPopupRef.current = popup;
 
   // Attach the event handler to the window object so it can be called from the HTML
   window.handleShowAddress = async (event, latitude, longitude) => {
     event.preventDefault();
-    const linkElement = document.getElementById(`coordinates-${latitude}-${longitude}`);
+    const linkElement = document.getElementById(
+      `coordinates-${latitude}-${longitude}`
+    );
     if (!linkElement) return;
 
-    linkElement.innerHTML = '<span style="color: #6b7280;">Address: Loading...</span>';
+    linkElement.innerHTML =
+      '<span style="color: #6b7280;">Address: Loading...</span>';
 
     const address = await reverseGeocode(latitude, longitude);
 
     if (address) {
       linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${address}</span>`;
     } else {
-      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}</span>`;
+      linkElement.innerHTML = `<span style="color: #6b7280;">Address: ${latitude.toFixed(
+        5
+      )}, ${longitude.toFixed(5)}</span>`;
     }
   };
 };
 
-export const openPopupForDeviceId = (map, deviceId, deviceFeatures, currentPopupRef) => {
+export const openPopupForDeviceId = (
+  map,
+  deviceId,
+  deviceFeatures,
+  currentPopupRef,
+  focusedDeviceIdRef,
+) => {
   const normalizedId = Number(deviceId);
   const feature = deviceFeatures.find(
     (candidate) => Number(candidate.properties.deviceId) === normalizedId
   );
 
   if (feature) {
-    openPopupFromFeature(map, feature, currentPopupRef);
+    openPopupFromFeature(map, feature, currentPopupRef, focusedDeviceIdRef);
   }
 };
 

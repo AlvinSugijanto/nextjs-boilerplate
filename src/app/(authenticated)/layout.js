@@ -36,7 +36,7 @@ export default function Layout({ children }) {
           </header>
 
           {/* 📦 Konten tanpa scroll & overflow disembunyikan */}
-          <div className="flex flex-1 flex-col gap-4 px-4 h-full overflow-hidden pt-6 pb-4">
+          <div className="flex flex-1 flex-col gap-4 px-4 h-full overflow-hidden pt-4 pb-0">
             {children}
           </div>
         </SidebarInset>

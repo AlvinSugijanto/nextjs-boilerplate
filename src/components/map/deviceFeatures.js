@@ -2,11 +2,13 @@ export const buildDeviceFeatures = (devices, positions) => {
   const deviceMap = new Map(devices.map(device => [device.id, device]));
   const positionList = positions || [];
   const latestPositions = new Map();
+  const totalDistances = new Map();
 
   positionList.forEach(position => {
     const deviceId = Number(position.deviceId);
     if (!Number.isFinite(deviceId) || latestPositions.has(deviceId)) return;
     latestPositions.set(deviceId, position);
+    totalDistances.set(deviceId, Number(position.attributes?.totalDistance) || 0);
   });
 
   const features = [];
@@ -32,6 +34,7 @@ export const buildDeviceFeatures = (devices, positions) => {
         status: device.status || 'unknown',
         speed: Number.isFinite(speedValue) ? speedValue : null,
         lastUpdate: device.lastUpdate || null,
+        totalDistance: totalDistances.get(deviceId) || 0,
         latitude,
         longitude
       }
