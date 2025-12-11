@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,13 +15,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import axios from "axios";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Name is required"),
   uniqueId: Yup.string().required("Identifier is required"),
 });
 
-export function DeviceAddDialog({ open, onClose, onRefresh }) {
+export function DeviceEditDialog({ open, onClose, device, onRefresh }) {
   const { token } = useAuth();
 
   const methods = useForm({
@@ -37,20 +39,28 @@ export function DeviceAddDialog({ open, onClose, onRefresh }) {
     reset,
   } = methods;
 
+  useEffect(() => {
+    if (device) {
+      reset({
+        name: device.name,
+        uniqueId: device.uniqueId,
+      });
+    }
+  }, [device, reset]);
+
   const onSubmit = async (data) => {
     try {
-      await axios.post("/api/proxy/traccar/devices", data, {
+      await axios.put(`/api/proxy/traccar/devices/${device.id}`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      toast.success("Device added successfully");
+      toast.success("Device updated successfully");
       onRefresh();
-      reset();
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to add device. Please try again.");
+      toast.error("Failed to update device. Please try again.");
     }
   };
 
@@ -58,7 +68,7 @@ export function DeviceAddDialog({ open, onClose, onRefresh }) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a New Device</DialogTitle>
+          <DialogTitle>Edit Device</DialogTitle>
         </DialogHeader>
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -73,7 +83,7 @@ export function DeviceAddDialog({ open, onClose, onRefresh }) {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Device"}
+                {isSubmitting ? "Updating..." : "Update Device"}
               </Button>
             </div>
           </form>

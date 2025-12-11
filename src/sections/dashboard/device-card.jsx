@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Edit, Plus, Search, Trash } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -16,24 +16,52 @@ import { TableList } from "@/components/table";
 import { fDateTime } from "@/utils/format-time";
 import { useBoolean } from "@/hooks/use-boolean";
 import { DeviceAddDialog } from "./device-add-dialog";
+import { DeviceEditDialog } from "./device-edit-dialog";
+import ConfirmDialog from "@/components/dialog/dialog-confirm";
+import { useAuth } from "@/context/auth-context";
+import axios from "axios";
+import { toast } from "sonner";
 
 function DeviceCard({
   devices = [],
-  setDevices,
   onDeviceClick,
   loading = false,
   selectedDeviceId,
+  onRefresh,
 }) {
+  const { token } = useAuth();
   // state
   const [search, setSearch] = useState("");
-  const [sorting, setSorting] = useState([
-    {
-      id: "name",
-      desc: false,
-    },
-  ]);
+  const [sorting, setSorting] = useState([{ id: "name", desc: false }]);
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
-  const isOpen = useBoolean();
+  const addDeviceDialog = useBoolean();
+  const editDeviceDialog = useBoolean();
+  const deleteDeviceDialog = useBoolean();
+
+  const handleEdit = (device) => {
+    setSelectedDevice(device);
+    editDeviceDialog.onTrue();
+  };
+
+  const handleDelete = (device) => {
+    setSelectedDevice(device);
+    deleteDeviceDialog.onTrue();
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await axios.delete(`/api/proxy/traccar/devices/${selectedDevice.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Device deleted successfully");
+      onRefresh();
+      deleteDeviceDialog.onFalse();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete device. Please try again.");
+    }
+  };
 
   // memo
   const filteredData = useMemo(() => {
@@ -58,18 +86,14 @@ function DeviceCard({
       {
         accessorKey: "status",
         header: "Status",
-        meta: {
-          sortable: true,
-        },
+        meta: { sortable: true },
         size: 30,
         cell: ({ row }) => {
           const status = row.getValue("status");
           let colorClass = "bg-gray-500";
-
           if (status === "online") colorClass = "bg-green-500";
           else if (status === "offline") colorClass = "bg-red-500";
           else if (status === "idle") colorClass = "bg-yellow-500";
-
           return (
             <div className="flex items-center gap-2">
               <span
@@ -82,22 +106,65 @@ function DeviceCard({
       {
         accessorKey: "name",
         header: "Device Name",
-        meta: {
-          sortable: true,
-        },
+        meta: { sortable: true },
       },
       {
         accessorKey: "lastActive",
         header: "Last Active",
-        meta: {
-          sortable: true,
-        },
+        meta: { sortable: true },
         cell: ({ row }) =>
           row.getValue("lastActive")
             ? fDateTime(row.getValue("lastActive"))
             : "-",
       },
+      {
+        accessorKey: "action",
+        header: "Action",
+        cell: ({ row }) => {
+          return (
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className="size-4 hover:bg-transparent!"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row.original);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Edit Device</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className="size-4 hover:bg-transparent!"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(row.original);
+                    }}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete Device</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
     ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devices]);
 
   return (
@@ -123,7 +190,7 @@ function DeviceCard({
                 variant="outline"
                 size="icon"
                 aria-label="Submit"
-                onClick={isOpen.onTrue}
+                onClick={addDeviceDialog.onTrue}
               >
                 <Plus />
               </Button>
@@ -164,9 +231,22 @@ function DeviceCard({
         </div>
       </Card>
       <DeviceAddDialog
-        open={isOpen.value}
-        onClose={isOpen.onFalse}
-        setDevices={setDevices}
+        open={addDeviceDialog.value}
+        onClose={addDeviceDialog.onFalse}
+        onRefresh={onRefresh}
+      />
+      <DeviceEditDialog
+        open={editDeviceDialog.value}
+        onClose={editDeviceDialog.onFalse}
+        device={selectedDevice}
+        onRefresh={onRefresh}
+      />
+      <ConfirmDialog
+        open={deleteDeviceDialog.value}
+        onClose={deleteDeviceDialog.onFalse}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Device"
+        description={`Are you sure you want to delete ${selectedDevice?.name}? This action cannot be undone.`}
       />
     </>
   );
