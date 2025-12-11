@@ -13,11 +13,18 @@ import { useBoolean } from "@/hooks/use-boolean";
 import DrawerAddEditActivity from "../drawer-add-edit-activity";
 import axios from "axios";
 import { endOfDay, startOfDay } from "date-fns";
+import { useGetDataDb } from "@/utils/collection";
 
 const ReportView = () => {
   const isMobile = useIsMobile();
   const openDrawer = useBoolean();
   const isLoading = useBoolean();
+
+  const { data: vehicle } = useGetDataDb("/api/collection/vehicle", {
+    type: "getfulllist",
+  });
+
+  console.log(vehicle);
 
   const [sorting, setSorting] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
