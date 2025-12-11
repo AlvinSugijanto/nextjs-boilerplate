@@ -1,4 +1,10 @@
-import { Map, LayoutDashboard, TableProperties } from "lucide-react";
+import {
+  Map,
+  LayoutDashboard,
+  TableProperties,
+  Grid2x2Plus,
+  BetweenHorizontalStart,
+} from "lucide-react";
 
 const NavigationsList = () => {
   return [
@@ -16,6 +22,11 @@ const NavigationsList = () => {
       name: "Map",
       url: "/example-map",
       icon: Map,
+    },
+    {
+      name: "Master Data",
+      url: "/master-data",
+      icon: BetweenHorizontalStart,
     },
   ];
 };

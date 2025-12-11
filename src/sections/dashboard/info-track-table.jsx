@@ -44,7 +44,7 @@ const InfoTrackTable = ({ data, devices = [], loading, onRowClick }) => {
         },
         cell: ({ row }) => {
           const speed = row.getValue("speed");
-          return speed ? `${speed.toFixed(2)} km/h` : "-";
+          return speed ? `${Number(speed.toFixed(2))} km/h` : "-";
         },
       },
       {
