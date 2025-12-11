@@ -1,4 +1,9 @@
-import { Map, LayoutDashboard, TableProperties } from "lucide-react";
+import {
+  Map,
+  LayoutDashboard,
+  TableProperties,
+  ClipboardMinus,
+} from "lucide-react";
 
 const NavigationsList = () => {
   return [
@@ -16,6 +21,11 @@ const NavigationsList = () => {
       name: "Map",
       url: "/example-map",
       icon: Map,
+    },
+    {
+      name: "Report",
+      url: "/report",
+      icon: ClipboardMinus,
     },
   ];
 };
