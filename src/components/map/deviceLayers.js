@@ -121,7 +121,7 @@ const setupDeviceLayerEvents = (map, currentPopupRef, focusedDeviceIdRef) => {
   map.on('click', UNCLUSTERED_LAYER_ID, (event) => {
     const feature = event.features?.[0];
     if (feature) {
-      openPopupFromFeature(map, feature, currentPopupRef);
+      openPopupFromFeature(map, feature, currentPopupRef, focusedDeviceIdRef);
       // Set the focused device ID
       if (focusedDeviceIdRef && feature.properties?.deviceId) {
         focusedDeviceIdRef.current = Number(feature.properties.deviceId);

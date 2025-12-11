@@ -180,75 +180,73 @@ function EventCard({
   }, [selectedDeviceId]);
 
   return (
-    <Card className="h-full p-0">
+    <Card className="h-full p-0 overflow-hidden">
       <div className="px-4 py-3 overflow-auto">
-        <div className="h-full">
-          <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap mb-4">
-            <div className="flex items-center gap-2 flex-wrap flex-1">
-              <MultiSelect
-                options={eventTypes.map(({ type }) => ({
-                  label: type,
-                  value: type,
-                }))}
-                className="w-fit min-w-[180px]"
-                placeholder="Filter by Event Type"
-                onValueChange={setSelectedEventTypes}
-                value={selectedEventTypes}
-              />
+        <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap mb-4">
+          <div className="flex items-center gap-2 flex-wrap flex-1">
+            <MultiSelect
+              options={eventTypes.map(({ type }) => ({
+                label: type,
+                value: type,
+              }))}
+              className="w-fit min-w-[180px]"
+              placeholder="Filter by Event Type"
+              onValueChange={setSelectedEventTypes}
+              value={selectedEventTypes}
+            />
 
-              <RangeDatePicker
-                dateRange={dateRange}
-                onChange={handleChangeDateRange}
-                loading={loading}
-                selectedDeviceId={selectedDeviceId}
-              />
-            </div>
+            <RangeDatePicker
+              dateRange={dateRange}
+              onChange={handleChangeDateRange}
+              loading={loading}
+              selectedDeviceId={selectedDeviceId}
+            />
           </div>
-
-          {/* Loading state */}
-          {loading && (
-            <div className="p-4 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Loading events...
-              </p>
-            </div>
-          )}
-
-          {/* Error state */}
-          {error && !loading && (
-            <div className="p-4 text-center text-destructive">
-              <p className="text-sm">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchEvent(selectedDeviceId)}
-                className="mt-2"
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-
-          {/* Content */}
-          {!loading && !error && (
-            <div className="h-full overflow-auto">
-              <div className="mb-2 text-xs text-muted-foreground">
-                Showing {filteredEvents.length} of {events.length} events
-                {dateRange.from && dateRange.to && (
-                  <span className="ml-2">
-                    ({fDate(dateRange.from)} - {fDate(dateRange.to)})
-                  </span>
-                )}
-              </div>
-              <EventTableListAll
-                events={filteredEvents}
-                selectedEvents={selectedEvents}
-                fetchPosition={fetchPosition}
-              />
-            </div>
-          )}
         </div>
+
+        {/* Loading state */}
+        {loading && (
+          <div className="p-4 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Loading events...
+            </p>
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && !loading && (
+          <div className="p-4 text-center text-destructive">
+            <p className="text-sm">{error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchEvent(selectedDeviceId)}
+              className="mt-2"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Content */}
+        {!loading && !error && (
+          <div className="overflow-auto">
+            <div className="mb-2 text-xs text-muted-foreground">
+              Showing {filteredEvents.length} of {events.length} events
+              {dateRange.from && dateRange.to && (
+                <span className="ml-2">
+                  ({fDate(dateRange.from)} - {fDate(dateRange.to)})
+                </span>
+              )}
+            </div>
+            <EventTableListAll
+              events={filteredEvents}
+              selectedEvents={selectedEvents}
+              fetchPosition={fetchPosition}
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
