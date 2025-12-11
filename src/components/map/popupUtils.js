@@ -2,14 +2,14 @@ import mapboxgl from "mapbox-gl";
 import { reverseGeocode } from "@/utils/reverse-geocode";
 
 export const createPopupHtml = (properties) => {
-  const { name, status, speed, latitude, longitude, lastUpdate } = properties;
+  const { name, status, speed, latitude, longitude, lastUpdate, totalDistance } = properties;
 
   const statusColor =
     status === "online"
       ? "#16a34a"
       : status === "offline"
-      ? "#dc2626"
-      : "#6b7280";
+        ? "#dc2626"
+        : "#6b7280";
 
   const speedLine =
     typeof speed === "number"
@@ -38,6 +38,12 @@ export const createPopupHtml = (properties) => {
        </div>`
     : "";
 
+  const totalDistanceLine = totalDistance
+    ? `<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280;">
+         <span>Total Distance: ${(totalDistance / 1000).toFixed(2)} km</span>
+       </div>`
+    : "";
+
   return `
     <div id="popup-content" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
@@ -47,6 +53,7 @@ export const createPopupHtml = (properties) => {
       ${speedLine}
       ${addressLine}
       ${updatedLine}
+      ${totalDistanceLine}
     </div>
   `;
 };
@@ -80,7 +87,7 @@ export const updatePopupContent = (popup, properties) => {
   };
 };
 
-export const openPopupFromFeature = (map, feature, currentPopupRef) => {
+export const openPopupFromFeature = (map, feature, currentPopupRef, focusedDeviceIdRef) => {
   if (!map) return;
 
   // Close existing popup
@@ -96,6 +103,13 @@ export const openPopupFromFeature = (map, feature, currentPopupRef) => {
     .setLngLat(coordinates)
     .setHTML(html)
     .addTo(map);
+
+  popup.on('close', () => {
+    if (focusedDeviceIdRef) {
+      focusedDeviceIdRef.current = null;
+    }
+    currentPopupRef.current = null;
+  });
 
   currentPopupRef.current = popup;
 
@@ -126,7 +140,8 @@ export const openPopupForDeviceId = (
   map,
   deviceId,
   deviceFeatures,
-  currentPopupRef
+  currentPopupRef,
+  focusedDeviceIdRef,
 ) => {
   const normalizedId = Number(deviceId);
   const feature = deviceFeatures.find(
@@ -134,7 +149,7 @@ export const openPopupForDeviceId = (
   );
 
   if (feature) {
-    openPopupFromFeature(map, feature, currentPopupRef);
+    openPopupFromFeature(map, feature, currentPopupRef, focusedDeviceIdRef);
   }
 };
 

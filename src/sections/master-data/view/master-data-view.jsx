@@ -7,6 +7,9 @@ import {
 } from "@/components/typography";
 import React, { useMemo } from "react";
 import VehicleTable from "../vehicle-table";
+import OperatorTable from "../operator-table";
+import ProjectTable from "../project-table";
+import RouteTable from "../route-table";
 
 const MasterDataView = () => {
   return (
@@ -15,6 +18,9 @@ const MasterDataView = () => {
 
       <div className="grid grid-cols-1 gap-4 mt-8">
         <VehicleTable />
+        <RouteTable />
+        <OperatorTable />
+        <ProjectTable />
       </div>
     </div>
   );

@@ -1,19 +1,6 @@
 "use client";
 
 import * as React from "react";
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  LayoutDashboard,
-  Presentation,
-  ClipboardClock,
-} from "lucide-react";
 
 import { NavUser } from "./nav-user";
 import {
@@ -42,8 +29,8 @@ export function AppSidebar({ ...props }) {
 
   return (
     <Sidebar collapsible="icon" {...props} className="z-50">
-      <SidebarHeader>
-        <div className="flex items-center px-2">
+      <SidebarHeader className="items-center">
+        <div className="flex items-center">
           {open ? <Logo /> : <LogoMobile />}
         </div>
       </SidebarHeader>

@@ -49,11 +49,7 @@ const DrawerAddEdit = ({
     defaultValues,
   });
 
-  const {
-    handleSubmit,
-    reset,
-    formState: { isDirty },
-  } = methods;
+  const { handleSubmit, reset } = methods;
 
   useEffect(() => {
     reset(defaultValues);

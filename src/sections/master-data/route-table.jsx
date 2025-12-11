@@ -3,17 +3,16 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { TypographyLarge } from "@/components/typography";
 import { Card } from "@/components/ui/card";
 import DrawerAddEdit from "./drawer-add-edit";
-import { vehicleSchema } from "./schema-validation";
+import { routeSchema } from "./schema-validation";
 import { RHFSelect, RHFTextField } from "@/components/hook-form";
 import { TableList } from "@/components/table";
 import ColumnActions from "./column-actions";
 import { useBoolean } from "@/hooks/use-boolean";
-import { LIST_VEHICLE_TYPE } from "./constants";
 import { fDate, fDateTime } from "@/utils/format-time";
 import { ConfirmDialog } from "@/components/dialog";
 import axios from "axios";
 
-const VehicleTable = () => {
+const RouteTable = () => {
   // hooks
   const loadingFetch = useBoolean();
   const openConfirm = useBoolean();
@@ -22,7 +21,7 @@ const VehicleTable = () => {
 
   // STATE
   const [data, setData] = useState([]);
-  const [devices, setDevices] = useState([]);
+  const [geofenceData, setGeofenceData] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedData, setSelectedData] = useState([]);
@@ -33,26 +32,15 @@ const VehicleTable = () => {
     },
   ]);
 
-  const filteredDevices = useMemo(() => {
-    return devices.filter((device) => {
-      // Exclude devices that are already assigned to a vehicle, except for the currently selected vehicle
-      const isAssigned = data.some(
-        (vehicle) =>
-          vehicle.device_id === device.id && vehicle.id !== selectedData?.id
-      );
-      return !isAssigned;
-    });
-  }, [devices, data, selectedData]);
-
   // handle
   const handleSubmit = async (data) => {
     try {
       if (data.id) {
         const { id, ...rest } = data;
 
-        // Edit existing vehicle
+        // Edit existing route
         const { data: res } = await axios.patch(
-          `/api/collection/vehicle/${id}`,
+          `/api/collection/route/${id}`,
           rest,
           {
             headers: {
@@ -67,16 +55,12 @@ const VehicleTable = () => {
 
         // console.log("Edited data: ", data);
       } else {
-        // Add new vehicle
-        const { data: res } = await axios.post(
-          "/api/collection/vehicle",
-          data,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // Add new route
+        const { data: res } = await axios.post("/api/collection/route", data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         setData((prevData) => [...prevData, res]);
       }
 
@@ -91,7 +75,7 @@ const VehicleTable = () => {
     loadingDelete.onTrue();
 
     try {
-      await axios.delete(`/api/collection/vehicle/${selectedData.id}`);
+      await axios.delete(`/api/collection/route/${selectedData.id}`);
 
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
@@ -99,13 +83,13 @@ const VehicleTable = () => {
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting vehicle: ", error);
+      console.error("Error deleting route: ", error);
     } finally {
       loadingDelete.onFalse();
     }
   };
 
-  const columnVehicle = useMemo(() => {
+  const columnoperator = useMemo(() => {
     return [
       {
         accessorKey: "name",
@@ -118,36 +102,38 @@ const VehicleTable = () => {
         ),
       },
       {
-        accessorKey: "unit_model",
-        header: "Unit Model",
-        meta: {
-          sortable: true,
-        },
-        cell: ({ row }) => (
-          <p className="text-xs">{row.getValue("unit_model")}</p>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        meta: {
-          sortable: true,
-        },
-        cell: ({ row }) => (
-          <p className="text-xs capitalize">{row.getValue("type")}</p>
-        ),
-      },
-      {
-        accessorKey: "device_id",
-        header: "Device",
+        accessorKey: "Source",
+        header: "Source",
         meta: {
           sortable: false,
         },
         cell: ({ row }) => {
-          const value = row.original.device_id;
-          const device = devices.find((device) => device.id === value);
+          const source = row.getValue("Source");
+          const sourceName = geofenceData.find((g) => g.id === source)?.name;
 
-          return <p className="text-xs">{device?.name || "-"}</p>;
+          return (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs">{sourceName || "-"}</p>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "Destination",
+        header: "Destination",
+        meta: {
+          sortable: false,
+        },
+        cell: ({ row }) => {
+          const destination = row.getValue("Destination");
+          const destinationName = geofenceData.find(
+            (g) => g.id === destination
+          )?.name;
+          return (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs">{destinationName || "-"}</p>
+            </div>
+          );
         },
       },
       {
@@ -191,13 +177,13 @@ const VehicleTable = () => {
         },
       },
     ];
-  }, [devices]);
+  }, [geofenceData]);
 
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
 
     try {
-      const { data } = await axios.get("/api/collection/vehicle", {
+      const { data } = await axios.get("/api/collection/route", {
         headers: {
           type: "getfulllist",
         },
@@ -205,39 +191,47 @@ const VehicleTable = () => {
 
       setData(data);
     } catch (error) {
-      console.error("Error fetching vehicle data: ", error);
+      console.error("Error fetching route data: ", error);
     } finally {
       loadingFetch.onFalse();
     }
   }, []);
 
-  const fetchDevices = useCallback(async () => {
-    try {
-      const { data } = await axios.get("/api/proxy/traccar/devices");
+  const fetchGeofanceData = useCallback(async () => {
+    loadingFetch.onTrue();
 
-      setDevices(data);
+    try {
+      const { data } = await axios.get("/api/proxy/traccar/geofences", {
+        headers: {
+          type: "getfulllist",
+        },
+      });
+
+      setGeofenceData(data);
     } catch (error) {
-      console.error("Error fetching device data: ", error);
+      console.error("Error fetching geofence data: ", error);
+    } finally {
+      loadingFetch.onFalse();
     }
   }, []);
 
   useEffect(() => {
     fetchData();
-    fetchDevices();
+    fetchGeofanceData();
   }, []);
 
   return (
     <>
       <Card className="p-4">
         <div className="flex items-center justify-between">
-          <TypographyLarge>Vehicle</TypographyLarge>
+          <TypographyLarge>Route</TypographyLarge>
           <DrawerAddEdit
-            title={`${selectedData ? "Edit" : "Add"} New Vehicle`}
+            title={`${selectedData ? "Edit" : "Add"} New Route`}
             subTitle={`Fill in the details to ${
               selectedData ? "edit" : "add"
-            } a new vehicle.`}
-            titleButton="Add Vehicle"
-            resolver={vehicleSchema}
+            } a new route.`}
+            titleButton="Add Route"
+            resolver={routeSchema}
             onOpen={openDrawer.onTrue}
             openDrawer={openDrawer.value}
             onCloseDrawer={() => {
@@ -247,44 +241,41 @@ const VehicleTable = () => {
             defaultValues={{
               id: selectedData?.id || "",
               name: selectedData?.name || "",
-              unit_model: selectedData?.unit_model || "",
-              type: selectedData?.type || "digger",
-              device_id: selectedData?.device_id
-                ? String(selectedData.device_id)
-                : "",
+              Source: selectedData?.Source || "",
+              Destination: selectedData?.Destination || "",
             }}
             onSubmit={handleSubmit}
           >
             <RHFTextField
               name="name"
-              label="Vehicle Name"
-              placeholder="Enter vehicle name"
-            />
-            <RHFTextField
-              name="unit_model"
-              label="Unit Model"
-              placeholder="Enter unit model"
+              label="Route Name"
+              placeholder="Enter route name"
             />
             <RHFSelect
-              name="type"
-              label="Type"
-              placeholder="Select type"
-              options={LIST_VEHICLE_TYPE}
+              name="Source"
+              label="Source"
+              placeholder="Select Source"
+              multiple
+              options={geofenceData.map((geofence) => ({
+                value: geofence.id,
+                label: geofence.name,
+              }))}
             />
             <RHFSelect
-              name="device_id"
-              label="Device"
-              placeholder="Select device"
-              options={filteredDevices.map((device) => ({
-                value: String(device.id),
-                label: device.name,
+              name="Destination"
+              label="Destination"
+              placeholder="Select Destination"
+              multiple
+              options={geofenceData.map((geofence) => ({
+                value: geofence.id,
+                label: geofence.name,
               }))}
             />
           </DrawerAddEdit>
         </div>
 
         <TableList
-          columns={columnVehicle}
+          columns={columnoperator}
           data={data}
           tableProps={{
             initialState: { pagination: { pageIndex: page - 1, pageSize } },
@@ -298,7 +289,7 @@ const VehicleTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete Vehicle "${selectedData?.name}"?`}
+        title={`Delete route "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -309,4 +300,4 @@ const VehicleTable = () => {
   );
 };
 
-export default VehicleTable;
+export default RouteTable;
