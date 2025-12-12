@@ -5,7 +5,8 @@ import {
   GEOFENCE_LABELS_SOURCE_ID,
   GEOFENCE_LABELS_LAYER_ID
 } from './constants';
-import { parseGeofence, calculateCentroid } from './geofenceParser';
+import { parseGeofence } from './geofenceParser';
+import * as turf from '@turf/turf';
 
 export const addGeofenceLayers = (map, isDark) => {
   if (!map.getSource(GEOFENCES_SOURCE_ID)) {
@@ -93,7 +94,14 @@ export const updateGeofenceData = (map, geofencesData) => {
       }
     });
 
-    const center = geometryData.center || calculateCentroid(geometryData.coordinates);
+    const center = geometryData.center || turf.centroid({
+      type: 'Feature',
+      geometry: {
+        type: geometryData.type,
+        coordinates: geometryData.coordinates
+      }
+    }).geometry.coordinates;
+
     labelFeatures.push({
       type: 'Feature',
       properties: {

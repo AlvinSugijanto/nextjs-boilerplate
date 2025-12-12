@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
-import { calculateCentroid, parseGeofence } from "@/components/map/geofenceParser";
+import { parseGeofence } from "@/components/map/geofenceParser";
+import * as turf from "@turf/turf";
 
 function getAccessToken(cookie) {
   const match = cookie?.match(/T_SESSION=([^;]+)/);
@@ -64,13 +65,25 @@ export async function POST(req) {
     if (sourceParsed.center) {
       sourceCentroid = sourceParsed.center;
     } else {
-      sourceCentroid = calculateCentroid(sourceParsed.coordinates);
+      sourceCentroid = turf.centroid({
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: sourceParsed.coordinates,
+        },
+      }).geometry.coordinates;
     }
 
     if (destinationParsed.center) {
       destinationCentroid = destinationParsed.center;
     } else {
-      destinationCentroid = calculateCentroid(destinationParsed.coordinates);
+      destinationCentroid = turf.centroid({
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: destinationParsed.coordinates,
+        },
+      }).geometry.coordinates;
     }
 
     const simulationUrl = new URL(`${process.env.NEXT_PUBLIC_SIMULATION_URL}/quick-start`);
