@@ -11,10 +11,12 @@ import { useBoolean } from "@/hooks/use-boolean";
 import { fDate, fDateTime } from "@/utils/format-time";
 import { ConfirmDialog } from "@/components/dialog";
 import axios from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const RouteTable = () => {
   // hooks
   const loadingFetch = useBoolean();
+  const loadingFetchGeofences = useBoolean();
   const openConfirm = useBoolean();
   const loadingDelete = useBoolean();
   const openDrawer = useBoolean();
@@ -198,7 +200,7 @@ const RouteTable = () => {
   }, []);
 
   const fetchGeofanceData = useCallback(async () => {
-    loadingFetch.onTrue();
+    loadingFetchGeofences.onTrue();
 
     try {
       const { data } = await axios.get("/api/proxy/traccar/geofences", {
@@ -211,7 +213,7 @@ const RouteTable = () => {
     } catch (error) {
       console.error("Error fetching geofence data: ", error);
     } finally {
-      loadingFetch.onFalse();
+      loadingFetchGeofences.onFalse();
     }
   }, []);
 
@@ -251,16 +253,20 @@ const RouteTable = () => {
               label="Route Name"
               placeholder="Enter route name"
             />
-            <RHFSelect
-              name="Source"
-              label="Source"
-              placeholder="Select Source"
-              multiple
-              options={geofenceData.map((geofence) => ({
-                value: geofence.id,
-                label: geofence.name,
-              }))}
-            />
+            {loadingFetchGeofences.value ? (
+              <Skeleton className="h-10 w-full rounded-md" />
+            ) : (
+              <RHFSelect
+                name="Source"
+                label="Source"
+                placeholder="Select Source"
+                multiple
+                options={geofenceData.map((geofence) => ({
+                  value: geofence.id,
+                  label: geofence.name,
+                }))}
+              />
+            )}
             <RHFSelect
               name="Destination"
               label="Destination"
@@ -282,6 +288,7 @@ const RouteTable = () => {
           }}
           setSorting={setSorting}
           sorting={sorting}
+          loading={loadingFetch.value || loadingFetchGeofences.value}
         />
       </Card>
 
