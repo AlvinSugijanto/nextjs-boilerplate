@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Play, Plus, Search, Trash } from "lucide-react";
+import { Edit, Play, Plus, Search, Trash, Square } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -37,11 +37,88 @@ function DeviceCard({
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([{ id: "name", desc: false }]);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [deviceSimulations, setDeviceSimulations] = useState({});
+  const [runningSimulations, setRunningSimulations] = useState({});
 
   const addDeviceDialog = useBoolean();
   const playSimulationDialog = useBoolean();
   const editDeviceDialog = useBoolean();
   const deleteDeviceDialog = useBoolean();
+
+  // Load device simulations from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("deviceSimulations");
+    if (stored) {
+      try {
+        setDeviceSimulations(JSON.parse(stored));
+      } catch (error) {
+        console.error("Failed to parse stored simulations:", error);
+      }
+    }
+  }, []);
+
+  // Save device simulations to localStorage whenever it changes
+  useEffect(() => {
+    if (Object.keys(deviceSimulations).length > 0) {
+      localStorage.setItem("deviceSimulations", JSON.stringify(deviceSimulations));
+    }
+  }, [deviceSimulations]);
+
+  // Check simulation status when selected device changes
+  useEffect(() => {
+    if (selectedDeviceId) {
+      checkSelectedDeviceSimulation();
+    }
+  }, [selectedDeviceId, deviceSimulations]);
+
+  const checkSelectedDeviceSimulation = async () => {
+    if (!selectedDeviceId) return;
+
+    const simulationId = deviceSimulations[selectedDeviceId];
+    if (!simulationId) {
+      setRunningSimulations((prev) => ({
+        ...prev,
+        [selectedDeviceId]: null,
+      }));
+      return;
+    }
+
+    try {
+      const { data } = await axios.post("/api/simulate/status", {
+        simulationId,
+      });
+
+      if (data.hasRunningSimulation) {
+        setRunningSimulations((prev) => ({
+          ...prev,
+          [selectedDeviceId]: data.simulation,
+        }));
+      } else {
+        // Simulation completed or stopped, remove from mapping
+        setRunningSimulations((prev) => ({
+          ...prev,
+          [selectedDeviceId]: null,
+        }));
+        setDeviceSimulations((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedDeviceId];
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Error checking simulation status:", error);
+      // Remove from mapping if there's an error (likely 404)
+      setRunningSimulations((prev) => ({
+        ...prev,
+        [selectedDeviceId]: null,
+      }));
+      setDeviceSimulations((prev) => {
+        const updated = { ...prev };
+        delete updated[selectedDeviceId];
+        return updated;
+      });
+    }
+  };
 
   const handleEdit = (device) => {
     const originalDevice = devices.find((d) => d.id === device.id);
@@ -61,10 +138,69 @@ function DeviceCard({
       });
       toast.success("Device deleted successfully");
       onDeviceDelete(selectedDevice.id);
+
+      // Clean up simulation mapping
+      setDeviceSimulations((prev) => {
+        const updated = { ...prev };
+        delete updated[selectedDevice.id];
+        return updated;
+      });
+
       deleteDeviceDialog.onFalse();
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete device. Please try again.");
+    }
+  };
+
+  const handleStopSimulation = async () => {
+    if (!selectedDeviceId || !runningSimulations[selectedDeviceId]) return;
+
+    try {
+      const simulation = runningSimulations[selectedDeviceId];
+      await axios.post("/api/simulate/stop", {
+        simulationId: simulation.simulation_id,
+      });
+
+      toast.success("Simulation stopped successfully");
+
+      // Update state and remove from mapping
+      setRunningSimulations((prev) => ({
+        ...prev,
+        [selectedDeviceId]: null,
+      }));
+      setDeviceSimulations((prev) => {
+        const updated = { ...prev };
+        delete updated[selectedDeviceId];
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error stopping simulation:", error);
+      toast.error("Failed to stop simulation");
+    }
+  };
+
+  const handleSimulationStart = (simulationData) => {
+    // Store device ID -> simulation ID mapping
+    setDeviceSimulations((prev) => ({
+      ...prev,
+      [simulationData.deviceId]: simulationData.simulationId,
+    }));
+
+    // Update running simulations state
+    setRunningSimulations((prev) => ({
+      ...prev,
+      [simulationData.deviceId]: simulationData.simulation,
+    }));
+  };
+
+  const handlePlayStopClick = () => {
+    const hasRunningSimulation = selectedDeviceId && runningSimulations[selectedDeviceId];
+
+    if (hasRunningSimulation) {
+      handleStopSimulation();
+    } else {
+      playSimulationDialog.onTrue();
     }
   };
 
@@ -172,6 +308,10 @@ function DeviceCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devices]);
 
+  const hasRunningSimulation = selectedDeviceId && runningSimulations[selectedDeviceId];
+  const playStopIcon = hasRunningSimulation ? Square : Play;
+  const playStopTooltip = hasRunningSimulation ? "Stop simulation" : "Play simulation";
+
   return (
     <>
       <Card className="h-full p-4 overflow-hidden flex flex-col gap-4">
@@ -209,14 +349,14 @@ function DeviceCard({
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Submit"
-                onClick={playSimulationDialog.onTrue}
+                aria-label="Play or Stop Simulation"
+                onClick={handlePlayStopClick}
               >
-                <Play />
+                {React.createElement(playStopIcon)}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Play simulation</p>
+              <p>{playStopTooltip}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -266,6 +406,8 @@ function DeviceCard({
         onClose={playSimulationDialog.onFalse}
         devices={devices}
         selectedDeviceId={selectedDeviceId}
+        onSimulationStart={handleSimulationStart}
+        deviceSimulations={deviceSimulations}
       />
       <ConfirmDialog
         open={deleteDeviceDialog.value}
