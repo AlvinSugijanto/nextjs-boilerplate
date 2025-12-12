@@ -1,14 +1,3 @@
-export const calculateCentroid = (coordinates) => {
-  const coords = coordinates[0];
-  let x = 0, y = 0;
-  const numPoints = coords.length - 1;
-  for (let i = 0; i < numPoints; i++) {
-    x += coords[i][0];
-    y += coords[i][1];
-  }
-  return [x / numPoints, y / numPoints];
-};
-
 const parseCircle = (area) => {
   const match = area.match(/CIRCLE \(([-\d.]+) ([-\d.]+), ([\d.]+)\)/);
   if (!match) return null;

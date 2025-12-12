@@ -303,14 +303,6 @@ const DashboardView = () => {
             return Array.from(positionMap.values());
           });
         }
-
-        if (message.geofences) {
-          setGeofences((prev) => {
-            const geofenceMap = new Map(prev.map((g) => [g.id, g]));
-            message.geofences.forEach((g) => geofenceMap.set(g.id, g));
-            return Array.from(geofenceMap.values());
-          });
-        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
