@@ -12,10 +12,12 @@ import { LIST_VEHICLE_TYPE } from "./constants";
 import { fDate, fDateTime } from "@/utils/format-time";
 import { ConfirmDialog } from "@/components/dialog";
 import axios from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const VehicleTable = () => {
   // hooks
   const loadingFetch = useBoolean();
+  const loadingFetchDevices = useBoolean();
   const openConfirm = useBoolean();
   const loadingDelete = useBoolean();
   const openDrawer = useBoolean();
@@ -212,12 +214,15 @@ const VehicleTable = () => {
   }, []);
 
   const fetchDevices = useCallback(async () => {
+    loadingFetchDevices.onTrue();
     try {
       const { data } = await axios.get("/api/proxy/traccar/devices");
 
       setDevices(data);
     } catch (error) {
       console.error("Error fetching device data: ", error);
+    } finally {
+      loadingFetchDevices.onFalse();
     }
   }, []);
 
@@ -271,15 +276,19 @@ const VehicleTable = () => {
               placeholder="Select type"
               options={LIST_VEHICLE_TYPE}
             />
-            <RHFSelect
-              name="device_id"
-              label="Device"
-              placeholder="Select device"
-              options={filteredDevices.map((device) => ({
-                value: String(device.id),
-                label: device.name,
-              }))}
-            />
+            {loadingFetchDevices.value ? (
+              <Skeleton className="h-10 w-full rounded-md" />
+            ) : (
+              <RHFSelect
+                name="device_id"
+                label="Device"
+                placeholder="Select device"
+                options={filteredDevices.map((device) => ({
+                  value: String(device.id),
+                  label: device.name,
+                }))}
+              />
+            )}
           </DrawerAddEdit>
         </div>
 
@@ -291,6 +300,7 @@ const VehicleTable = () => {
           }}
           setSorting={setSorting}
           sorting={sorting}
+          loading={loadingFetch.value || loadingFetchDevices.value}
         />
       </Card>
 
