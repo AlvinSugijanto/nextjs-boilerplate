@@ -19,7 +19,6 @@ import { DeviceAddDialog } from "./device-add-dialog";
 import { DeviceEditDialog } from "./device-edit-dialog";
 import { DeviceSimulationDialog } from "./device-simulation-dialog";
 import ConfirmDialog from "@/components/dialog/dialog-confirm";
-import { useAuth } from "@/context/auth-context";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -32,8 +31,6 @@ function DeviceCard({
   onDeviceUpdate,
   onDeviceDelete,
 }) {
-  const { token } = useAuth();
-
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState([{ id: "name", desc: false }]);
   const [selectedDevice, setSelectedDevice] = useState(null);
@@ -133,9 +130,7 @@ function DeviceCard({
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`/api/proxy/traccar/devices/${selectedDevice.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`/api/proxy/traccar/devices/${selectedDevice.id}`);
       toast.success("Device deleted successfully");
       onDeviceDelete(selectedDevice.id);
 
