@@ -348,18 +348,18 @@ const DashboardView = () => {
   };
 
   const handleDeviceAdd = (newDevice) => {
-		setDevices((prev) => [...prev, newDevice]);
-	};
+    setDevices((prev) => [...prev, newDevice]);
+  };
 
-	const handleDeviceUpdate = (updatedDevice) => {
-		setDevices((prev) =>
-			prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
-		);
-	};
+  const handleDeviceUpdate = (updatedDevice) => {
+    setDevices((prev) =>
+      prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d))
+    );
+  };
 
-	const handleDeviceDelete = (deviceId) => {
-		setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-	};
+  const handleDeviceDelete = (deviceId) => {
+    setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+  };
 
   const fetchEventTypes = useCallback(async () => {
     loadingEventTypes.onTrue();

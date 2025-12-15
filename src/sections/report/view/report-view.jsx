@@ -1,7 +1,7 @@
 "use client";
 
 import { TableList } from "@/components/table";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { faker } from "@faker-js/faker";
 import { Progress } from "@/components/ui/progress";
 import TableExpand from "../table-expand";
@@ -24,76 +24,183 @@ const ReportView = () => {
     type: "getfulllist",
   });
 
+  const { data: operatorData } = useGetDataDb("/api/collection/operator", {
+    type: "getfulllist",
+  });
+
+  const { data: routeData } = useGetDataDb("/api/collection/route", {
+    type: "getfulllist",
+  });
+
+  const { data: projectData } = useGetDataDb("/api/collection/project", {
+    type: "getfulllist",
+  });
+
+  const { data: activityData } = useGetDataDb(
+    "/api/collection/daily_productivity",
+    {
+      type: "getfulllist",
+      filter: "hauler:length > 0",
+      expand:
+        "operator,project,route,vehicle,hauler,hauler.operator,hauler.project,hauler.route,hauler.vehicle",
+    }
+  );
+
   const [sorting, setSorting] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [geoFencesData, setGeofencesData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
   const [devicesData, setDevicesData] = useState([]);
-  const [usersData, setUsersData] = useState([]);
 
-  const generateOverburdenData = () => {
-    return Array.from({ length: 3 }, (_, i) => ({
-      id: `overburden-${i + 1}`,
-      no: i + 1,
-      digger: `EX-${faker.number.int({ min: 2000, max: 2030 })}`,
-      operator: faker.person.fullName().toUpperCase(),
-      model: `CAT${faker.helpers.arrayElement([340, 345, 350])}`,
-      activity: faker.helpers.arrayElement(["CLAY", "SUB SOIL", "OVERBURDEN"]),
-      plan: faker.number.int({ min: 200, max: 300 }),
-      ach: faker.number.int({ min: 0, max: 100 }),
-    }));
+  const calculateHourlyTrips = (events) => {
+    const hourlyCount = {};
+
+    events.forEach((event) => {
+      try {
+        const eventTime = new Date(event.eventTime);
+        const hour = eventTime.getHours();
+
+        // Hanya hitung jam 7-19
+        if (hour >= 7 && hour <= 19) {
+          const hourStr = `${hour.toString().padStart(2, "0")}:00`;
+          hourlyCount[hourStr] = (hourlyCount[hourStr] || 0) + 1;
+        }
+      } catch (error) {
+        console.error("Error parsing event time:", error);
+      }
+    });
+
+    // Inisialisasi jam 07:00 sampai 19:00 saja (13 jam)
+    const timeColumns = Array.from(
+      { length: 13 },
+      (_, i) => `${(i + 7).toString().padStart(2, "0")}:00`
+    );
+
+    const result = {};
+    timeColumns.forEach((hour) => {
+      result[hour] = hourlyCount[hour] || 0;
+    });
+
+    return result;
   };
 
-  const generateCoalGettingData = () => {
-    return Array.from({ length: 2 }, (_, i) => ({
-      id: `coalgetting-${i + 1}`,
-      no: i + 1,
-      digger: `EX-${faker.number.int({ min: 2000, max: 2030 })}`,
-      operator: faker.person.fullName().toUpperCase(),
-      model: `CAT${faker.helpers.arrayElement([340, 345, 350])}`,
-      activity: "CG",
-      plan: faker.number.int({ min: 200, max: 250 }),
-      ach: faker.number.int({ min: 0, max: 100 }),
-    }));
-  };
+  const updatedActivityData = useMemo(() => {
+    const result = activityData?.filter((item) => item.type === "overburden");
 
-  const generateCoalHaulingData = () => {
-    return Array.from({ length: 1 }, (_, i) => ({
-      id: `coalhauling-${i + 1}`,
-      no: i + 1,
-      digger: `WL-${faker.number.int({ min: 2000, max: 2030 })}`,
-      operator: faker.person.fullName().toUpperCase(),
-      model: `SEM${faker.number.int({ min: 600, max: 700 })}`,
-      activity: "CH",
-      plan: faker.number.int({ min: 80, max: 150 }),
-      ach: faker.number.int({ min: 0, max: 100 }),
-    }));
-  };
+    if (!result || !eventsData?.length) return result;
 
-  const overburdenData = generateOverburdenData();
-  const coalGettingData = generateCoalGettingData();
-  const coalHaulingData = generateCoalHaulingData();
+    return result.map((item) => {
+      const source = item?.expand?.route?.Source;
+      const destination = item?.expand?.route?.Destination;
+      const hauler = item?.expand?.hauler || [];
+
+      // Clone item untuk di-update
+      const updatedItem = { ...item };
+
+      if (!updatedItem.expand) updatedItem.expand = {};
+      if (!updatedItem.expand.hauler) updatedItem.expand.hauler = [];
+
+      // Update setiap hauler dengan data per jam
+      const updatedHauler = hauler.map((truck) => {
+        const vehicleDeviceId = truck.expand?.vehicle?.device_id;
+        if (!vehicleDeviceId) return truck;
+
+        // Filter events untuk truck ini dan source geofence
+        const truckEvents = eventsData.filter(
+          (event) =>
+            event.deviceId === vehicleDeviceId && event.geofenceId === source
+        );
+
+        // Hitung jumlah trip per jam
+        const hourlyData = calculateHourlyTrips(truckEvents);
+
+        // Hitung total data timbang (jumlah trip)
+        const totalTrips = Object.values(hourlyData).reduce(
+          (sum, count) => sum + count,
+          0
+        );
+
+        return {
+          ...truck,
+          // Tambahkan data per jam
+          hourly_data: hourlyData,
+          // Update data_timbang dengan jumlah trip
+          data_timbang: totalTrips,
+        };
+      });
+
+      // Update hauler dengan data yang sudah dihitung
+      updatedItem.expand.hauler = updatedHauler;
+
+      // Hitung total untuk parent (digger)
+      const parentHourlyData = {};
+
+      const timeColumns = Array.from(
+        { length: 13 },
+        (_, i) => `${(i + 7).toString().padStart(2, "0")}:00`
+      );
+      timeColumns.forEach((hour) => {
+        parentHourlyData[hour] = updatedHauler.reduce((sum, truck) => {
+          return sum + (truck.hourly_data?.[hour] || 0);
+        }, 0);
+      });
+
+      // Tambahkan hourly_data ke parent
+      updatedItem.hourly_data = parentHourlyData;
+
+      // Hitung total achievement untuk parent
+      updatedItem.total_trips = Object.values(parentHourlyData).reduce(
+        (sum, count) => sum + count,
+        0
+      );
+
+      return updatedItem;
+    });
+  }, [activityData, eventsData]);
+
+  const overburdenData = useMemo(() => {
+    return activityData?.filter((item) => item.type === "overburden");
+  }, [activityData]);
+
+  const coalGettingData = useMemo(() => {
+    return activityData?.filter((item) => item.type === "coal getting");
+  }, [activityData]);
+
+  const coalHaulingData = useMemo(() => {
+    return activityData?.filter((item) => item.type === "coal hauling");
+  }, [activityData]);
 
   const columns = [
     {
       accessorKey: "no",
       header: "No",
-      cell: (info) => info.getValue(),
+      cell: ({ row }) => {
+        return row.index + 1;
+      },
     },
     {
       accessorKey: "digger",
       header: "Digger",
-      cell: (info) => info.getValue(),
+      cell: ({ row }) => {
+        const vehicle = row?.original?.expand?.vehicle?.name;
+        return vehicle;
+      },
     },
     {
       accessorKey: "operator",
       header: "Operator",
-      cell: (info) => info.getValue(),
+      cell: ({ row }) => {
+        const operator = row?.original?.expand?.operator?.name;
+        return operator;
+      },
     },
     {
       accessorKey: "model",
       header: "Model",
-      cell: (info) => info.getValue(),
+      cell: ({ row }) => {
+        const model = row?.original?.expand?.vehicle?.model;
+        return model;
+      },
     },
     {
       accessorKey: "activity",
@@ -103,7 +210,6 @@ const ReportView = () => {
     {
       accessorKey: "plan",
       header: "Plan",
-      cell: (info) => info.getValue(),
     },
     {
       accessorKey: "ach",
@@ -134,12 +240,10 @@ const ReportView = () => {
       const toISO = endOfDay(new Date()).toISOString();
 
       // Fetch geofences dan devices secara parallel
-      const [geofencesResponse, devicesResponse, userResponses] =
-        await Promise.all([
-          axios.get("/api/proxy/traccar/geofences"),
-          axios.get("/api/proxy/traccar/devices"),
-          axios.get("/api/proxy/traccar/users"),
-        ]);
+      const [geofencesResponse, devicesResponse] = await Promise.all([
+        axios.get("/api/proxy/traccar/geofences"),
+        axios.get("/api/proxy/traccar/devices"),
+      ]);
 
       // Set geofences data
       if (geofencesResponse.data) {
@@ -169,11 +273,9 @@ const ReportView = () => {
 
         const allEvents = await Promise.all(eventPromises);
         const flattenedEvents = allEvents.flat();
-        setEventsData(flattenedEvents);
-      }
-
-      if (userResponses.data) {
-        setUsersData(userResponses.data);
+        setEventsData(
+          flattenedEvents?.filter((item) => item.type === "geofenceEnter")
+        );
       }
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -186,10 +288,6 @@ const ReportView = () => {
   useEffect(() => {
     fetchInitialData();
   }, []);
-
-  // console.log("Event : ", eventsData);
-  // console.log("Geofence :", geoFencesData);
-  // console.log("Device :", devicesData);
 
   return (
     <div className="flex flex-col gap-4">
@@ -310,11 +408,12 @@ const ReportView = () => {
         </div>
       </div>
 
-      <TableExpand />
+      <TableExpand updatedActivityData={updatedActivityData} />
 
       <Drawer
         direction={isMobile ? "bottom" : "right"}
         open={openDrawer.value}
+        className="w-6xl"
         onOpenChange={(value) => {
           if (value) {
             openDrawer.onTrue();
@@ -325,14 +424,14 @@ const ReportView = () => {
         }}
       >
         <DrawerAddEditActivity
-          // onUpdateData={setData}
           onClose={() => {
             openDrawer.onFalse();
-            // setEditData(null);
           }}
           geoFencesData={geoFencesData}
           vehicleData={vehicleData}
-          // editData={editData}
+          operatorData={operatorData}
+          routeData={routeData}
+          projectData={projectData}
         />
       </Drawer>
     </div>
