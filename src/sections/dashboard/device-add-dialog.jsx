@@ -9,11 +9,12 @@ import {
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import { RHFTextField } from "@/components/hook-form";
+import { RHFTextField, RhfMultiSelect } from "@/components/hook-form";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/auth-context";
 import axios from "axios";
 import { toast } from "sonner";
+import { useCallback, useEffect, useState } from "react";
+import { useBoolean } from "@/hooks/use-boolean";
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Name is required"),
@@ -21,7 +22,8 @@ const schema = Yup.object().shape({
 });
 
 export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
-  const { token } = useAuth();
+  const loadingFetch = useBoolean();
+  const [geofenceData, setGeofenceData] = useState([]);
 
   const methods = useForm({
     resolver: yupResolver(schema),
@@ -39,11 +41,26 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post("/api/proxy/traccar/devices", data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.post(
+        "/api/proxy/traccar/devices",
+        {
+          name: data.name,
+          uniqueId: data.uniqueId,
         },
-      });
+      );
+
+      if (data.geofences.length > 0) {
+        for (const geofenceId of data.geofences) {
+          await axios.post(
+            "api/proxy/traccar/permissions",
+            {
+              deviceId: response.data.id.toString(),
+              geofenceId: geofenceId,
+            },
+          );
+        }
+      }
+
       toast.success("Device added successfully");
       onDeviceAdd(response.data);
       reset();
@@ -53,6 +70,24 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
       toast.error("Failed to add device. Please try again.");
     }
   };
+
+  const fetchGeofenceData = useCallback(async () => {
+    loadingFetch.onTrue();
+
+    try {
+      const { data } = await axios.get("/api/proxy/traccar/geofences");
+
+      setGeofenceData(data);
+    } catch (error) {
+      console.error("Error fetching geofence data: ", error);
+    } finally {
+      loadingFetch.onFalse();
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGeofenceData();
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -67,6 +102,17 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
               name="uniqueId"
               label="Identifier"
               helperText="IMEI, serial number or other id. It has to match the identifier device reports to the server."
+            />
+            <RhfMultiSelect
+              name="geofences"
+              label="Geofences Connection"
+              placeholder="Select Geofences"
+              options={geofenceData?.map((geofence) => ({
+                label: geofence.name,
+                value: geofence.id,
+              }))}
+              searchable
+              hideSelectAll={false}
             />
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>

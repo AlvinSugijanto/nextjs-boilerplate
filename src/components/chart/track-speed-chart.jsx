@@ -19,8 +19,8 @@ export default function TrackSpeedChart({ data = [], height = 260 }) {
 
   const formattedData = data.map((item) => ({
     ...item,
-    speedKmh: Math.round((item.speed || 0) * 1.852),
     label: item.time || item.date || "",
+    speedKmh: Number(Number((item.speed || 0) * 1.852).toFixed(2)),
   }));
 
   return (

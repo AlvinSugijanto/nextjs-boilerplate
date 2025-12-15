@@ -360,7 +360,7 @@ const transformedDataFullTrack = (data, device) => {
     longitude: item.longitude,
     date: new Date(item.deviceTime),
     time: new Date(item.deviceTime).toTimeString().split(" ")[0],
-    speed: item.speed,
+    speed: Number(item.speed || 0),
     deviceName: device?.name || null,
   }));
 };

@@ -7,7 +7,7 @@ function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
   const [sorting, setSorting] = useState([
     {
       id: "eventTime",
-      desc: false,
+      desc: true,
     },
   ]);
 

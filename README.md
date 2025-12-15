@@ -5,7 +5,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ````bash
-# hjs-project
+# TRACCAR
 
 Next.js app scaffolded from create-next-app and using the shadcn UI template with Tailwind CSS.
 

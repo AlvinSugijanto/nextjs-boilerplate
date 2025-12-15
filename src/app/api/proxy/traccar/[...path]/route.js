@@ -132,9 +132,11 @@ export async function DELETE(req, { params }) {
   if (!token)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const body = await req.json().catch(() => ({}));
+
   try {
     const api = apiClient(token);
-    const res = await api.delete(url.replace(BASE_API_URL, ""));
+    const res = await api.delete(url.replace(BASE_API_URL, ""), { data: body });
     return NextResponse.json(res.data);
   } catch (error) {
     return handleError(error, url);

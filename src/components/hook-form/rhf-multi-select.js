@@ -34,6 +34,7 @@ export default function RHFMultiSelect({
           )}
 
           <MultiSelect
+            key={JSON.stringify(value || [])}
             options={options}
             onValueChange={onChange}
             defaultValue={value || []}
