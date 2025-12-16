@@ -24,6 +24,7 @@ import { toast } from "sonner";
 
 function DeviceCard({
   devices = [],
+  geofences = [],
   onDeviceClick,
   loading = false,
   selectedDeviceId,
@@ -389,6 +390,7 @@ function DeviceCard({
         open={addDeviceDialog.value}
         onClose={addDeviceDialog.onFalse}
         onDeviceAdd={onDeviceAdd}
+        geofences={geofences}
       />
       <DeviceEditDialog
         open={editDeviceDialog.value}
