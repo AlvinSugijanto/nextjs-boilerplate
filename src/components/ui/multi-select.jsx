@@ -187,7 +187,7 @@ export function MultiSelect({
           zIndex: 9999,
         }}
       >
-        <Command className="rounded-lg border shadow-md">
+        <Command className="shadow-md">
           {searchable && (
             <CommandInput
               placeholder="Search..."
