@@ -4,7 +4,6 @@ import { Controller, useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import Iconify from "../iconify";
 
 export default function RHFInput({
   name,
@@ -15,6 +14,7 @@ export default function RHFInput({
   customChange,
   className,
   propsEndInput,
+  disabled = false,
 }) {
   const { control } = useFormContext();
 
@@ -43,6 +43,7 @@ export default function RHFInput({
                 customChange?.(value);
               }}
               onWheel={(e) => e.currentTarget.blur()} // untuk mencegah scroll ubah nilai number
+              disabled={disabled}
               className={cn(
                 error
                   ? "border-destructive focus-visible:ring-destructive"
