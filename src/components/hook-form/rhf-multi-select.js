@@ -17,6 +17,7 @@ export default function RHFMultiSelect({
   placeholder = "Select options",
   className,
   variant = "default",
+  disabled = false,
   ...rest
 }) {
   const { control } = useFormContext();
@@ -40,6 +41,7 @@ export default function RHFMultiSelect({
             defaultValue={value || []}
             placeholder={placeholder}
             variant={variant}
+            disabled={disabled}
             {...rest}
           />
 

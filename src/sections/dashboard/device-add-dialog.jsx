@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Dialog,
   DialogContent,
@@ -13,18 +11,13 @@ import { RHFTextField, RhfMultiSelect } from "@/components/hook-form";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { toast } from "sonner";
-import { useCallback, useEffect, useState } from "react";
-import { useBoolean } from "@/hooks/use-boolean";
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Name is required"),
   uniqueId: Yup.string().required("Identifier is required"),
 });
 
-export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
-  const loadingFetch = useBoolean();
-  const [geofenceData, setGeofenceData] = useState([]);
-
+export function DeviceAddDialog({ open, onClose, onDeviceAdd, geofences }) {
   const methods = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -71,24 +64,6 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
     }
   };
 
-  const fetchGeofenceData = useCallback(async () => {
-    loadingFetch.onTrue();
-
-    try {
-      const { data } = await axios.get("/api/proxy/traccar/geofences");
-
-      setGeofenceData(data);
-    } catch (error) {
-      console.error("Error fetching geofence data: ", error);
-    } finally {
-      loadingFetch.onFalse();
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchGeofenceData();
-  }, []);
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
@@ -107,7 +82,7 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd }) {
               name="geofences"
               label="Geofences Connection"
               placeholder="Select Geofences"
-              options={geofenceData?.map((geofence) => ({
+              options={geofences?.map((geofence) => ({
                 label: geofence.name,
                 value: geofence.id,
               }))}

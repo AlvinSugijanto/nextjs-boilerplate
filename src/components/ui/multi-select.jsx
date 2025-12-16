@@ -54,6 +54,7 @@ export function MultiSelect({
   hideSelectAll = false,
   maxViewSelected = 1,
   size = "sm",
+  disabled = false,
 }) {
   const [selectedValues, setSelectedValues] = React.useState(defaultValue);
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
@@ -64,6 +65,8 @@ export function MultiSelect({
   const s = sizeStyles[size] ?? sizeStyles["md"];
 
   const toggleOption = (value) => {
+    if (disabled) return;
+
     const newValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
@@ -74,6 +77,8 @@ export function MultiSelect({
   };
 
   const clearAll = () => {
+    if (disabled) return;
+
     setSelectedValues([]);
     onValueChange?.([]);
   };
@@ -84,6 +89,8 @@ export function MultiSelect({
   }, [options]);
 
   const toggleAll = () => {
+    if (disabled) return;
+
     if (selectedValues.length === allOptions.length) {
       clearAll();
     } else {
@@ -110,14 +117,19 @@ export function MultiSelect({
   }, [options, searchValue]);
 
   return (
-    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen} modal={true}>
+    <Popover
+      open={isPopoverOpen && !disabled}
+      onOpenChange={(open) => !disabled && setIsPopoverOpen(open)}
+      modal={true}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
           variant="outline"
+          disabled={disabled}
           className={cn(
             "w-full justify-between",
-            s.button, // ⭐ apply size
+            s.button,
             className
           )}
 
@@ -133,12 +145,15 @@ export function MultiSelect({
                     <Badge
                       key={value}
                       className={cn(
-                        "flex items-center gap-1 cursor-pointer",
+                        "flex items-center gap-1",
+                        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
                         s.badge
                       )}
                       onClick={(e) => {
-                        e.stopPropagation();
-                        toggleOption(value);
+                        if (!disabled) {
+                          e.stopPropagation();
+                          toggleOption(value);
+                        }
                       }}
                     >
                       {label}
@@ -172,7 +187,7 @@ export function MultiSelect({
           zIndex: 9999,
         }}
       >
-        <Command className="rounded-lg border shadow-md">
+        <Command className="shadow-md">
           {searchable && (
             <CommandInput
               placeholder="Search..."
@@ -263,7 +278,6 @@ export function MultiSelect({
                   </CommandItem>
                 );
               })}
-
             {selectedValues.length > 0 && (
               <CommandGroup>
                 <CommandItem

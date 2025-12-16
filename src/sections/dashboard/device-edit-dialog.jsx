@@ -110,13 +110,21 @@ export function DeviceEditDialog({ open, onClose, device, onDeviceUpdate }) {
     } finally {
       loadingFetch.onFalse();
     }
-  }, [device]);
+  }, [device, reset]);
 
   useEffect(() => {
     if (open && device?.id) {
       fetchGeofenceData();
+    } else if (!open) {
+      reset({
+        name: "",
+        uniqueId: "",
+        geofences: [],
+      });
+      setGeofenceData([]);
+      setSelectedGeofences([]);
     }
-  }, [open, device?.id, fetchGeofenceData]);
+  }, [open, device?.id, fetchGeofenceData, reset]);
 
 
   return (
@@ -127,28 +135,44 @@ export function DeviceEditDialog({ open, onClose, device, onDeviceUpdate }) {
         </DialogHeader>
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <RHFTextField name="name" label="Name" />
+            <RHFTextField
+              name="name"
+              label="Name"
+              placeholder={loadingFetch.value ? "Loading..." : ""}
+              disabled={loadingFetch.value}
+            />
             <RHFTextField
               name="uniqueId"
               label="Identifier"
+              placeholder={loadingFetch.value ? "Loading..." : ""}
               helperText="IMEI, serial number or other id. It has to match the identifier device reports to the server."
+              disabled={loadingFetch.value}
             />
             <RhfMultiSelect
               name="geofences"
               label="Geofences Connection"
-              placeholder="Select Geofences"
+              placeholder={loadingFetch.value ? "Loading geofences..." : "Select Geofences"}
               options={geofenceData?.map((geofence) => ({
                 label: geofence.name,
                 value: geofence.id,
               }))}
               searchable
               hideSelectAll={false}
+              disabled={loadingFetch.value}
             />
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting || loadingFetch.value}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting || loadingFetch.value}
+              >
                 {isSubmitting ? "Updating..." : "Update Device"}
               </Button>
             </div>
