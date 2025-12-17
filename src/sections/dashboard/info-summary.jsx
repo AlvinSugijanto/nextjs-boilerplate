@@ -106,7 +106,7 @@ const InfoSummary = ({
           onValueChange={onChangeDevices}
         />
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex-1">
             <RangeDatePicker
               from={from}
@@ -118,10 +118,9 @@ const InfoSummary = ({
           </div>
 
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             aria-label="Reset"
-            className="bg-gray-100! dark:bg-gray-800! hover:bg-gray-200! dark:hover:bg-gray-700! border"
             onClick={() => {
               onChangeDateRange({ from: new Date(), to: new Date() });
             }}

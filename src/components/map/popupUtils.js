@@ -14,7 +14,7 @@ export const createPopupHtml = (properties) => {
   const speedLine =
     typeof speed === "number"
       ? `<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280;">
-         <span>Speed: ${Math.round(speed * 1.852 || 0)} km/h</span>
+         <span>Speed: ${(speed * 1.852).toFixed(2)} km/h</span>
        </div>`
       : "";
 

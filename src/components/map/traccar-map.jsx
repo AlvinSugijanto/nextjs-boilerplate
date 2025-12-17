@@ -18,6 +18,8 @@ import { Loader2 } from "lucide-react";
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
+  GEOFENCES_FILL_LAYER_ID,
+  GEOFENCES_OUTLINE_LAYER_ID,
   GEOFENCE_LABELS_LAYER_ID,
 } from "./constants";
 import { addGeofenceLayers, updateGeofenceData } from "./geofenceLayers";
@@ -515,7 +517,11 @@ const TraccarMap = ({
       if (!editMode) return;
 
       const features = mapRef.current.queryRenderedFeatures(e.point, {
-        layers: ["geofences-fill", "geofences-outline"],
+        layers: [
+          GEOFENCES_FILL_LAYER_ID,
+          GEOFENCES_OUTLINE_LAYER_ID,
+          GEOFENCE_LABELS_LAYER_ID,
+        ],
       });
 
       if (features.length > 0) {
@@ -528,11 +534,42 @@ const TraccarMap = ({
       }
     };
 
+    const handleMouseEnter = () => {
+      if (!editMode) return;
+      mapRef.current.getCanvas().style.cursor = "pointer";
+    };
+
+    const handleMouseLeave = (e) => {
+      if (!editMode) return;
+      const features = mapRef.current.queryRenderedFeatures(e.point, {
+        layers: [
+          GEOFENCES_FILL_LAYER_ID,
+          GEOFENCES_OUTLINE_LAYER_ID,
+          GEOFENCE_LABELS_LAYER_ID,
+        ],
+      });
+      if (features.length === 0) {
+        mapRef.current.getCanvas().style.cursor = "";
+      }
+    };
+
     mapRef.current.on("click", handleGeofenceClick);
+    mapRef.current.on("mouseenter", GEOFENCES_FILL_LAYER_ID, handleMouseEnter);
+    mapRef.current.on("mouseleave", GEOFENCES_FILL_LAYER_ID, handleMouseLeave);
+    mapRef.current.on("mouseenter", GEOFENCES_OUTLINE_LAYER_ID, handleMouseEnter);
+    mapRef.current.on("mouseleave", GEOFENCES_OUTLINE_LAYER_ID, handleMouseLeave);
+    mapRef.current.on("mouseenter", GEOFENCE_LABELS_LAYER_ID, handleMouseEnter);
+    mapRef.current.on("mouseleave", GEOFENCE_LABELS_LAYER_ID, handleMouseLeave);
 
     return () => {
       if (mapRef.current) {
         mapRef.current.off("click", handleGeofenceClick);
+        mapRef.current.off("mouseenter", GEOFENCES_FILL_LAYER_ID, handleMouseEnter);
+        mapRef.current.off("mouseleave", GEOFENCES_FILL_LAYER_ID, handleMouseLeave);
+        mapRef.current.off("mouseenter", GEOFENCES_OUTLINE_LAYER_ID, handleMouseEnter);
+        mapRef.current.off("mouseleave", GEOFENCES_OUTLINE_LAYER_ID, handleMouseLeave);
+        mapRef.current.off("mouseenter", GEOFENCE_LABELS_LAYER_ID, handleMouseEnter);
+        mapRef.current.off("mouseleave", GEOFENCE_LABELS_LAYER_ID, handleMouseLeave);
       }
     };
   }, [editMode, mapLoaded]);
