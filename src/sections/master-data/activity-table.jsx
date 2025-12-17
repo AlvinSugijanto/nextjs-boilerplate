@@ -20,21 +20,23 @@ import {
 } from "@/components/ui/sheet";
 import { TableList } from "@/components/table";
 import { ConfirmDialog } from "@/components/dialog";
-import { RHFTextField } from "@/components/hook-form";
+import { RHFSelect, RHFTextField } from "@/components/hook-form";
 import Iconify from "@/components/iconify";
 import ColumnActions from "./column-actions";
 
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { activitySchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
+  sub_activity: "",
+  process_method: "",
 };
 
-const ProjectTable = () => {
+const ActivityTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -44,6 +46,7 @@ const ProjectTable = () => {
 
   // ====== State ======
   const [data, setData] = useState([]);
+  const [processMethod, setProcessMethod] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -51,7 +54,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(activitySchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,21 +62,40 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode ? "Edit Activity" : "Add New Activity";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the activity details below."
+    : "Fill in the details to add a new activity.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
-        headers: { type: "getfulllist" },
+      const { data } = await axios.get("/api/collection/activity", {
+        headers: {
+          type: "getfulllist",
+          expand: "sub_activity, process_method",
+        },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching activity data:", error);
+    } finally {
+      loadingFetch.onFalse();
+    }
+  }, []);
+
+  const fetchProcessMethod = useCallback(async () => {
+    loadingFetch.onTrue();
+    try {
+      const { data } = await axios.get("/api/collection/activity_method", {
+        headers: {
+          type: "getfulllist",
+        },
+      });
+      setProcessMethod(data);
+    } catch (error) {
+      console.error("Error fetching process method data:", error);
     } finally {
       loadingFetch.onFalse();
     }
@@ -105,27 +127,53 @@ const ProjectTable = () => {
     loadingSubmit.onTrue();
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing activity
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
+          `/api/collection/activity/${selectedData.id}`,
           values
         );
+
+        const transformedData = {
+          ...res,
+          expand: {
+            ...res.expand,
+            sub_activity: data.find((item) => item.id === res.sub_activity),
+            process_method: processMethod.find(
+              (item) => item.id === res.process_method
+            ),
+          },
+        };
+
         setData((prevData) =>
-          prevData.map((item) => (item.id === selectedData.id ? res : item))
+          prevData.map((item) =>
+            item.id === selectedData.id ? transformedData : item
+          )
         );
-        toast.success("Project updated successfully!");
+        toast.success("Activity updated successfully!");
       } else {
-        // Create new project
+        // Create new activity
         const { data: res } = await axios.post(
-          "/api/collection/project",
+          "/api/collection/activity",
           values
         );
-        setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+
+        const transformedData = {
+          ...res,
+          expand: {
+            ...res.expand,
+            sub_activity: data.find((item) => item.id === res.sub_activity),
+            process_method: processMethod.find(
+              (item) => item.id === res.process_method
+            ),
+          },
+        };
+
+        setData((prevData) => [...prevData, transformedData]);
+        toast.success("Activity created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting activity:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -157,7 +205,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save activity. Please try again."
         );
       }
     } finally {
@@ -168,14 +216,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/activity/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting activity:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -194,15 +242,20 @@ const ProjectTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: "Activity",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
         ),
       },
       {
-        accessorKey: "code",
-        header: "Project Code",
+        accessorKey: "expand.sub_activity.name",
+        header: "Sub Activity",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "expand.process_method.name",
+        header: "Process Method",
         meta: { sortable: true },
       },
       {
@@ -239,7 +292,8 @@ const ProjectTable = () => {
   // ====== Effects ======
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchProcessMethod();
+  }, []);
 
   // ====== Render ======
   return (
@@ -247,7 +301,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>Activity</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -258,7 +312,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add Activity
               </Button>
             </SheetTrigger>
 
@@ -274,13 +328,26 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
+                        label="Activity Name"
+                        placeholder="Enter activity name"
                       />
-                      <RHFTextField
-                        name="code"
-                        label="Project Code"
-                        placeholder="Enter project code"
+                      <RHFSelect
+                        name="sub_activity"
+                        label="Sub Activity"
+                        placeholder="Select sub activity"
+                        options={data.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
+                      />
+                      <RHFSelect
+                        name="process_method"
+                        label="Process Method"
+                        placeholder="Select process method"
+                        options={processMethod.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
                       />
                     </div>
                   </div>
@@ -327,7 +394,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete activity "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -338,4 +405,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default ActivityTable;

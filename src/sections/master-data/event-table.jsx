@@ -20,21 +20,22 @@ import {
 } from "@/components/ui/sheet";
 import { TableList } from "@/components/table";
 import { ConfirmDialog } from "@/components/dialog";
-import { RHFTextField } from "@/components/hook-form";
+import { RHFSelect, RHFTextField } from "@/components/hook-form";
 import Iconify from "@/components/iconify";
 import ColumnActions from "./column-actions";
 
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { eventSchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
+  status: "",
 };
 
-const ProjectTable = () => {
+const EventTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -44,6 +45,7 @@ const ProjectTable = () => {
 
   // ====== State ======
   const [data, setData] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -51,7 +53,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(eventSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,23 +61,34 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode ? "Edit Event" : "Add New Event";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the event details below."
+    : "Fill in the details to add a new event.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
-        headers: { type: "getfulllist" },
+      const { data } = await axios.get("/api/collection/events", {
+        headers: { type: "getfulllist", expand: "status" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching event data:", error);
     } finally {
       loadingFetch.onFalse();
+    }
+  }, []);
+
+  const fetchDataEvents = useCallback(async () => {
+    try {
+      const { data } = await axios.get("/api/collection/event_type", {
+        headers: { type: "getfulllist" },
+      });
+      setEventTypes(data);
+    } catch (error) {
+      console.error("Error fetching event data:", error);
     }
   }, []);
 
@@ -103,29 +116,72 @@ const ProjectTable = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
+
+    // make array with same status
+    let lastCode = "";
+    const sameStatus = data.filter((item) => item.status === values.status);
+
+    if (sameStatus.length > 0) {
+      console.log("sameStatus", sameStatus);
+
+      // sort by code
+      const sortedSameStatus = sameStatus.sort((a, b) => {
+        return parseInt(a.code) - parseInt(b.code);
+      });
+
+      console.log("sortedSameStatus", sortedSameStatus);
+
+      const sortedLastCode = sortedSameStatus[sameStatus.length - 1].code;
+      const newCode = parseInt(sortedLastCode) + 1;
+      lastCode = newCode.toString().padStart(4, "0");
+    }
+
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing event
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
-          values
+          `/api/collection/events/${selectedData.id}`,
+          {
+            ...values,
+            code: lastCode,
+          }
         );
+
+        const transformedData = {
+          ...res,
+          code: lastCode,
+          expand: {
+            status: eventTypes.find((item) => item.id === res.status),
+          },
+        };
+
         setData((prevData) =>
-          prevData.map((item) => (item.id === selectedData.id ? res : item))
+          prevData.map((item) =>
+            item.id === selectedData.id ? transformedData : item
+          )
         );
-        toast.success("Project updated successfully!");
+        toast.success("Event updated successfully!");
       } else {
-        // Create new project
-        const { data: res } = await axios.post(
-          "/api/collection/project",
-          values
-        );
-        setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+        // Create new event
+        const { data: res } = await axios.post("/api/collection/events", {
+          ...values,
+          code: lastCode,
+        });
+
+        const transformedData = {
+          ...res,
+          code: lastCode,
+          expand: {
+            status: eventTypes.find((item) => item.id === res.status),
+          },
+        };
+
+        setData((prevData) => [...prevData, transformedData]);
+        toast.success("Event created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting event:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -157,7 +213,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save event. Please try again."
         );
       }
     } finally {
@@ -168,14 +224,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/events/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting event:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -194,16 +250,38 @@ const ProjectTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: "Event Activity",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
         ),
       },
       {
-        accessorKey: "code",
-        header: "Project Code",
+        accessorKey: "expand.status.name",
+        header: "Event",
         meta: { sortable: true },
+      },
+      {
+        accessorKey: "expand.status.event_number",
+        header: "Event Number",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "expand.status.code",
+        header: "Event Code",
+        meta: { sortable: true },
+        cell: ({ row }) => {
+          const value = row.original;
+          const statusCode = value.expand.status.code;
+          const eventCode = value.code;
+
+          return (
+            <p className="text-xs">
+              {statusCode}
+              {eventCode}
+            </p>
+          );
+        },
       },
       {
         accessorKey: "created",
@@ -239,7 +317,8 @@ const ProjectTable = () => {
   // ====== Effects ======
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchDataEvents();
+  }, []);
 
   // ====== Render ======
   return (
@@ -247,7 +326,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>Event</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -258,7 +337,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add Event
               </Button>
             </SheetTrigger>
 
@@ -274,13 +353,17 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
+                        label="Event Activity"
+                        placeholder="Enter event activity"
                       />
-                      <RHFTextField
-                        name="code"
-                        label="Project Code"
-                        placeholder="Enter project code"
+                      <RHFSelect
+                        name="status"
+                        label="Event"
+                        placeholder="Select event"
+                        options={eventTypes.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
                       />
                     </div>
                   </div>
@@ -327,7 +410,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete event "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -338,4 +421,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default EventTable;

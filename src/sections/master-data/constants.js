@@ -1,4 +1,16 @@
-export const LIST_VEHICLE_TYPE = [
-  { label: "Digger", value: "digger" },
-  { label: "Dump Truck", value: "dump truck" },
-];
+export const LIST_TAB = [
+  {label: "Project", value: "project"},
+  {label: "Cluster", value: "cluster"},
+  {label: "Activity Method", value: "activity_method"},
+  {label: "Equipment Model", value: "equipment_model"},
+  {label: "Event", value: "event"},
+  {label: "UoM", value: "uom"},
+  {label: "Material Recived", value: "material_recived"},
+  {label: "Material Count", value: "material_count"},
+  {label: "Activity", value: "activity"},
+  {label: "Process Loading", value: "process_loading"},
+  {label: "Process Material", value: "process_material"},
+  {label: "Process Activity", value: "process_activity"},
+  {label: "Number Filter Activity", value: "number_filter_activity"},
+  {label: "Shiftly", value: "shiftly"},
+]

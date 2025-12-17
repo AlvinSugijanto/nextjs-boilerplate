@@ -20,21 +20,23 @@ import {
 } from "@/components/ui/sheet";
 import { TableList } from "@/components/table";
 import { ConfirmDialog } from "@/components/dialog";
-import { RHFTextField } from "@/components/hook-form";
+import { RHFSelect, RHFTextField } from "@/components/hook-form";
 import Iconify from "@/components/iconify";
 import ColumnActions from "./column-actions";
 
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { equipmentModelSchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
+  activity_method: "",
+  cluster: "",
 };
 
-const ProjectTable = () => {
+const EquipmentModelTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -44,6 +46,8 @@ const ProjectTable = () => {
 
   // ====== State ======
   const [data, setData] = useState([]);
+  const [listActivityMethod, setListActivityMethod] = useState([]);
+  const [listCluster, setListCluster] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -51,7 +55,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(equipmentModelSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,21 +63,51 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode
+    ? "Edit EquipmentModel"
+    : "Add New EquipmentModel";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the equipmentModel details below."
+    : "Fill in the details to add a new equipmentModel.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
-        headers: { type: "getfulllist" },
+      const { data } = await axios.get("/api/collection/equipment_model", {
+        headers: { type: "getfulllist", expand: "activity_method, cluster" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching equipmentModel data:", error);
+    } finally {
+      loadingFetch.onFalse();
+    }
+  }, []);
+
+  const fetchDataActivityMethod = useCallback(async () => {
+    loadingFetch.onTrue();
+    try {
+      const { data } = await axios.get("/api/collection/activity_method", {
+        headers: { type: "getfulllist" },
+      });
+      setListActivityMethod(data);
+    } catch (error) {
+      console.error("Error fetching activity method data:", error);
+    } finally {
+      loadingFetch.onFalse();
+    }
+  }, []);
+
+  const fetchDataCluster = useCallback(async () => {
+    loadingFetch.onTrue();
+    try {
+      const { data } = await axios.get("/api/collection/cluster", {
+        headers: { type: "getfulllist" },
+      });
+      setListCluster(data);
+    } catch (error) {
+      console.error("Error fetching cluster data:", error);
     } finally {
       loadingFetch.onFalse();
     }
@@ -105,27 +139,51 @@ const ProjectTable = () => {
     loadingSubmit.onTrue();
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing equipmentModel
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
+          `/api/collection/equipment_model/${selectedData.id}`,
           values
         );
+
+        const transformedData = {
+          ...res,
+          expand: {
+            activity_method: listActivityMethod.find(
+              (item) => item.id === res.activity_method
+            ),
+            cluster: listCluster.find((item) => item.id === res.cluster),
+          },
+        };
+
         setData((prevData) =>
-          prevData.map((item) => (item.id === selectedData.id ? res : item))
+          prevData.map((item) =>
+            item.id === selectedData.id ? transformedData : item
+          )
         );
-        toast.success("Project updated successfully!");
+        toast.success("EquipmentModel updated successfully!");
       } else {
-        // Create new project
+        // Create new equipmentModel
         const { data: res } = await axios.post(
-          "/api/collection/project",
+          "/api/collection/equipment_model",
           values
         );
-        setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+
+        const transformedData = {
+          ...res,
+          expand: {
+            activity_method: listActivityMethod.find(
+              (item) => item.id === res.activity_method
+            ),
+            cluster: listCluster.find((item) => item.id === res.cluster),
+          },
+        };
+
+        setData((prevData) => [...prevData, transformedData]);
+        toast.success("EquipmentModel created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting equipmentModel:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -157,7 +215,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save equipmentModel. Please try again."
         );
       }
     } finally {
@@ -168,14 +226,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/equipment_model/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting equipmentModel:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -201,8 +259,18 @@ const ProjectTable = () => {
         ),
       },
       {
-        accessorKey: "code",
-        header: "Project Code",
+        accessorKey: "expand.activity_method.name",
+        header: "Activity Method",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "expand.cluster.name",
+        header: "Cluster",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "expand.activity_method.code",
+        header: "Method Code",
         meta: { sortable: true },
       },
       {
@@ -239,7 +307,9 @@ const ProjectTable = () => {
   // ====== Effects ======
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchDataActivityMethod();
+    fetchDataCluster();
+  }, []);
 
   // ====== Render ======
   return (
@@ -247,7 +317,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>EquipmentModel</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -258,7 +328,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add EquipmentModel
               </Button>
             </SheetTrigger>
 
@@ -274,13 +344,26 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
+                        label="Name"
+                        placeholder="Enter name"
                       />
-                      <RHFTextField
-                        name="code"
-                        label="Project Code"
-                        placeholder="Enter project code"
+                      <RHFSelect
+                        name="activity_method"
+                        label="Activity Method"
+                        placeholder="Select activity method"
+                        options={listActivityMethod.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
+                      />
+                      <RHFSelect
+                        name="cluster"
+                        label="Cluster"
+                        placeholder="Select cluster"
+                        options={listCluster.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
                       />
                     </div>
                   </div>
@@ -327,7 +410,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete equipmentModel "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -338,4 +421,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default EquipmentModelTable;

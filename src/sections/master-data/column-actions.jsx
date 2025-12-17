@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Iconify from "@/components/iconify";
-import { ConfirmDialog } from "@/components/dialog";
 
 const ColumnActions = ({ onEdit, onDelete }) => {
   return (

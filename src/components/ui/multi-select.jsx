@@ -102,9 +102,14 @@ export function MultiSelect({
 
   const filteredOptions = React.useMemo(() => {
     if (!searchValue) return options;
-    const filterFn = (opt) =>
-      opt.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-      opt.value.toLowerCase().includes(searchValue.toLowerCase());
+    const filterFn = (opt) => {
+      const label = String(opt.label ?? "").toLowerCase();
+      const value = String(opt.value ?? "").toLowerCase();
+      const search = searchValue.toLowerCase();
+
+      return label.includes(search) || value.includes(search);
+    };
+
     if (isGrouped) {
       return options
         .map((g) => ({
@@ -127,12 +132,7 @@ export function MultiSelect({
           type="button"
           variant="outline"
           disabled={disabled}
-          className={cn(
-            "w-full justify-between",
-            s.button,
-            className
-          )}
-
+          className={cn("w-full justify-between", s.button, className)}
         >
           <div className="flex flex-wrap items-start gap-1">
             {selectedValues.length > 0 ? (
@@ -146,7 +146,9 @@ export function MultiSelect({
                       key={value}
                       className={cn(
                         "flex items-center gap-1",
-                        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+                        disabled
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer",
                         s.badge
                       )}
                       onClick={(e) => {
@@ -225,59 +227,59 @@ export function MultiSelect({
 
             {isGrouped
               ? filteredOptions.map((group) => (
-                <CommandGroup
-                  key={group.heading}
-                  heading={group.heading}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-                >
-                  {group.options.map((opt) => {
-                    const isSelected = selectedValues.includes(opt.value);
-                    return (
-                      <CommandItem
-                        key={opt.value}
-                        disabled={opt.disabled}
-                        onSelect={() => toggleOption(opt.value)}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <div
-                          className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "opacity-50"
-                          )}
-                        >
-                          <CheckIcon className="h-3 w-3" />
-                        </div>
-                        {opt.label}
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              ))
-              : filteredOptions.map((opt) => {
-                const isSelected = selectedValues.includes(opt.value);
-                return (
-                  <CommandItem
-                    key={opt.value}
-                    disabled={opt.disabled}
-                    onSelect={() => toggleOption(opt.value)}
-                    className="flex items-center gap-2 cursor-pointer"
+                  <CommandGroup
+                    key={group.heading}
+                    heading={group.heading}
+                    className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
                   >
-                    <div
-                      className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50"
-                      )}
+                    {group.options.map((opt) => {
+                      const isSelected = selectedValues.includes(opt.value);
+                      return (
+                        <CommandItem
+                          key={opt.value}
+                          disabled={opt.disabled}
+                          onSelect={() => toggleOption(opt.value)}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <div
+                            className={cn(
+                              "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50"
+                            )}
+                          >
+                            <CheckIcon className="h-3 w-3" />
+                          </div>
+                          {opt.label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                ))
+              : filteredOptions.map((opt) => {
+                  const isSelected = selectedValues.includes(opt.value);
+                  return (
+                    <CommandItem
+                      key={opt.value}
+                      disabled={opt.disabled}
+                      onSelect={() => toggleOption(opt.value)}
+                      className="flex items-center gap-2 cursor-pointer"
                     >
-                      <CheckIcon className="h-3 w-3" />
-                    </div>
-                    {opt.label}
-                  </CommandItem>
-                );
-              })}
+                      <div
+                        className={cn(
+                          "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "opacity-50"
+                        )}
+                      >
+                        <CheckIcon className="h-3 w-3" />
+                      </div>
+                      {opt.label}
+                    </CommandItem>
+                  );
+                })}
             {selectedValues.length > 0 && (
               <CommandGroup>
                 <CommandItem

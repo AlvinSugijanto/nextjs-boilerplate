@@ -27,14 +27,14 @@ import ColumnActions from "./column-actions";
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { clusterSchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
 };
 
-const ProjectTable = () => {
+const ClusterTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -51,7 +51,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(clusterSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,21 +59,21 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode ? "Edit Cluster" : "Add New Cluster";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the cluster details below."
+    : "Fill in the details to add a new cluster.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
+      const { data } = await axios.get("/api/collection/cluster", {
         headers: { type: "getfulllist" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching cluster data:", error);
     } finally {
       loadingFetch.onFalse();
     }
@@ -105,27 +105,27 @@ const ProjectTable = () => {
     loadingSubmit.onTrue();
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing cluster
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
+          `/api/collection/cluster/${selectedData.id}`,
           values
         );
         setData((prevData) =>
           prevData.map((item) => (item.id === selectedData.id ? res : item))
         );
-        toast.success("Project updated successfully!");
+        toast.success("Cluster updated successfully!");
       } else {
-        // Create new project
+        // Create new cluster
         const { data: res } = await axios.post(
-          "/api/collection/project",
+          "/api/collection/cluster",
           values
         );
         setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+        toast.success("Cluster created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting cluster:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -157,7 +157,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save cluster. Please try again."
         );
       }
     } finally {
@@ -168,14 +168,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/cluster/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting cluster:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -199,11 +199,6 @@ const ProjectTable = () => {
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
         ),
-      },
-      {
-        accessorKey: "code",
-        header: "Project Code",
-        meta: { sortable: true },
       },
       {
         accessorKey: "created",
@@ -247,7 +242,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>Cluster</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -258,7 +253,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add Cluster
               </Button>
             </SheetTrigger>
 
@@ -274,13 +269,8 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
-                      />
-                      <RHFTextField
-                        name="code"
-                        label="Project Code"
-                        placeholder="Enter project code"
+                        label="Cluster Name"
+                        placeholder="Enter cluster name"
                       />
                     </div>
                   </div>
@@ -327,7 +317,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete cluster "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -338,4 +328,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default ClusterTable;
