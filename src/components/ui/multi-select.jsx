@@ -215,7 +215,7 @@ export function MultiSelect({
                       "flex h-4 w-4 items-center justify-center rounded-[4px] border",
                       selectedValues.length === allOptions.length
                         ? "bg-primary border-primary"
-                        : "border-white/50"
+                        : "dark:border-white/50 border-black/50"
                     )}
                   >
                     <CheckIcon className={selectedValues.length === allOptions.length
@@ -249,7 +249,7 @@ export function MultiSelect({
                             "flex h-4 w-4 items-center justify-center rounded-[4px] border",
                             isSelected
                               ? "bg-primary border-primary"
-                              : "border-white/50"
+                              : "dark:border-white/50 border-black/50"
                           )}
                         >
                           <CheckIcon className={isSelected ? "text-primary-foreground" : ""} />
@@ -276,7 +276,7 @@ export function MultiSelect({
                           "flex h-4 w-4 items-center justify-center rounded-[4px] border",
                           isSelected
                             ? "bg-primary border-primary"
-                            : "border-ring"
+                            : "dark:border-white/50 border-black/50"
                         )}
                       >
                         <CheckIcon className={isSelected ? "text-primary-foreground" : ""} />
