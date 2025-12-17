@@ -20,23 +20,35 @@ const ReportView = () => {
   const openDrawer = useBoolean();
   const isLoading = useBoolean();
 
-  const { data: vehicleData } = useGetDataDb("/api/collection/vehicle", {
-    type: "getfulllist",
-  });
+  const { data: vehicleData, loading: loadingVehicle } = useGetDataDb(
+    "/api/collection/vehicle",
+    {
+      type: "getfulllist",
+    }
+  );
 
-  const { data: operatorData } = useGetDataDb("/api/collection/operator", {
-    type: "getfulllist",
-  });
+  const { data: operatorData, loading: loadingOperator } = useGetDataDb(
+    "/api/collection/operator",
+    {
+      type: "getfulllist",
+    }
+  );
 
-  const { data: routeData } = useGetDataDb("/api/collection/route", {
-    type: "getfulllist",
-  });
+  const { data: routeData, loading: loadingRouter } = useGetDataDb(
+    "/api/collection/route",
+    {
+      type: "getfulllist",
+    }
+  );
 
-  const { data: projectData } = useGetDataDb("/api/collection/project", {
-    type: "getfulllist",
-  });
+  const { data: projectData, loading: loadingProject } = useGetDataDb(
+    "/api/collection/project",
+    {
+      type: "getfulllist",
+    }
+  );
 
-  const { data: activityData } = useGetDataDb(
+  const { data: activityData, loading: loadingActivity } = useGetDataDb(
     "/api/collection/daily_productivity",
     {
       type: "getfulllist",
@@ -46,13 +58,31 @@ const ReportView = () => {
     }
   );
 
+  const loading = useMemo(() => {
+    return (
+      isLoading ||
+      loadingActivity ||
+      loadingOperator ||
+      loadingProject ||
+      loadingRouter ||
+      loadingVehicle
+    );
+  }, [
+    isLoading,
+    loadingActivity,
+    loadingOperator,
+    loadingProject,
+    loadingRouter,
+    loadingVehicle,
+  ]);
+
   const [sorting, setSorting] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [geoFencesData, setGeofencesData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
   const [devicesData, setDevicesData] = useState([]);
 
-  const calculateHourlyTrips = (events) => {
+  const calculateHourlyTrips = (events, data_timbang = 0) => {
     const hourlyCount = {};
 
     events.forEach((event) => {
@@ -78,7 +108,7 @@ const ReportView = () => {
 
     const result = {};
     timeColumns.forEach((hour) => {
-      result[hour] = hourlyCount[hour] || 0;
+      result[hour] = hourlyCount[hour] * data_timbang || 0;
     });
 
     return result;
@@ -112,7 +142,10 @@ const ReportView = () => {
         );
 
         // Hitung jumlah trip per jam
-        const hourlyData = calculateHourlyTrips(truckEvents);
+        const hourlyData = calculateHourlyTrips(
+          truckEvents,
+          truck?.data_timbang
+        );
 
         // Hitung total data timbang (jumlah trip)
         const totalTrips = Object.values(hourlyData).reduce(
@@ -124,8 +157,6 @@ const ReportView = () => {
           ...truck,
           // Tambahkan data per jam
           hourly_data: hourlyData,
-          // Update data_timbang dengan jumlah trip
-          data_timbang: totalTrips,
         };
       });
 
@@ -149,7 +180,7 @@ const ReportView = () => {
       updatedItem.hourly_data = parentHourlyData;
 
       // Hitung total achievement untuk parent
-      updatedItem.total_trips = Object.values(parentHourlyData).reduce(
+      updatedItem.total_hourly_data = Object.values(parentHourlyData).reduce(
         (sum, count) => sum + count,
         0
       );
@@ -159,16 +190,16 @@ const ReportView = () => {
   }, [activityData, eventsData]);
 
   const overburdenData = useMemo(() => {
-    return activityData?.filter((item) => item.type === "overburden");
-  }, [activityData]);
+    return updatedActivityData?.filter((item) => item.type === "overburden");
+  }, [updatedActivityData]);
 
   const coalGettingData = useMemo(() => {
-    return activityData?.filter((item) => item.type === "coal getting");
-  }, [activityData]);
+    return updatedActivityData?.filter((item) => item.type === "coal getting");
+  }, [updatedActivityData]);
 
   const coalHaulingData = useMemo(() => {
-    return activityData?.filter((item) => item.type === "coal hauling");
-  }, [activityData]);
+    return updatedActivityData?.filter((item) => item.type === "coal hauling");
+  }, [updatedActivityData]);
 
   const columns = [
     {
@@ -215,12 +246,18 @@ const ReportView = () => {
       accessorKey: "ach",
       header: "ACH",
       cell: ({ row }) => {
-        const ach = row.original.ach;
+        const total = Number(row.original.total_hourly_data) || 0;
+        const plan = Number(row.original.plan) || 0;
+
+        const ach = plan > 0 ? (total / plan) * 100 : 0;
+
+        const progressValue = Math.min(Math.max(ach, 0), 100);
+
         return (
           <div className="flex gap-2 items-center">
-            <Progress value={ach} />
+            <Progress value={progressValue} />
 
-            <p className={` ${getTextColor(ach)}`}>{ach}</p>
+            <p className={getTextColor(ach)}>{ach}</p>
           </div>
         );
       },
@@ -344,7 +381,7 @@ const ReportView = () => {
                 : ""
             }
             onRowClick={handleDeviceClick}
-            loading={false}
+            loading={loadingActivity}
             tableProps={{
               initialState: {
                 pagination: { pageIndex: 0, pageSize: overburdenData.length },
@@ -371,7 +408,7 @@ const ReportView = () => {
                 : ""
             }
             onRowClick={handleDeviceClick}
-            loading={false}
+            loading={loadingActivity}
             tableProps={{
               initialState: {
                 pagination: { pageIndex: 0, pageSize: coalGettingData.length },
@@ -398,7 +435,7 @@ const ReportView = () => {
                 : ""
             }
             onRowClick={handleDeviceClick}
-            loading={false}
+            loading={loadingActivity}
             tableProps={{
               initialState: {
                 pagination: { pageIndex: 0, pageSize: coalHaulingData.length },
@@ -408,7 +445,10 @@ const ReportView = () => {
         </div>
       </div>
 
-      <TableExpand updatedActivityData={updatedActivityData} />
+      <TableExpand
+        updatedActivityData={updatedActivityData}
+        loading={loading}
+      />
 
       <Drawer
         direction={isMobile ? "bottom" : "right"}
@@ -440,8 +480,10 @@ const ReportView = () => {
 
 export default ReportView;
 
-const getTextColor = (number) => {
+const getTextColor = (number = 0) => {
   if (number >= 90) return "text-green-600";
   if (number >= 60) return "text-yellow-600";
   if (number >= 1) return "text-red-600";
+
+  return ""; // untuk 0 atau negatif
 };
