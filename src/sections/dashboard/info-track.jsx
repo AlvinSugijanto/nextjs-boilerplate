@@ -118,7 +118,7 @@ const InfoTrack = ({
             variant="ghost"
             size="sm"
             aria-label="Reset"
-            className="bg-gray-100! dark:bg-gray-800! hover:bg-gray-200! dark:hover:bg-gray-700! border"
+            className="bg-gray-100! dark:bg-gray-800! hover:bg-gray-200! dark:hover:bg-gray-700! border h-9"
             onClick={() => {
               handleDateChange(new Date());
             }}
@@ -132,13 +132,13 @@ const InfoTrack = ({
             onValueChange={setSelectedTab}
           >
             <TabsList>
-              <TabsTrigger value="list">
+              <TabsTrigger value="list" className="rounded-sm">
                 <ListMinus />
               </TabsTrigger>
               {/* <TabsTrigger value="history">
                 <History />
               </TabsTrigger> */}
-              <TabsTrigger value="table">
+              <TabsTrigger value="table" className="rounded-sm">
                 <Table />
               </TabsTrigger>
             </TabsList>
