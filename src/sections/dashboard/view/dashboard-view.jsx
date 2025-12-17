@@ -402,6 +402,7 @@ const DashboardView = () => {
         <div ref={topRowRef} className="min-h-[150px]">
           <DeviceCard
             devices={devices}
+            geofences={geofences}
             selectedDeviceId={selectedDeviceId}
             onDeviceClick={handleDeviceClick}
             loading={loadingDevices.value}
