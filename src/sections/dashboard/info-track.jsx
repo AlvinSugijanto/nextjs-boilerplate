@@ -115,10 +115,8 @@ const InfoTrack = ({
           </div>
 
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
             aria-label="Reset"
-            className="bg-gray-100! dark:bg-gray-800! hover:bg-gray-200! dark:hover:bg-gray-700! border h-9"
             onClick={() => {
               handleDateChange(new Date());
             }}
@@ -128,7 +126,7 @@ const InfoTrack = ({
 
           <Tabs
             defaultValue="list"
-            className="shadow border rounded-md"
+            className="border rounded-md"
             onValueChange={setSelectedTab}
           >
             <TabsList>

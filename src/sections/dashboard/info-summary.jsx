@@ -118,10 +118,9 @@ const InfoSummary = ({
           </div>
 
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             aria-label="Reset"
-            className="bg-gray-100! dark:bg-gray-800! hover:bg-gray-200! dark:hover:bg-gray-700! border"
             onClick={() => {
               onChangeDateRange({ from: new Date(), to: new Date() });
             }}
