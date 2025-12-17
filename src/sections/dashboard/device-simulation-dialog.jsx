@@ -14,10 +14,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/dialog/dialog-confirm";
+import RHFInput from "@/components/hook-form/rhf-text-field";
 
 const schema = Yup.object().shape({
   deviceId: Yup.string().required("Device is required"),
   routeId: Yup.string().required("Route is required"),
+  speed: Yup.number().min(1, "Speed must be at least 1 km/h").optional(),
 });
 
 export function DeviceSimulationDialog({
@@ -40,6 +42,7 @@ export function DeviceSimulationDialog({
     defaultValues: {
       deviceId: selectedDeviceId || "",
       routeId: "",
+      speed: 40,
     },
   });
 
@@ -151,10 +154,10 @@ export function DeviceSimulationDialog({
       }
 
       const response = await axios.post("/api/simulate", {
-        deviceId: device.id,
         uniqueId: device.uniqueId,
         sourceGeofenceId: route.Source,
         destinationGeofenceId: route.Destination,
+        speed: data.speed,
       });
 
       toast.success("Simulation started successfully");
@@ -242,6 +245,13 @@ export function DeviceSimulationDialog({
                 label="Route"
                 placeholder={loadingRoutes ? "Loading routes..." : "Select a route"}
                 options={routeOptions}
+              />
+
+              <RHFInput
+                name="speed"
+                type="number"
+                label="Speed (in km/h)"
+                placeholder="Enter speed"
               />
 
               <div className="flex justify-end gap-2">
