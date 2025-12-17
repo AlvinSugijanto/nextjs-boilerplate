@@ -199,65 +199,77 @@ export function MultiSelect({
             />
           )}
 
-          <CommandList className="max-h-64 overflow-auto thin-scrollbar">
+          <CommandList className="max-h-64 overflow-auto">
             <CommandEmpty className="py-6 text-center text-sm">
               {emptyText}
             </CommandEmpty>
 
             {!hideSelectAll && (
-              <CommandGroup>
+              <CommandGroup className="border-b pb-1">
                 <CommandItem
                   onSelect={toggleAll}
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <div
                     className={cn(
-                      "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                      "flex h-4 w-4 items-center justify-center rounded-[4px] border",
                       selectedValues.length === allOptions.length
-                        ? "bg-primary text-primary-foreground"
-                        : "opacity-50"
+                        ? "bg-primary border-primary"
+                        : "dark:border-white/50 border-black/50"
                     )}
                   >
-                    <CheckIcon className="h-3 w-3 " />
+                    <CheckIcon
+                      className={
+                        selectedValues.length === allOptions.length
+                          ? "text-primary-foreground"
+                          : ""
+                      }
+                    />
                   </div>
                   <span>Select All</span>
                 </CommandItem>
               </CommandGroup>
             )}
 
-            {isGrouped
-              ? filteredOptions.map((group) => (
-                  <CommandGroup
-                    key={group.heading}
-                    heading={group.heading}
-                    className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-                  >
-                    {group.options.map((opt) => {
-                      const isSelected = selectedValues.includes(opt.value);
-                      return (
-                        <CommandItem
-                          key={opt.value}
-                          disabled={opt.disabled}
-                          onSelect={() => toggleOption(opt.value)}
-                          className="flex items-center gap-2 cursor-pointer"
+            {isGrouped ? (
+              filteredOptions.map((group) => (
+                <CommandGroup
+                  key={group.heading}
+                  heading={group.heading}
+                  className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground"
+                >
+                  {group.options.map((opt) => {
+                    const isSelected = selectedValues.includes(opt.value);
+                    return (
+                      <CommandItem
+                        key={opt.value}
+                        disabled={opt.disabled}
+                        onSelect={() => toggleOption(opt.value)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <div
+                          className={cn(
+                            "flex h-4 w-4 items-center justify-center rounded-[4px] border",
+                            isSelected
+                              ? "bg-primary border-primary"
+                              : "dark:border-white/50 border-black/50"
+                          )}
                         >
-                          <div
-                            className={cn(
-                              "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "opacity-50"
-                            )}
-                          >
-                            <CheckIcon className="h-3 w-3" />
-                          </div>
-                          {opt.label}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                ))
-              : filteredOptions.map((opt) => {
+                          <CheckIcon
+                            className={
+                              isSelected ? "text-primary-foreground" : ""
+                            }
+                          />
+                        </div>
+                        {opt.label}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              ))
+            ) : (
+              <CommandGroup>
+                {filteredOptions.map((opt) => {
                   const isSelected = selectedValues.includes(opt.value);
                   return (
                     <CommandItem
@@ -268,20 +280,26 @@ export function MultiSelect({
                     >
                       <div
                         className={cn(
-                          "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          "flex h-4 w-4 items-center justify-center rounded-[4px] border",
                           isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "opacity-50"
+                            ? "bg-primary border-primary"
+                            : "dark:border-white/50 border-black/50"
                         )}
                       >
-                        <CheckIcon className="h-3 w-3" />
+                        <CheckIcon
+                          className={
+                            isSelected ? "text-primary-foreground" : ""
+                          }
+                        />
                       </div>
                       {opt.label}
                     </CommandItem>
                   );
                 })}
+              </CommandGroup>
+            )}
             {selectedValues.length > 0 && (
-              <CommandGroup>
+              <CommandGroup className="border-t pt-1">
                 <CommandItem
                   onSelect={clearAll}
                   className="cursor-pointer text-destructive focus:text-destructive"

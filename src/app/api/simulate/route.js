@@ -17,7 +17,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { uniqueId, sourceGeofenceId, destinationGeofenceId } = await req.json();
+    const { uniqueId, sourceGeofenceId, destinationGeofenceId, speed } = await req.json();
 
     if (!uniqueId || !sourceGeofenceId || !destinationGeofenceId) {
       return NextResponse.json(
@@ -92,6 +92,7 @@ export async function POST(req) {
     simulationUrl.searchParams.set("start_lon", sourceCentroid[0]);
     simulationUrl.searchParams.set("end_lat", destinationCentroid[1]);
     simulationUrl.searchParams.set("end_lon", destinationCentroid[0]);
+    simulationUrl.searchParams.set("speed", parseFloat(speed) / 1.852);
 
     const simulationResponse = await axios.get(simulationUrl.toString());
 

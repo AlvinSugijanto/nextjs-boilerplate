@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-
 import {
   Select,
   SelectContent,
@@ -30,7 +29,7 @@ const timeColumns = Array.from(
   (_, i) => `${(i + 7).toString().padStart(2, "0")}:00`
 );
 
-const TableExpand = ({ updatedActivityData = [] }) => {
+const TableExpand = ({ updatedActivityData = [], loading }) => {
   const [expandedDiggers, setExpandedDiggers] = useState({});
   const [filterProcess, setFilterProcess] = useState(PROCESS_LIST[0].value);
 
@@ -56,6 +55,22 @@ const TableExpand = ({ updatedActivityData = [] }) => {
     if (percentage >= 60) return "bg-yellow-500 text-white";
     return "bg-red-500 text-white";
   };
+
+  // Render skeleton loader
+  if (loading.value) {
+    return (
+      <>
+        <div className="mt-4 flex justify-between items-end animate-pulse">
+          <div>
+            <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-80"></div>
+          </div>
+          <div className="w-[200px] h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+        <div className="my-4 w-full animate-pulse h-32 bg-gray-200 dark:bg-gray-700"></div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -87,7 +102,7 @@ const TableExpand = ({ updatedActivityData = [] }) => {
         </Select>
       </div>
 
-      <div className="overflow-x-auto mt-4">
+      <div className="overflow-x-auto my-4">
         <table className="w-full text-xs">
           <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
             <tr className="text-left">
@@ -98,6 +113,8 @@ const TableExpand = ({ updatedActivityData = [] }) => {
               <th className="px-4 py-3">Model</th>
               <th className="px-4 py-3">Activity</th>
               <th className="px-4 py-3 text-center">Plan</th>
+              <th className="px-4 py-3 text-center">Data Timbang</th>
+              {/* Added column */}
               {timeColumns.map((time) => (
                 <th key={time} className="px-2 py-3 text-center font-semibold">
                   {time}
@@ -109,141 +126,135 @@ const TableExpand = ({ updatedActivityData = [] }) => {
             {filteredData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7 + timeColumns.length}
+                  colSpan={8 + timeColumns.length}
                   className="px-4 py-8 text-center text-gray-500"
                 >
                   No data available
                 </td>
               </tr>
             ) : (
-              filteredData.map((item) => (
-                <React.Fragment key={item.id}>
-                  {/* Digger Summary Row (Clickable) */}
-                  <tr
-                    className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
-                    onClick={() => toggleDigger(item.id)}
-                  >
-                    <td className="px-4 py-3 text-center">
-                      <button className="p-1">
-                        {expandedDiggers[item.id] ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
+              filteredData.map((item) => {
+                return (
+                  <React.Fragment key={item.id}>
+                    {/* Digger Summary Row (Clickable) */}
+                    <tr
+                      className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                      onClick={() => toggleDigger(item.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <button className="p-1">
+                          {expandedDiggers[item.id] ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-primary hover:underline">
+                        {item.expand?.project?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                        {item.expand?.vehicle?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {item.expand?.operator?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {item.expand?.vehicle?.model || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {item.activity || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-800 dark:text-gray-200">
+                        {item.plan || 0}
+                      </td>
+                      <td className="px-4 py-3 text-center dark:text-blue-400">
+                        {item.data_timbang || 0}
+                      </td>
+
+                      {item?.hourly_data &&
+                        Object?.entries(item?.hourly_data).map(
+                          ([time, value]) => (
+                            <td key={time} className="px-2 py-3">
+                              <div
+                                className={`${getBgColor(
+                                  value,
+                                  item.plan
+                                )} font-medium py-2 px-1 text-xs rounded text-center transition-all`}
+                              >
+                                {value}
+                              </div>
+                            </td>
+                          )
                         )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-primary hover:underline">
-                      {item.expand?.project?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                      {item.expand?.vehicle?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                      {item.expand?.operator?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                      {item.expand?.vehicle?.model || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                      {item.activity || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-center font-semibold text-gray-800 dark:text-gray-200">
-                      {item.plan || 0}
-                    </td>
+                    </tr>
 
-                    {item?.hourly_data &&
-                      Object?.entries(item?.hourly_data).map(
-                        ([time, value]) => (
-                          <td key={time} className="px-2 py-3">
-                            <div
-                              className={`${getBgColor(
-                                value, // Temporary, nanti bisa ambil dari data per jam
-                                item.plan
-                              )} font-medium py-2 px-1 text-xs rounded text-center transition-all`}
-                            >
-                              {value}
-                            </div>
-                          </td>
-                        )
-                      )}
-                  </tr>
-
-                  {/* Expanded Truck Detail Rows */}
-                  {expandedDiggers[item.id] &&
-                    item.expand?.hauler?.length > 0 && (
-                      <>
-                        {/* Detail Header */}
-                        <tr className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700 text-xs">
-                          <td className="px-4 py-2"></td>
-                          <td className="px-4 py-2">No</td>
-                          <td className="px-4 py-2">Truck</td>
-                          <td className="px-4 py-2">Operator</td>
-                          <td className="px-4 py-2">Route</td>
-                          <td colSpan="1" className="px-4 py-2"></td>
-                          <td className="px-4 py-2 text-center">
-                            Data Timbang
-                          </td>
-                          {timeColumns.map((time) => (
-                            <td key={time} className="px-2 py-2 text-center">
-                              {time}
-                            </td>
-                          ))}
-                        </tr>
-
-                        {/* Truck Rows */}
-                        {item.expand.hauler.map((truck, idx) => (
-                          <tr key={truck.id} className="border-b text-xs">
+                    {/* Expanded Truck Detail Rows */}
+                    {expandedDiggers[item.id] &&
+                      item.expand?.hauler?.length > 0 && (
+                        <>
+                          {/* Detail Header */}
+                          <tr className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700 text-xs">
                             <td className="px-4 py-2"></td>
-                            <td className="px-4 py-2">{idx + 1}</td>
-                            <td className="px-4 py-2 font-medium">
-                              {truck.expand?.vehicle?.name || "-"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {truck.expand?.operator?.name || "-"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {truck.expand?.route?.name || "-"}
-                            </td>
-                            <td colSpan="1" className="px-4 py-2"></td>
-                            <td className="px-4 py-2 text-center text-gray-700 dark:text-gray-300">
-                              {truck.data_timbang || 0}
-                            </td>
-                            {Object.entries(truck?.hourly_data).map(
-                              ([time, value]) => (
-                                <td
-                                  key={time}
-                                  className="px-2 py-2 text-center text-gray-700 dark:text-gray-300"
-                                >
-                                  {value}
-                                </td>
-                              )
-                            )}
+                            <td className="px-4 py-2">No</td>
+                            <td className="px-4 py-2">Truck</td>
+                            <td className="px-4 py-2">Operator</td>
+                            <td className="px-4 py-2">Route</td>
+                            <td colSpan="3" className="px-4 py-2"></td>
+                            {timeColumns.map((time) => (
+                              <td key={time} className="px-2 py-2 text-center">
+                                {time}
+                              </td>
+                            ))}
                           </tr>
-                        ))}
 
-                        {/* Summary Info */}
-                        <tr className="bg-gray-100 dark:bg-gray-700/50 border-b dark:border-gray-700 text-xs italic">
-                          <td
-                            colSpan={7 + timeColumns.length}
-                            className="px-4 py-2 text-gray-500 dark:text-gray-400"
-                          >
-                            <span className="ml-8">
-                              Total Dump Truck:{" "}
-                              <strong>
-                                {item.expand?.hauler?.length || 0}
+                          {/* Truck Rows */}
+                          {item.expand.hauler.map((truck, idx) => (
+                            <tr key={truck.id} className="border-b text-xs">
+                              <td className="px-4 py-2"></td>
+                              <td className="px-4 py-2">{idx + 1}</td>
+                              <td className="px-4 py-2 font-medium">
+                                {truck.expand?.vehicle?.name || "-"}
+                              </td>
+                              <td className="px-4 py-2">
+                                {truck.expand?.operator?.name || "-"}
+                              </td>
+                              <td className="px-4 py-2">
+                                {truck.expand?.route?.name || "-"}
+                              </td>
+                              <td colSpan="3" className="px-4 py-2"></td>
+                              {Object.entries(truck?.hourly_data).map(
+                                ([time, value]) => (
+                                  <td
+                                    key={time}
+                                    className="px-2 py-2 text-center text-gray-700 dark:text-gray-300"
+                                  >
+                                    {value}
+                                  </td>
+                                )
+                              )}
+                            </tr>
+                          ))}
 
-                                {item.expand?.hauler?.reduce(
-                                  (sum, t) => sum + (t.data_timbang || 0),
-                                  0
-                                ) || 0}
-                              </strong>
-                            </span>
-                          </td>
-                        </tr>
-                      </>
-                    )}
-                </React.Fragment>
-              ))
+                          {/* Summary Info */}
+                          <tr className="bg-gray-100 dark:bg-gray-700/50 border-b dark:border-gray-700 text-xs italic">
+                            <td
+                              colSpan={8 + timeColumns.length}
+                              className="px-4 py-2 text-gray-500 dark:text-gray-400"
+                            >
+                              <span className="ml-8">
+                                Total Dump Truck:{" "}
+                                <strong>
+                                  {item.expand?.hauler?.length || 0}
+                                </strong>
+                              </span>
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                  </React.Fragment>
+                );
+              })
             )}
           </tbody>
         </table>
