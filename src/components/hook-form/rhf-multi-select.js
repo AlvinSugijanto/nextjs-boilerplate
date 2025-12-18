@@ -37,7 +37,7 @@ export default function RHFMultiSelect({
           <MultiSelect
             options={options}
             onValueChange={onChange}
-            defaultValue={value || []}
+            value={value || []}
             placeholder={placeholder}
             variant={variant}
             disabled={disabled}

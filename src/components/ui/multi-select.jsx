@@ -45,6 +45,7 @@ const sizeStyles = {
 export function MultiSelect({
   options,
   onValueChange,
+  value,
   defaultValue = [],
   placeholder = "Select options",
   searchable = true,
@@ -56,11 +57,14 @@ export function MultiSelect({
   size = "sm",
   disabled = false,
 }) {
-  const [selectedValues, setSelectedValues] = React.useState(defaultValue);
+  const [internalValue, setInternalValue] = React.useState(defaultValue);
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
   const isGrouped = options.length > 0 && "heading" in options[0];
+
+  const isControlled = value !== undefined;
+  const selectedValues = isControlled ? value : internalValue;
 
   const s = sizeStyles[size] ?? sizeStyles["md"];
 
@@ -71,7 +75,7 @@ export function MultiSelect({
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
 
-    setSelectedValues(newValues);
+    if (!isControlled) setInternalValue(newValues);
     onValueChange?.(newValues);
     if (closeOnSelect) setIsPopoverOpen(false);
   };
@@ -79,7 +83,7 @@ export function MultiSelect({
   const clearAll = () => {
     if (disabled) return;
 
-    setSelectedValues([]);
+    if (!isControlled) setInternalValue([]);
     onValueChange?.([]);
   };
 
@@ -95,7 +99,7 @@ export function MultiSelect({
       clearAll();
     } else {
       const all = allOptions.map((o) => o.value);
-      setSelectedValues(all);
+      if (!isControlled) setInternalValue(all);
       onValueChange?.(all);
     }
   };
@@ -115,10 +119,6 @@ export function MultiSelect({
     }
     return options.filter(filterFn);
   }, [options, searchValue]);
-
-  React.useEffect(() => {
-    setSelectedValues(defaultValue);
-  }, [defaultValue]);
 
   return (
     <Popover
