@@ -48,3 +48,20 @@ export const processLoadingSchema = Yup.object().shape({
 export const processMaterialSchema = Yup.object().shape({
   name: Yup.string().required("Process Material is required"),
 });
+
+export const processActivitySchema = Yup.object().shape({
+  process_activity: Yup.string().required("Process Activity is required"),
+  method_count: Yup.string().required("Method Count is required"),
+  vol_uom: Yup.string().required("Volume UOM is required"),
+  dist_uom: Yup.string().required("Distance UOM is required"),
+});
+
+export const shiflySchema = Yup.object().shape({
+  project: Yup.string().required("Project is required"),
+  start: Yup.string().required("Start is required"),
+  end: Yup.string().required("End is required"),
+  duration: Yup.number()
+    .typeError("Duration must be a number")
+    .required("Duration is required")
+    .max(15, "Maximum duration is 15 hours"),
+});

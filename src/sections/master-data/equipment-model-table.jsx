@@ -252,7 +252,7 @@ const EquipmentModelTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: "Equipment Model",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
@@ -344,13 +344,13 @@ const EquipmentModelTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Name"
-                        placeholder="Enter name"
+                        label="Equipment Model"
+                        placeholder="Enter Equipment Model"
                       />
                       <RHFSelect
                         name="activity_method"
                         label="Activity Method"
-                        placeholder="Select activity method"
+                        placeholder="Select Activity Method"
                         options={listActivityMethod.map((item) => ({
                           value: item.id,
                           label: item.name,
@@ -359,7 +359,7 @@ const EquipmentModelTable = () => {
                       <RHFSelect
                         name="cluster"
                         label="Cluster"
-                        placeholder="Select cluster"
+                        placeholder="Select Cluster"
                         options={listCluster.map((item) => ({
                           value: item.id,
                           label: item.name,

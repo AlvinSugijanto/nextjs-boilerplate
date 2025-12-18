@@ -259,6 +259,11 @@ const ActivityTable = () => {
         meta: { sortable: true },
       },
       {
+        accessorKey: "expand.process_method.code",
+        header: "Method Code",
+        meta: { sortable: true },
+      },
+      {
         accessorKey: "created",
         header: "Created Date",
         meta: { sortable: true },

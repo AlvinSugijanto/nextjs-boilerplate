@@ -22,6 +22,7 @@ export default function RHFSelect({
   className,
   options,
   customChange,
+  onChange,
 }) {
   const { control } = useFormContext();
 
@@ -51,6 +52,8 @@ export default function RHFSelect({
           <Select
             value={field.value || ""}
             onValueChange={(val) => {
+              if (onChange) onChange(val);
+
               field.onChange(val);
               customChange?.(val);
             }}

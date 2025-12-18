@@ -103,12 +103,26 @@ const ProjectTable = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
+
+    let lastCode = 1;
+
+    const sortByProjectCode = data.sort((a, b) => {
+      return parseInt(a.code) - parseInt(b.code);
+    });
+
+    if (sortByProjectCode.length > 0) {
+      const sortedLastCode =
+        sortByProjectCode[sortByProjectCode.length - 1].code;
+      const newCode = parseInt(sortedLastCode) + 1;
+      lastCode = newCode;
+    }
+
     try {
       if (isEditMode) {
         // Update existing project
         const { data: res } = await axios.put(
           `/api/collection/project/${selectedData.id}`,
-          values
+          { ...values, code: lastCode }
         );
         setData((prevData) =>
           prevData.map((item) => (item.id === selectedData.id ? res : item))
@@ -116,10 +130,10 @@ const ProjectTable = () => {
         toast.success("Project updated successfully!");
       } else {
         // Create new project
-        const { data: res } = await axios.post(
-          "/api/collection/project",
-          values
-        );
+        const { data: res } = await axios.post("/api/collection/project", {
+          ...values,
+          code: lastCode,
+        });
         setData((prevData) => [...prevData, res]);
         toast.success("Project created successfully!");
       }
@@ -194,7 +208,7 @@ const ProjectTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: "Project Name",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
@@ -276,11 +290,6 @@ const ProjectTable = () => {
                         name="name"
                         label="Project Name"
                         placeholder="Enter project name"
-                      />
-                      <RHFTextField
-                        name="code"
-                        label="Project Code"
-                        placeholder="Enter project code"
                       />
                     </div>
                   </div>

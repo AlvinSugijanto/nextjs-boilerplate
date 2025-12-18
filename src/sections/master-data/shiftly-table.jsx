@@ -20,22 +20,25 @@ import {
 } from "@/components/ui/sheet";
 import { TableList } from "@/components/table";
 import { ConfirmDialog } from "@/components/dialog";
-import { RHFTextField } from "@/components/hook-form";
+import { RHFSelect, RHFTextField } from "@/components/hook-form";
 import Iconify from "@/components/iconify";
 import ColumnActions from "./column-actions";
 
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { activityMethodSchema } from "./schema-validation";
+import { shiflySchema } from "./schema-validation";
+import { LIST_SHIFT_HOURS } from "./constants";
 
 // Default form values
 const DEFAULT_VALUES = {
-  name: "",
-  code: "",
+  project: "",
+  start: "",
+  end: "",
+  duration: "",
 };
 
-const ActivityMethodTable = () => {
+const ShiftlyTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -45,14 +48,15 @@ const ActivityMethodTable = () => {
 
   // ====== State ======
   const [data, setData] = useState([]);
+  const [projectData, setProjectData] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sorting, setSorting] = useState([{ id: "name", desc: false }]);
+  const [sorting, setSorting] = useState([{ id: "created", desc: true }]);
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(activityMethodSchema),
+    resolver: yupResolver(shiflySchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -60,25 +64,34 @@ const ActivityMethodTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode
-    ? "Edit ActivityMethod"
-    : "Add New ActivityMethod";
+  const dialogTitle = isEditMode ? "Edit Shifly" : "Add New Shifly";
   const dialogDescription = isEditMode
-    ? "Update the activity_method details below."
-    : "Fill in the details to add a new Activity Method.";
+    ? "Update the shifly details below."
+    : "Fill in the details to add a new shifly.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/activity_method", {
-        headers: { type: "getfulllist" },
+      const { data } = await axios.get("/api/collection/shift", {
+        headers: { type: "getfulllist", expand: "project" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching activity_method data:", error);
+      console.error("Error fetching shifly data:", error);
     } finally {
       loadingFetch.onFalse();
+    }
+  }, []);
+
+  const fetchProjectData = useCallback(async () => {
+    try {
+      const { data } = await axios.get("/api/collection/project", {
+        headers: { type: "getfulllist" },
+      });
+      setProjectData(data);
+    } catch (error) {
+      console.error("Error fetching project data:", error);
     }
   }, []);
 
@@ -106,29 +119,68 @@ const ActivityMethodTable = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
+
+    const hourFields = generateHourFields(values.start, values.duration);
+
+    let shiftId = 1;
+
+    // filter same project
+    const filteredData = data.filter((item) => item.project === values.project);
+
+    if (filteredData.length > 0) {
+      // sort by shiftId
+      const sortedData = filteredData.sort((a, b) => b.shift_id - a.shift_id);
+
+      shiftId = sortedData[0].shift_id + 1;
+    }
+
+    const payload = {
+      ...values,
+      shift_id: shiftId,
+      ...hourFields,
+    };
+
     try {
       if (isEditMode) {
-        // Update existing activity_method
+        // Update existing shifly
         const { data: res } = await axios.put(
-          `/api/collection/activity_method/${selectedData.id}`,
-          values
+          `/api/collection/shift/${selectedData.id}`,
+          payload
         );
+
+        const transformData = {
+          ...res,
+          expand: {
+            project: projectData.find((item) => item.id === res.project),
+          },
+        };
+
         setData((prevData) =>
-          prevData.map((item) => (item.id === selectedData.id ? res : item))
+          prevData.map((item) =>
+            item.id === selectedData.id ? transformData : item
+          )
         );
-        toast.success("ActivityMethod updated successfully!");
+        toast.success("Shifly updated successfully!");
       } else {
-        // Create new activity_method
+        // Create new shifly
         const { data: res } = await axios.post(
-          "/api/collection/activity_method",
-          values
+          "/api/collection/shift",
+          payload
         );
-        setData((prevData) => [...prevData, res]);
-        toast.success("ActivityMethod created successfully!");
+
+        const transformData = {
+          ...res,
+          expand: {
+            project: projectData.find((item) => item.id === res.project),
+          },
+        };
+
+        setData((prevData) => [...prevData, transformData]);
+        toast.success("Shifly created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting activity_method:", error);
+      console.error("Error submitting shifly:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -160,7 +212,7 @@ const ActivityMethodTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save Activity Method. Please try again."
+            "Failed to save shifly. Please try again."
         );
       }
     } finally {
@@ -171,14 +223,14 @@ const ActivityMethodTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/activity_method/${selectedData.id}`);
+      await axios.delete(`/api/collection/shift/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting activity_method:", error);
+      console.error("Error deleting shifly:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -196,18 +248,45 @@ const ActivityMethodTable = () => {
   const columns = useMemo(
     () => [
       {
-        accessorKey: "name",
-        header: "Activity Method",
+        accessorKey: "expand.project.name",
+        header: "Project Name",
         meta: { sortable: true },
-        cell: ({ row }) => (
-          <p className="font-semibold text-xs">{row.getValue("name")}</p>
-        ),
+        cell: ({ row }) => {
+          const value = row.original.expand?.project?.name;
+
+          return <p className="font-semibold text-xs">{value}</p>;
+        },
       },
       {
-        accessorKey: "code",
-        header: "Method Code",
+        accessorKey: "shift_id",
+        header: "Shift ID",
         meta: { sortable: true },
       },
+      {
+        accessorKey: "start",
+        header: "Start",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "end",
+        header: "Stop",
+        meta: { sortable: true },
+      },
+      {
+        accessorKey: "duration",
+        header: "Duration",
+        meta: { sortable: true },
+      },
+      ...Array.from({ length: 16 }, (_, index) => ({
+        accessorKey: `h${index + 1}`,
+        header: `H${index + 1}`,
+        meta: { sortable: false },
+        cell: ({ row }) => {
+          const value = row.original[`h${index + 1}`];
+
+          return <p className="font-semibold text-xs">{value || "-"}</p>;
+        },
+      })),
       {
         accessorKey: "created",
         header: "Created Date",
@@ -242,7 +321,8 @@ const ActivityMethodTable = () => {
   // ====== Effects ======
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchProjectData();
+  }, []);
 
   // ====== Render ======
   return (
@@ -250,7 +330,7 @@ const ActivityMethodTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>ActivityMethod</TypographyLarge>
+          <TypographyLarge>Shifly</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -261,7 +341,7 @@ const ActivityMethodTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add ActivityMethod
+                Add Shifly
               </Button>
             </SheetTrigger>
 
@@ -274,16 +354,46 @@ const ActivityMethodTable = () => {
               <FormProvider {...methods}>
                 <form onSubmit={onSubmit} className="flex flex-col h-full">
                   <div className="flex-1 overflow-auto py-4">
-                    <div className="grid gap-6 px-4">
-                      <RHFTextField
-                        name="name"
-                        label="Activity Method"
-                        placeholder="Enter Activity Method name"
+                    <div className="grid gap-2 px-4">
+                      <RHFSelect
+                        name="project"
+                        label="Project"
+                        placeholder="Select project"
+                        options={projectData.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
+                      />
+                      <RHFSelect
+                        name="start"
+                        label="Start"
+                        placeholder="Select Start"
+                        options={LIST_SHIFT_HOURS}
+                        onChange={(value) => {
+                          const start = value;
+                          const end = methods.getValues("end");
+                          const duration = calculateTotalHours(start, end);
+                          methods.setValue("duration", duration);
+                        }}
+                      />
+                      <RHFSelect
+                        name="end"
+                        label="Stop"
+                        placeholder="Select Stop"
+                        options={LIST_SHIFT_HOURS}
+                        onChange={(value) => {
+                          const start = methods.getValues("start");
+                          const end = value;
+                          const duration = calculateTotalHours(start, end);
+
+                          methods.setValue("duration", duration);
+                        }}
                       />
                       <RHFTextField
-                        name="code"
-                        label="Method Code"
-                        placeholder="Enter Activity Method code"
+                        name="duration"
+                        label="Duration"
+                        placeholder="Duration"
+                        disabled
                       />
                     </div>
                   </div>
@@ -330,7 +440,7 @@ const ActivityMethodTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete activity_method "${selectedData?.name}"?`}
+        title={`Delete shifly "${selectedData?.expand?.project?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -341,4 +451,53 @@ const ActivityMethodTable = () => {
   );
 };
 
-export default ActivityMethodTable;
+export default ShiftlyTable;
+
+function generateHourFields(start, duration, maxHour = 16) {
+  const result = {};
+
+  // Default semua h1–h16 = null
+  for (let i = 1; i <= maxHour; i++) {
+    result[`h${i}`] = null;
+  }
+
+  if (!start || !duration) return result;
+
+  let [hour, minute] = start.split(":").map(Number);
+
+  // h1 = start time
+  result.h1 = `${String(hour).padStart(2, "0")}:${String(minute).padStart(
+    2,
+    "0"
+  )}`;
+
+  // h2 sampai h(duration + 1)
+  for (let i = 2; i <= Math.min(duration + 1, maxHour); i++) {
+    hour = (hour + 1) % 24;
+
+    const h = String(hour).padStart(2, "0");
+    const m = String(minute).padStart(2, "0");
+
+    result[`h${i}`] = `${h}:${m}`;
+  }
+
+  return result;
+}
+
+function calculateTotalHours(start, end) {
+  if (!start || !end) return 0;
+
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+
+  const startTotalMinutes = startHour * 60 + startMinute;
+  const endTotalMinutes = endHour * 60 + endMinute;
+
+  // Jika end lebih kecil dari start, anggap lewat tengah malam
+  let diffMinutes = endTotalMinutes - startTotalMinutes;
+  if (diffMinutes < 0) {
+    diffMinutes += 24 * 60;
+  }
+
+  return diffMinutes / 60;
+}

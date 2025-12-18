@@ -15,6 +15,8 @@ import MaterialCountTable from "../material-count-table";
 import ActivityTable from "../activity-table";
 import ProcessLoadingTable from "../process-loading-table";
 import ProcessMaterialTable from "../process-material-table";
+import ProcessActivityTable from "../process-activity-table";
+import ShiftlyTable from "../shiftly-table";
 
 const MasterDataView = () => {
   const [currentTab, setCurrentTab] = useState(LIST_TAB[0].value);
@@ -54,6 +56,8 @@ const MasterDataView = () => {
         {currentTab === "activity" && <ActivityTable />}
         {currentTab === "process_loading" && <ProcessLoadingTable />}
         {currentTab === "process_material" && <ProcessMaterialTable />}
+        {currentTab === "process_activity" && <ProcessActivityTable />}
+        {currentTab === "shiftly" && <ShiftlyTable />}
       </div>
     </div>
   );
