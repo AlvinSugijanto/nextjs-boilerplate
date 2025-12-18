@@ -262,10 +262,7 @@ const DrawerAddEditActivity = ({
 
                 <div className="space-y-2">
                   {fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="flex gap-2 items-end p-3 border rounded-lg bg-muted/30"
-                    >
+                    <div key={field.id} className="flex gap-2 items-end">
                       <div className="flex-1">
                         <label className="text-xs text-muted-foreground">
                           Vehicle
