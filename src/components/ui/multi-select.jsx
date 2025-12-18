@@ -116,6 +116,10 @@ export function MultiSelect({
     return options.filter(filterFn);
   }, [options, searchValue]);
 
+  React.useEffect(() => {
+    setSelectedValues(defaultValue);
+  }, [defaultValue]);
+
   return (
     <Popover
       open={isPopoverOpen && !disabled}
