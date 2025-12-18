@@ -42,6 +42,7 @@ export default function RHFMultiSelect({
             placeholder={placeholder}
             variant={variant}
             disabled={disabled}
+            className="h-fit"
             {...rest}
           />
 
