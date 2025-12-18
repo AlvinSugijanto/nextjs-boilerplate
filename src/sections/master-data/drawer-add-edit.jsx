@@ -58,9 +58,8 @@ const DrawerAddEdit = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       await onSubmitProp?.(values);
-      toast.success("Data saved successfully");
     } catch (error) {
-      toast.error("Failed to save data");
+      console.log(error);
     }
   });
 

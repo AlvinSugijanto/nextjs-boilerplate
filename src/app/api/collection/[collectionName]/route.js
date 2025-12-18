@@ -53,6 +53,17 @@ export async function GET(req, { params }) {
       });
 
       return NextResponse.json(record);
+    } else if (type.toLowerCase().includes("getfirstlist")) {
+      const record = await pb.collection(collection).getFirstListItem(filter, {
+        expand,
+        sort,
+        fields,
+        headers: {
+          Authorization: authorization,
+        },
+      });
+
+      return NextResponse.json(record);
     }
 
     return NextResponse.json({ message: "Invalid type" }, { status: 400 });

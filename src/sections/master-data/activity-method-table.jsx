@@ -27,14 +27,15 @@ import ColumnActions from "./column-actions";
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { activityMethodSchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
+  code: "",
 };
 
-const ProjectTable = () => {
+const ActivityMethodTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -51,7 +52,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(activityMethodSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,21 +60,23 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode
+    ? "Edit ActivityMethod"
+    : "Add New ActivityMethod";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the activity_method details below."
+    : "Fill in the details to add a new Activity Method.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
+      const { data } = await axios.get("/api/collection/activity_method", {
         headers: { type: "getfulllist" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching activity_method data:", error);
     } finally {
       loadingFetch.onFalse();
     }
@@ -103,43 +106,29 @@ const ProjectTable = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
-
-    let lastCode = 1;
-
-    const sortByProjectCode = data.sort((a, b) => {
-      return parseInt(a.code) - parseInt(b.code);
-    });
-
-    if (sortByProjectCode.length > 0) {
-      const sortedLastCode =
-        sortByProjectCode[sortByProjectCode.length - 1].code;
-      const newCode = parseInt(sortedLastCode) + 1;
-      lastCode = newCode;
-    }
-
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing activity_method
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
-          { ...values, code: lastCode }
+          `/api/collection/activity_method/${selectedData.id}`,
+          values
         );
         setData((prevData) =>
           prevData.map((item) => (item.id === selectedData.id ? res : item))
         );
-        toast.success("Project updated successfully!");
+        toast.success("ActivityMethod updated successfully!");
       } else {
-        // Create new project
-        const { data: res } = await axios.post("/api/collection/project", {
-          ...values,
-          code: lastCode,
-        });
+        // Create new activity_method
+        const { data: res } = await axios.post(
+          "/api/collection/activity_method",
+          values
+        );
         setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+        toast.success("ActivityMethod created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting activity_method:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -171,7 +160,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save Activity Method. Please try again."
         );
       }
     } finally {
@@ -182,14 +171,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/activity_method/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting activity_method:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -208,7 +197,7 @@ const ProjectTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Project Name",
+        header: "Activity Method",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
@@ -216,7 +205,7 @@ const ProjectTable = () => {
       },
       {
         accessorKey: "code",
-        header: "Project Code",
+        header: "Method Code",
         meta: { sortable: true },
       },
       {
@@ -261,7 +250,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>ActivityMethod</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -272,7 +261,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add ActivityMethod
               </Button>
             </SheetTrigger>
 
@@ -288,8 +277,13 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
+                        label="Activity Method"
+                        placeholder="Enter Activity Method name"
+                      />
+                      <RHFTextField
+                        name="code"
+                        label="Method Code"
+                        placeholder="Enter Activity Method code"
                       />
                     </div>
                   </div>
@@ -336,7 +330,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete activity_method "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -347,4 +341,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default ActivityMethodTable;

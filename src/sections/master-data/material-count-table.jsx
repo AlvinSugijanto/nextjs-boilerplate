@@ -27,14 +27,14 @@ import ColumnActions from "./column-actions";
 // Utils & Hooks
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
-import { projectSchema } from "./schema-validation";
+import { materialCountSchema } from "./schema-validation";
 
 // Default form values
 const DEFAULT_VALUES = {
   name: "",
 };
 
-const ProjectTable = () => {
+const MaterialCountTable = () => {
   // ====== Boolean Flags ======
   const loadingFetch = useBoolean();
   const loadingSubmit = useBoolean();
@@ -51,7 +51,7 @@ const ProjectTable = () => {
 
   // ====== Form Setup ======
   const methods = useForm({
-    resolver: yupResolver(projectSchema),
+    resolver: yupResolver(materialCountSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -59,21 +59,23 @@ const ProjectTable = () => {
 
   // ====== Helper Variables ======
   const isEditMode = Boolean(selectedData?.id);
-  const dialogTitle = isEditMode ? "Edit Project" : "Add New Project";
+  const dialogTitle = isEditMode
+    ? "Edit Material Count"
+    : "Add New Material Count";
   const dialogDescription = isEditMode
-    ? "Update the project details below."
-    : "Fill in the details to add a new project.";
+    ? "Update the Material Count details below."
+    : "Fill in the details to add a new Material Count.";
 
   // ====== API Calls ======
   const fetchData = useCallback(async () => {
     loadingFetch.onTrue();
     try {
-      const { data } = await axios.get("/api/collection/project", {
+      const { data } = await axios.get("/api/collection/material_count", {
         headers: { type: "getfulllist" },
       });
       setData(data);
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      console.error("Error fetching Material Count data:", error);
     } finally {
       loadingFetch.onFalse();
     }
@@ -103,43 +105,29 @@ const ProjectTable = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
-
-    let lastCode = 1;
-
-    const sortByProjectCode = data.sort((a, b) => {
-      return parseInt(a.code) - parseInt(b.code);
-    });
-
-    if (sortByProjectCode.length > 0) {
-      const sortedLastCode =
-        sortByProjectCode[sortByProjectCode.length - 1].code;
-      const newCode = parseInt(sortedLastCode) + 1;
-      lastCode = newCode;
-    }
-
     try {
       if (isEditMode) {
-        // Update existing project
+        // Update existing materialCount
         const { data: res } = await axios.put(
-          `/api/collection/project/${selectedData.id}`,
-          { ...values, code: lastCode }
+          `/api/collection/material_count/${selectedData.id}`,
+          values
         );
         setData((prevData) =>
           prevData.map((item) => (item.id === selectedData.id ? res : item))
         );
-        toast.success("Project updated successfully!");
+        toast.success("Material Count updated successfully!");
       } else {
-        // Create new project
-        const { data: res } = await axios.post("/api/collection/project", {
-          ...values,
-          code: lastCode,
-        });
+        // Create new Material Count
+        const { data: res } = await axios.post(
+          "/api/collection/material_count",
+          values
+        );
         setData((prevData) => [...prevData, res]);
-        toast.success("Project created successfully!");
+        toast.success("Material Count created successfully!");
       }
       handleCloseDrawer();
     } catch (error) {
-      console.error("Error submitting project:", error);
+      console.error("Error submitting Material Count:", error);
 
       // Handle API validation errors
       if (error.response?.data?.data) {
@@ -171,7 +159,7 @@ const ProjectTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save project. Please try again."
+            "Failed to save Material Count. Please try again."
         );
       }
     } finally {
@@ -182,14 +170,14 @@ const ProjectTable = () => {
   const handleDelete = async () => {
     loadingDelete.onTrue();
     try {
-      await axios.delete(`/api/collection/project/${selectedData.id}`);
+      await axios.delete(`/api/collection/material_count/${selectedData.id}`);
       setData((prevData) =>
         prevData.filter((item) => item.id !== selectedData.id)
       );
       setSelectedData(null);
       openConfirm.onFalse();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting Material Count:", error);
     } finally {
       loadingDelete.onFalse();
     }
@@ -208,16 +196,11 @@ const ProjectTable = () => {
     () => [
       {
         accessorKey: "name",
-        header: "Project Name",
+        header: "Material Count",
         meta: { sortable: true },
         cell: ({ row }) => (
           <p className="font-semibold text-xs">{row.getValue("name")}</p>
         ),
-      },
-      {
-        accessorKey: "code",
-        header: "Project Code",
-        meta: { sortable: true },
       },
       {
         accessorKey: "created",
@@ -261,7 +244,7 @@ const ProjectTable = () => {
       <Card className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Project</TypographyLarge>
+          <TypographyLarge>Material Count</TypographyLarge>
 
           <Sheet
             open={openDrawer.value}
@@ -272,7 +255,7 @@ const ProjectTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add Project
+                Add Material Count
               </Button>
             </SheetTrigger>
 
@@ -288,8 +271,8 @@ const ProjectTable = () => {
                     <div className="grid gap-6 px-4">
                       <RHFTextField
                         name="name"
-                        label="Project Name"
-                        placeholder="Enter project name"
+                        label="Material Count"
+                        placeholder="Enter Material Count"
                       />
                     </div>
                   </div>
@@ -336,7 +319,7 @@ const ProjectTable = () => {
         open={openConfirm.value}
         onClose={openConfirm.onFalse}
         onConfirm={handleDelete}
-        title={`Delete project "${selectedData?.name}"?`}
+        title={`Delete Material Count "${selectedData?.name}"?`}
         description="This action will permanently remove this record. You can't undo it."
         confirmText="Delete"
         cancelText="Cancel"
@@ -347,4 +330,4 @@ const ProjectTable = () => {
   );
 };
 
-export default ProjectTable;
+export default MaterialCountTable;
