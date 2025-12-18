@@ -35,13 +35,13 @@ export default function RHFMultiSelect({
           )}
 
           <MultiSelect
-            key={JSON.stringify(value || [])}
             options={options}
             onValueChange={onChange}
-            defaultValue={value || []}
+            value={value || []}
             placeholder={placeholder}
             variant={variant}
             disabled={disabled}
+            className="h-fit"
             {...rest}
           />
 
