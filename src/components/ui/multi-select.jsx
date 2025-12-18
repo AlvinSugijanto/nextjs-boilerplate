@@ -240,6 +240,7 @@ export function MultiSelect({
                     return (
                       <CommandItem
                         key={opt.value}
+                        value={String(opt.value)}
                         disabled={opt.disabled}
                         onSelect={() => toggleOption(opt.value)}
                         className="flex items-center gap-2 cursor-pointer"
@@ -267,6 +268,7 @@ export function MultiSelect({
                   return (
                     <CommandItem
                       key={opt.value}
+                      value={String(opt.value)}
                       disabled={opt.disabled}
                       onSelect={() => toggleOption(opt.value)}
                       className="flex items-center gap-2 cursor-pointer"
