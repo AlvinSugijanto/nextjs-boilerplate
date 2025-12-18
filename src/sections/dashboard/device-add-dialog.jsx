@@ -88,6 +88,7 @@ export function DeviceAddDialog({ open, onClose, onDeviceAdd, geofences }) {
               }))}
               searchable
               hideSelectAll={false}
+              maxViewSelected={3}
             />
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>

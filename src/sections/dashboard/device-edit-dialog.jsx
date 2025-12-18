@@ -159,6 +159,7 @@ export function DeviceEditDialog({ open, onClose, device, onDeviceUpdate }) {
               searchable
               hideSelectAll={false}
               disabled={loadingFetch.value}
+              maxViewSelected={3}
             />
             <div className="flex justify-end gap-2">
               <Button
