@@ -28,6 +28,12 @@ import ColumnActions from "./column-actions";
 import { useBoolean } from "@/hooks/use-boolean";
 import { fDateTime } from "@/utils/format-time";
 import { clusterSchema } from "./schema-validation";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Search } from "lucide-react";
 
 // Default form values
 const DEFAULT_VALUES = {
@@ -100,6 +106,30 @@ const ClusterTable = () => {
     reset(DEFAULT_VALUES); // Reset form
     openDrawer.onFalse();
   }, [reset, openDrawer]);
+
+  const handleSearch = useCallback(
+    (e) => {
+      const searchValue = e.target.value.toLowerCase();
+      const keysSearch = ["name"];
+
+      if (!searchValue) {
+        fetchData();
+        return;
+      }
+
+      const filteredData = data.filter((item) =>
+        keysSearch.some((key) => {
+          const value = item[key];
+          if (value === null || value === undefined) return false;
+
+          return String(value).toLowerCase().includes(searchValue);
+        })
+      );
+
+      setData(filteredData);
+    },
+    [data]
+  );
 
   const onSubmit = handleSubmit(async (values) => {
     loadingSubmit.onTrue();
@@ -241,8 +271,18 @@ const ClusterTable = () => {
     <>
       <Card className="p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <TypographyLarge>Cluster</TypographyLarge>
+        <div className="flex items-center justify-between">
+          <div className="w-[350px]">
+            <InputGroup>
+              <InputGroupInput
+                placeholder="Search..."
+                onChange={handleSearch}
+              />
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
 
           <Sheet
             open={openDrawer.value}

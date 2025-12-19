@@ -11,7 +11,6 @@ export const LIST_TAB = [
   {label: "Process Loading", value: "process_loading"},
   {label: "Process Material", value: "process_material"},
   {label: "Process Activity", value: "process_activity"},
-  // {label: "Number Filter Activity", value: "number_filter_activity"},
   {label: "Shiftly", value: "shiftly"},
 ]
 

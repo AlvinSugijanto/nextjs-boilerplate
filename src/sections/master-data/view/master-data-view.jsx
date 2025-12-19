@@ -10,7 +10,7 @@ import ActivityMethodTable from "../activity-method-table";
 import EquipmentModelTable from "../equipment-model-table";
 import EventTable from "../event-table";
 import UomTable from "../uom-table";
-import MatRecivedTable from "../mat-recived-table";
+// import MatRecivedTable from "../mat-recived-table";
 import MaterialCountTable from "../material-count-table";
 import ActivityTable from "../activity-table";
 import ProcessLoadingTable from "../process-loading-table";
@@ -51,7 +51,7 @@ const MasterDataView = () => {
         {currentTab === "equipment_model" && <EquipmentModelTable />}
         {currentTab === "event" && <EventTable />}
         {currentTab === "uom" && <UomTable />}
-        {currentTab === "material_recived" && <MatRecivedTable />}
+        {/* {currentTab === "material_recived" && <MatRecivedTable />} */}
         {currentTab === "material_count" && <MaterialCountTable />}
         {currentTab === "activity" && <ActivityTable />}
         {currentTab === "process_loading" && <ProcessLoadingTable />}

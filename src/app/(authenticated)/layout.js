@@ -12,7 +12,7 @@ export default function Layout({ children }) {
   return (
     <AuthGuard>
       <PersistentSidebarProvider>
-        <AppSidebar variant="inset" />
+        <AppSidebar variant="inset"/>
 
         {/* Parent utama: tidak memutus sticky */}
         <SidebarInset className="flex flex-1 flex-col w-[calc(100vw-18rem)]">
