@@ -3,7 +3,12 @@ import { fDate, fDateTime } from "@/utils/format-time";
 import { TableList } from "@/components/table";
 import { LocateFixed, Waypoints } from "lucide-react";
 
-function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
+function EventTableListAll({
+  events = [],
+  selectedEvents,
+  fetchPosition,
+  loading,
+}) {
   const [sorting, setSorting] = useState([
     {
       id: "eventTime",
@@ -94,16 +99,17 @@ function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
   return (
     <>
       <TableList
-        key={events.length}
         columns={columns}
         data={events}
         setSorting={setSorting}
         sorting={sorting}
         showPagination={true}
         pageSize={events.length}
-        rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        rowClassName="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+        rowClassNameProps={(event) =>
+          event.id === selectedEvents ? "bg-gray-200 dark:bg-gray-700" : ""
+        }
         onRowClick={(event) => {
-          console.log(event);
           if (event.positionId > 0) {
             fetchPosition(event.positionId, event.id);
           }
@@ -113,6 +119,8 @@ function EventTableListAll({ events = [], selectedEvents, fetchPosition }) {
             pagination: { pageIndex: 0, pageSize: 5 },
           },
         }}
+        loading={loading}
+        loadingType="last"
       />
     </>
   );

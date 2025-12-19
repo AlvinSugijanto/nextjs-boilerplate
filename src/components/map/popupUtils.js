@@ -87,7 +87,7 @@ export const updatePopupContent = (popup, properties) => {
   };
 };
 
-export const openPopupFromFeature = (map, feature, currentPopupRef, focusedDeviceIdRef) => {
+export const openPopupFromFeature = (map, feature, currentPopupRef, focusedDeviceIdRef, onClose) => {
   if (!map) return;
 
   // Close existing popup
@@ -109,6 +109,7 @@ export const openPopupFromFeature = (map, feature, currentPopupRef, focusedDevic
       focusedDeviceIdRef.current = null;
     }
     currentPopupRef.current = null;
+    if (onClose) onClose();
   });
 
   currentPopupRef.current = popup;
@@ -142,6 +143,7 @@ export const openPopupForDeviceId = (
   deviceFeatures,
   currentPopupRef,
   focusedDeviceIdRef,
+  onClose
 ) => {
   const normalizedId = Number(deviceId);
   const feature = deviceFeatures.find(
@@ -149,7 +151,7 @@ export const openPopupForDeviceId = (
   );
 
   if (feature) {
-    openPopupFromFeature(map, feature, currentPopupRef, focusedDeviceIdRef);
+    openPopupFromFeature(map, feature, currentPopupRef, focusedDeviceIdRef, onClose);
   }
 };
 
