@@ -24,7 +24,7 @@ import {
 } from "./constants";
 import { addGeofenceLayers, updateGeofenceData } from "./geofenceLayers";
 import { buildDeviceFeatures } from "./deviceFeatures";
-import { addDeviceLayers, updateDeviceSourceData } from "./deviceLayers";
+import { addDeviceLayers, updateDeviceSourceData, setDeviceLabelVisibility } from "./deviceLayers";
 import {
   openPopupForDeviceId,
   closePopup,
@@ -650,6 +650,7 @@ const TraccarMap = ({
 
     closePopup(currentPopupRef);
     focusedDeviceIdRef.current = deviceId;
+    setDeviceLabelVisibility(mapRef.current, deviceId);
 
     mapRef.current.flyTo({
       center: feature.geometry.coordinates,
@@ -665,7 +666,8 @@ const TraccarMap = ({
           deviceId,
           latestDeviceFeaturesRef.current,
           currentPopupRef,
-          focusedDeviceIdRef
+          focusedDeviceIdRef,
+          () => setDeviceLabelVisibility(mapRef.current, null)
         );
       }
     }, 1600);

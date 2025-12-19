@@ -21,6 +21,7 @@ export const buildDeviceFeatures = (devices, positions) => {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
     const speedValue = Number(position.speed);
+    const courseValue = Number(position.course);
 
     features.push({
       type: 'Feature',
@@ -33,6 +34,7 @@ export const buildDeviceFeatures = (devices, positions) => {
         name: device.name || 'Unknown device',
         status: device.status || 'unknown',
         speed: Number.isFinite(speedValue) ? speedValue : null,
+        course: Number.isFinite(courseValue) ? courseValue : null,
         lastUpdate: device.lastUpdate || null,
         totalDistance: totalDistances.get(deviceId) || 0,
         latitude,
