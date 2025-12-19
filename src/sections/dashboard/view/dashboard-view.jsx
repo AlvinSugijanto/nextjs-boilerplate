@@ -471,17 +471,15 @@ const DashboardView = () => {
 
         {/* Bottom Right Panel */}
         <div ref={bottomRightRef} className="min-h-[150px]">
-          {!loadingMap && (
-            <EventCard
-              eventTypes={eventTypes}
-              geofences={geofences}
-              selectedDeviceId={selectedDeviceId}
-              positions={positions}
-              setPositions={setPositions}
-              setIsSelectingEvent={setIsSelectingEvent}
-              fetchInitialData={fetchInitialData}
-            />
-          )}
+          <EventCard
+            eventTypes={eventTypes}
+            geofences={geofences}
+            selectedDeviceId={selectedDeviceId}
+            positions={positions}
+            setPositions={setPositions}
+            setIsSelectingEvent={setIsSelectingEvent}
+            fetchInitialData={fetchInitialData}
+          />
         </div>
       </div>
     </div>

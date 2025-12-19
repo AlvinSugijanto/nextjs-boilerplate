@@ -42,6 +42,7 @@ export default function TableList({
   rowClassNameProps = () => ({}),
   onRowClick = null,
   loading = false,
+  loadingType = "first",
 }) {
   const table = useReactTable({
     data,
@@ -103,56 +104,103 @@ export default function TableList({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length
-            ? table.getRowModel().rows.map((row) => {
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={cn(
-                      rowClassName,
-                      rowClassNameProps(row.original)
-                    )}
-                    onClick={() => onRowClick?.(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="text-xs"
-                        align={cell.column.columnDef.meta?.align || "start"}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+        {loadingType === "first" ? (
+          <TableBody>
+            {table.getRowModel().rows?.length
+              ? table.getRowModel().rows.map((row) => {
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        rowClassName,
+                        rowClassNameProps(row.original)
+                      )}
+                      onClick={() => onRowClick?.(row.original)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className="text-xs"
+                          align={cell.column.columnDef.meta?.align || "start"}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              : !loading && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
                   </TableRow>
-                );
-              })
-            : !loading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
+                )}
 
-          {loading &&
-            [...Array(5)].map((_, i) => (
-              <TableRow key={i}>
-                {columns.map((col, idx) => (
-                  <TableCell key={idx} className="text-xs">
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
+            {loading &&
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  {columns.map((col, idx) => (
+                    <TableCell key={idx} className="text-xs">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        ) : (
+          <TableBody>
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  {columns.map((_, idx) => (
+                    <TableCell key={idx} className="text-xs">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={cn(rowClassName, rowClassNameProps(row.original))}
+                  onClick={() => onRowClick?.(row.original)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="text-xs"
+                      align={cell.column.columnDef.meta?.align || "start"}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
               </TableRow>
-            ))}
-        </TableBody>
+            )}
+          </TableBody>
+        )}
       </Table>
 
       {paginationType === "small" ? (
