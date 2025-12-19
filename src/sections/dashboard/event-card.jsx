@@ -17,17 +17,6 @@ import { fDate } from "@/utils/format-time";
 import { endOfDay, startOfDay, subDays, subMonths } from "date-fns";
 import axios from "axios";
 
-const listTabs = [
-  {
-    value: 1,
-    icon: <LayoutGrid />,
-  },
-  {
-    value: 2,
-    icon: <List />,
-  },
-];
-
 function EventCard({
   eventTypes,
   geofences,
@@ -106,7 +95,6 @@ function EventCard({
         setSelectedEvents("");
         await fetchInitialData();
 
-        console.log("is this run");
         return;
       }
 
@@ -180,9 +168,9 @@ function EventCard({
   }, [selectedDeviceId]);
 
   return (
-    <Card className="h-full p-0 overflow-hidden">
-      <div className="px-4 py-3 overflow-auto">
-        <div className="flex items-center justify-between gap-2 overflow-auto flex-wrap mb-4">
+    <Card className="h-full p-0 flex flex-col">
+      <div className="px-4 py-3 flex flex-col flex-1 min-h-0">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
           <div className="flex items-center gap-2 flex-wrap flex-1">
             <MultiSelect
               options={eventTypes.map(({ type }) => ({
@@ -204,35 +192,9 @@ function EventCard({
           </div>
         </div>
 
-        {/* Loading state */}
-        {loading && (
-          <div className="p-4 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Loading events...
-            </p>
-          </div>
-        )}
-
-        {/* Error state */}
-        {error && !loading && (
-          <div className="p-4 text-center text-destructive">
-            <p className="text-sm">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchEvent(selectedDeviceId)}
-              className="mt-2"
-            >
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {/* Content */}
-        {!loading && !error && (
-          <div className="overflow-auto">
-            <div className="mb-2 text-xs text-muted-foreground">
+        {!error && (
+          <>
+            <div className="mb-2 text-xs text-muted-foreground flex-shrink-0">
               Showing {filteredEvents.length} of {events.length} events
               {dateRange.from && dateRange.to && (
                 <span className="ml-2">
@@ -240,12 +202,15 @@ function EventCard({
                 </span>
               )}
             </div>
-            <EventTableListAll
-              events={filteredEvents}
-              selectedEvents={selectedEvents}
-              fetchPosition={fetchPosition}
-            />
-          </div>
+            <div className="flex-1 overflow-auto min-h-0">
+              <EventTableListAll
+                events={filteredEvents}
+                selectedEvents={selectedEvents}
+                fetchPosition={fetchPosition}
+                loading={loading}
+              />
+            </div>
+          </>
         )}
       </div>
     </Card>

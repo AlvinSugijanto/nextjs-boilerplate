@@ -106,9 +106,14 @@ export function MultiSelect({
 
   const filteredOptions = React.useMemo(() => {
     if (!searchValue) return options;
-    const filterFn = (opt) =>
-      opt.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-      opt.value.toLowerCase().includes(searchValue.toLowerCase());
+    const filterFn = (opt) => {
+      const label = String(opt.label ?? "").toLowerCase();
+      const value = String(opt.value ?? "").toLowerCase();
+      const search = searchValue.toLowerCase();
+
+      return label.includes(search) || value.includes(search);
+    };
+
     if (isGrouped) {
       return options
         .map((g) => ({
@@ -131,12 +136,7 @@ export function MultiSelect({
           type="button"
           variant="outline"
           disabled={disabled}
-          className={cn(
-            "w-full justify-between",
-            s.button,
-            className
-          )}
-
+          className={cn("w-full justify-between", s.button, className)}
         >
           <div className="flex flex-wrap items-start gap-1">
             {selectedValues.length > 0 ? (
@@ -150,7 +150,9 @@ export function MultiSelect({
                       key={value}
                       className={cn(
                         "flex items-center gap-1",
-                        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+                        disabled
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer",
                         s.badge
                       )}
                       onClick={(e) => {
@@ -207,9 +209,7 @@ export function MultiSelect({
             </CommandEmpty>
 
             {!hideSelectAll && (
-              <CommandGroup
-                className="border-b pb-1"
-              >
+              <CommandGroup className="border-b pb-1">
                 <CommandItem
                   onSelect={toggleAll}
                   className="flex items-center gap-2 cursor-pointer"
@@ -222,18 +222,21 @@ export function MultiSelect({
                         : "dark:border-white/50 border-black/50"
                     )}
                   >
-                    <CheckIcon className={selectedValues.length === allOptions.length
-                      ? "text-primary-foreground"
-                      : ""
-                    } />
+                    <CheckIcon
+                      className={
+                        selectedValues.length === allOptions.length
+                          ? "text-primary-foreground"
+                          : ""
+                      }
+                    />
                   </div>
                   <span>Select All</span>
                 </CommandItem>
               </CommandGroup>
             )}
 
-            {isGrouped
-              ? filteredOptions.map((group) => (
+            {isGrouped ? (
+              filteredOptions.map((group) => (
                 <CommandGroup
                   key={group.heading}
                   heading={group.heading}
@@ -257,7 +260,11 @@ export function MultiSelect({
                               : "dark:border-white/50 border-black/50"
                           )}
                         >
-                          <CheckIcon className={isSelected ? "text-primary-foreground" : ""} />
+                          <CheckIcon
+                            className={
+                              isSelected ? "text-primary-foreground" : ""
+                            }
+                          />
                         </div>
                         {opt.label}
                       </CommandItem>
@@ -265,7 +272,7 @@ export function MultiSelect({
                   })}
                 </CommandGroup>
               ))
-              :
+            ) : (
               <CommandGroup>
                 {filteredOptions.map((opt) => {
                   const isSelected = selectedValues.includes(opt.value);
@@ -285,18 +292,20 @@ export function MultiSelect({
                             : "dark:border-white/50 border-black/50"
                         )}
                       >
-                        <CheckIcon className={isSelected ? "text-primary-foreground" : ""} />
+                        <CheckIcon
+                          className={
+                            isSelected ? "text-primary-foreground" : ""
+                          }
+                        />
                       </div>
                       {opt.label}
                     </CommandItem>
                   );
                 })}
               </CommandGroup>
-            }
+            )}
             {selectedValues.length > 0 && (
-              <CommandGroup
-                className="border-t pt-1"
-              >
+              <CommandGroup className="border-t pt-1">
                 <CommandItem
                   onSelect={clearAll}
                   className="cursor-pointer text-destructive focus:text-destructive"
