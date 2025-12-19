@@ -146,14 +146,15 @@ export const addDeviceLayers = (
       "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
       "text-size": 12,
       "text-anchor": "bottom",
-      "text-offset": [0, -1.5],
-      "text-allow-overlap": false,
+      "text-offset": [0, -1],
+      "text-allow-overlap": true,
       "text-ignore-placement": false,
     },
     paint: {
       "text-color": isDark ? "#ffffff" : "#4c5368",
       "text-halo-color": isDark ? "#000000" : "#ffffff",
       "text-halo-width": 1,
+      "text-opacity-transition": { "duration": 0 },
     },
   });
 
