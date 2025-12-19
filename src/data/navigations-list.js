@@ -31,7 +31,7 @@ const NavigationsList = () => {
     },
     {
       name: "Master Data",
-      url: "/master-data",
+      url: "/master-data/project",
       icon: BetweenHorizontalStart,
     },
   ];
