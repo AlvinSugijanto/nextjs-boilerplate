@@ -21,7 +21,8 @@ export function PersistentSidebarProvider({ children }) {
   if (!ready) return null; // prevent hydration mismatch
 
   return (
-    <SidebarProvider defaultOpen={initialState === "expanded"}>
+    // <SidebarProvider defaultOpen={initialState === "expanded"}>
+    <SidebarProvider defaultOpen={false}>
       <SidebarStateSync />
       {children}
     </SidebarProvider>
