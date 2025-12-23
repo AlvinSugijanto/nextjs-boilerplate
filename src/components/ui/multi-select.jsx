@@ -193,7 +193,7 @@ export function MultiSelect({
           zIndex: 9999,
         }}
       >
-        <Command className="shadow-md">
+        <Command className="shadow-md" shouldFilter={false}>
           {searchable && (
             <CommandInput
               placeholder="Search..."
