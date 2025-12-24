@@ -176,9 +176,8 @@ const ActivityMethodTable = () => {
           if (fieldError.code === "validation_not_unique") {
             setError(fieldName, {
               type: "manual",
-              message: `${
-                fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
-              } must be unique. This value already exists.`,
+              message: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
+                } must be unique. This value already exists.`,
             });
           } else {
             // Handle other validation errors
@@ -194,7 +193,7 @@ const ActivityMethodTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save Activity Method. Please try again."
+          "Failed to save Activity Method. Please try again."
         );
       }
     } finally {
@@ -305,7 +304,7 @@ const ActivityMethodTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add ActivityMethod
+                Add Activity Method
               </Button>
             </SheetTrigger>
 
@@ -341,8 +340,8 @@ const ActivityMethodTable = () => {
                       {loadingSubmit.value
                         ? "Saving..."
                         : isEditMode
-                        ? "Update"
-                        : "Save"}
+                          ? "Update"
+                          : "Save"}
                     </Button>
                     <SheetClose asChild>
                       <Button variant="outline" onClick={handleCloseDrawer}>

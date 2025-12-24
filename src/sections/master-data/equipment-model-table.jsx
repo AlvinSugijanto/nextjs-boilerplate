@@ -236,9 +236,8 @@ const EquipmentModelTable = () => {
           if (fieldError.code === "validation_not_unique") {
             setError(fieldName, {
               type: "manual",
-              message: `${
-                fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
-              } must be unique. This value already exists.`,
+              message: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
+                } must be unique. This value already exists.`,
             });
           } else {
             // Handle other validation errors
@@ -254,7 +253,7 @@ const EquipmentModelTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save equipmentModel. Please try again."
+          "Failed to save equipmentModel. Please try again."
         );
       }
     } finally {
@@ -377,7 +376,7 @@ const EquipmentModelTable = () => {
             <SheetTrigger asChild>
               <Button size="sm" onClick={handleOpenDrawerForAdd}>
                 <Iconify icon="ic:round-plus" className="size-5" />
-                Add EquipmentModel
+                Add Equipment Model
               </Button>
             </SheetTrigger>
 
@@ -426,8 +425,8 @@ const EquipmentModelTable = () => {
                       {loadingSubmit.value
                         ? "Saving..."
                         : isEditMode
-                        ? "Update"
-                        : "Save"}
+                          ? "Update"
+                          : "Save"}
                     </Button>
                     <SheetClose asChild>
                       <Button variant="outline" onClick={handleCloseDrawer}>
