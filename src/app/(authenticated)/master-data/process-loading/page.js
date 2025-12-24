@@ -1,5 +1,5 @@
-import { MasterDataProcessMaterialView } from "@/sections/master-data/view";
+import { MasterDataProcessLoadingView } from "@/sections/master-data/view";
 
-export default function MasterDataProcessMaterialPage() {
-  return <MasterDataProcessMaterialView />;
+export default function MasterDataProcessLoadingPage() {
+  return <MasterDataProcessLoadingView />;
 }
