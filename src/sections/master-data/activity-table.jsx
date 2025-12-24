@@ -226,9 +226,8 @@ const ActivityTable = () => {
           if (fieldError.code === "validation_not_unique") {
             setError(fieldName, {
               type: "manual",
-              message: `${
-                fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
-              } must be unique. This value already exists.`,
+              message: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
+                } must be unique. This value already exists.`,
             });
           } else {
             // Handle other validation errors
@@ -244,7 +243,7 @@ const ActivityTable = () => {
         // Generic error message
         toast.error(
           error.response?.data?.message ||
-            "Failed to save activity. Please try again."
+          "Failed to save activity. Please try again."
         );
       }
     } finally {
@@ -342,10 +341,9 @@ const ActivityTable = () => {
   // ====== Render ======
   return (
     <>
-      <Card className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="w-[350px]">
+      <Card className="p-4 flex flex-col max-h-[calc(100vh-10rem)] gap-4">
+        <div className="flex items-center justify-between shrink-0">
+          <div className="w-87.5">
             <InputGroup>
               <InputGroupInput
                 placeholder="Search..."
@@ -415,8 +413,8 @@ const ActivityTable = () => {
                       {loadingSubmit.value
                         ? "Saving..."
                         : isEditMode
-                        ? "Update"
-                        : "Save"}
+                          ? "Update"
+                          : "Save"}
                     </Button>
                     <SheetClose asChild>
                       <Button variant="outline" onClick={handleCloseDrawer}>
@@ -430,17 +428,18 @@ const ActivityTable = () => {
           </Sheet>
         </div>
 
-        {/* Table */}
-        <TableList
-          columns={columns}
-          data={data}
-          tableProps={{
-            initialState: { pagination: { pageIndex: page - 1, pageSize } },
-          }}
-          setSorting={setSorting}
-          sorting={sorting}
-          loading={loadingFetch.value}
-        />
+        <div className="overflow-auto">
+          <TableList
+            columns={columns}
+            data={data}
+            tableProps={{
+              initialState: { pagination: { pageIndex: page - 1, pageSize } },
+            }}
+            setSorting={setSorting}
+            sorting={sorting}
+            loading={loadingFetch.value}
+          />
+        </div>
       </Card>
 
       {/* Delete Confirmation Dialog */}

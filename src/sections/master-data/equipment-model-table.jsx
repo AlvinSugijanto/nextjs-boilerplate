@@ -352,10 +352,9 @@ const EquipmentModelTable = () => {
   // ====== Render ======
   return (
     <>
-      <Card className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="w-[350px]">
+      <Card className="p-4 flex flex-col max-h-[calc(100vh-10rem)] gap-4">
+        <div className="flex items-center justify-between shrink-0">
+          <div className="w-87.5">
             <InputGroup>
               <InputGroupInput
                 placeholder="Search..."
@@ -440,17 +439,18 @@ const EquipmentModelTable = () => {
           </Sheet>
         </div>
 
-        {/* Table */}
-        <TableList
-          columns={columns}
-          data={data}
-          tableProps={{
-            initialState: { pagination: { pageIndex: page - 1, pageSize } },
-          }}
-          setSorting={setSorting}
-          sorting={sorting}
-          loading={loadingFetch.value}
-        />
+        <div className="overflow-auto">
+          <TableList
+            columns={columns}
+            data={data}
+            tableProps={{
+              initialState: { pagination: { pageIndex: page - 1, pageSize } },
+            }}
+            setSorting={setSorting}
+            sorting={sorting}
+            loading={loadingFetch.value}
+          />
+        </div>
       </Card>
 
       {/* Delete Confirmation Dialog */}

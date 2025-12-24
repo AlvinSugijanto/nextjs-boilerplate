@@ -66,8 +66,8 @@ export function AppSidebar({ ...props }) {
           </SidebarHeader>
 
           <SidebarContent className="px-3 py-4">
-            {MASTER_DATA_NAV.map((group) => (
-              <div key={group.group} className="mb-6">
+            {MASTER_DATA_NAV.map((group, idx) => (
+              <div key={group.group} className={idx !== 0 ? "mt-3" : ""}>
                 {/* Group title */}
                 <p className="px-2 mb-2 text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                   {group.group}
