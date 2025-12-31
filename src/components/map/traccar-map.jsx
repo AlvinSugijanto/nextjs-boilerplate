@@ -605,6 +605,8 @@ const TraccarMap = ({
         focusedDeviceIdRef
       );
       updateDeviceData();
+      addTrackLayers(mapRef.current, isDark);
+      addTrackLayerHistory(mapRef.current);
     });
   }, [isDark]);
 
