@@ -606,7 +606,13 @@ const TraccarMap = ({
       );
       updateDeviceData();
       addTrackLayers(mapRef.current, isDark);
+      updateTrackData(mapRef.current, tracksRef.current);
       addTrackLayerHistory(mapRef.current);
+      updateTrackDataHistory(
+        mapRef.current,
+        trackHistoryRef.current,
+        currentPopupRef
+      );
     });
   }, [isDark]);
 
