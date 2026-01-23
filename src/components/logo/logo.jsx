@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -12,12 +13,13 @@ const Logo = () => {
       className="flex items-center space-x-2 cursor-pointer"
       onClick={() => router.push("/")}
     >
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+      <Image src={"/logo/logo.png"} width={200} height={200} alt="Logo" />
+      {/* <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
         <Activity className="w-5 h-5 text-white" />
       </div>
       <span className="text font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
         Teletrace
-      </span>
+      </span> */}
     </div>
   );
 };

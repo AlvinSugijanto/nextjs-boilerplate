@@ -8,6 +8,7 @@ const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
+import Navbar from "@/components/Navbar";
 
 export const metadata = {
   title: "Teletrace",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             {children}
             <ClientToaster />
+            <Navbar />
           </AuthProvider>
         </ThemeProvider>
       </body>
