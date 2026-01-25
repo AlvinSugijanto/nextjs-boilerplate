@@ -1,9 +1,9 @@
-import { LandingView } from "@/sections/landing/view";
+import { HomeView } from "@/sections/home/view";
 
 export const metadata = {
-  title: "Project Management",
+  title: "Bodha Padma Nawadhya",
 };
 
 export default function LandingPage() {
-  return <LandingView />;
+  return <HomeView />;
 }

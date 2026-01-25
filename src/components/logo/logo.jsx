@@ -5,22 +5,18 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-const Logo = () => {
+const Logo = ({ width = 200, height = 200, ...props }) => {
   const router = useRouter();
 
   return (
-    <div
-      className="flex items-center space-x-2 cursor-pointer"
+    <Image
+      {...props}
+      src={"/logo/logo.png"}
+      width={width}
+      height={height}
       onClick={() => router.push("/")}
-    >
-      <Image src={"/logo/logo.png"} width={200} height={200} alt="Logo" />
-      {/* <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-        <Activity className="w-5 h-5 text-white" />
-      </div>
-      <span className="text font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-        Teletrace
-      </span> */}
-    </div>
+      alt="Logo"
+    />
   );
 };
 

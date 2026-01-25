@@ -4,11 +4,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ClientToaster } from "@/components/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+});
 
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Teletrace",
@@ -24,7 +28,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={poppins.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -35,6 +39,7 @@ export default function RootLayout({ children }) {
             {children}
             <ClientToaster />
             <Navbar />
+            <Footer />
           </AuthProvider>
         </ThemeProvider>
       </body>
