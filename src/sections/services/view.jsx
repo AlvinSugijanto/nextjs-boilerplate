@@ -86,8 +86,8 @@ export default function ServicesView() {
       />
 
       {/* section 1 */}
-      <section className="py-24 px-12">
-        <h2 className="text-3xl font-semibold text-center mb-8">
+      <section className="py-24 px-4 xs:px-12">
+        <h2 className="text-2xl xs:text-3xl font-semibold text-center mb-8">
           Dedicated Expert Support
         </h2>
 
@@ -222,7 +222,6 @@ export default function ServicesView() {
           </div>
         </div>
       </section>
-      {/* section 4 */}
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default function NawadhyaLogMonitoringView() {
       className={`min-h-screen text-sm transition-colors duration-300 overflow-hidden`}
     >
       <ProductHero
-        src="/assets/products/nawadhya-log-monitoring/1.jpg"
+        src="/assets/products/nawadhya-log-monitoring/real.jpg"
         title="Nawadhya Log Monitoring"
         description="Nawadhya Log Platform is a powerful log analytics engine powered
                 by Elasticsearch, enabling organizations to search, analyze, and

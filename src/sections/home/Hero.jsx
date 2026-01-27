@@ -52,13 +52,13 @@ const Hero = () => {
               priority
             />
             {/* optional overlay biar kontras */}
-            <div className="absolute inset-0 bg-black/50" />
+            {/* <div className="absolute inset-0 bg-black/50" /> */}
           </div>
 
-          <LightningEffects />
+          <LightningEffects type="horizontal" />
 
           {/* Content */}
-          <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="relative z-50 h-full flex items-center justify-center">
             <div className="container mx-auto px-6">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -90,7 +90,7 @@ const Hero = () => {
           whileInView="show"
           viewport={{
             once: true,
-            margin: "-150px", // 🔥 trigger setelah scroll lebih dalam
+            margin: "-150px",
           }}
           className=" absolute left-0 z-20 -bottom-32 sm:-bottom-48 md:-bottom-64 lg:-bottom-96 xl:-bottom-140 grid grid-cols-2 gap-4 items-start"
         >

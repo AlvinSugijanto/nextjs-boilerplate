@@ -2,7 +2,7 @@ import React from "react";
 
 const Card = ({ item, index }) => {
   return (
-    <div className="rounded-3xl bg-[#EAF4FF] p-10 border">
+    <div className="h-full rounded-3xl bg-[#EAF4FF] p-10 border">
       <div className=" h-10 w-10 rounded-full border border-[#354C64] flex items-center justify-center text-lg font-medium">
         {index + 1}
       </div>

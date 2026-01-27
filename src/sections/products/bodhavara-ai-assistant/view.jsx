@@ -12,7 +12,6 @@ export default function BodhavaraAIAssistantView() {
     >
       <ProductHero
         src="/assets/products/bodhavara-ai-assistant/4.jpg"
-        // src="/assets/products/bodhavara-ai-assistant/1 - Copy (2).jpg"
         title="Bodhavara AI Assistant"
         description={
           <div className="flex flex-col gap-4">
