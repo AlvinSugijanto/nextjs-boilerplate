@@ -76,10 +76,9 @@ const LightningEffects = ({ type }) => {
           }}
         />
 
+        {/* antara ini */}
         {/* base background color */}
         <div className="absolute inset-0 bg-primary z-10" />
-
-        {/* <div className="absolute inset-0 bg-primary/60 z-50" /> */}
 
         <div
           className="absolute inset-0 bg-gradient-to-tr 
@@ -87,6 +86,22 @@ const LightningEffects = ({ type }) => {
   to-transparent to-[100%] 
   z-20"
         />
+
+        {/* atau ini */}
+
+        {/* <div
+          className="absolute inset-0 bg-gradient-to-r 
+  from-primary from-[40%] 
+  to-transparent to-[100%] 
+  z-20"
+        />
+
+        <div
+          className="absolute inset-0 bg-gradient-to-t 
+  from-primary from-[0%] 
+  to-transparent to-[25%] 
+  z-20"
+        /> */}
       </>
     );
   }

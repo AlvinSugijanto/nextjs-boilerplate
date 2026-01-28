@@ -1,5 +1,6 @@
 import React from "react";
 import { Logo } from "./logo";
+import Link from "next/link";
 
 const Footer = () => {
   return (
@@ -12,15 +13,27 @@ const Footer = () => {
           <div className="flex flex-1 flex-col sm:flex-row xl:justify-center gap-16 lg:gap-36 ">
             <div className="flex flex-col gap-4">
               <h2 className="font-semibold text-xl text-white">PRODUCT</h2>
-              <p className="text-gray-200">Nawadhya Big Data Platform</p>
-              <p>Nawadhya Log Monitoring</p>
-              <p>Nawadhya Operating System</p>
-              <p>Bodhavara AI Assistant</p>
-              <p>Private On-Premise</p>
+              <Link href="/nawadhya-big-data">
+                <p>Nawadhya Big Data Platform</p>
+              </Link>
+              <Link href="/nawadhya-log-monitoring">
+                <p>Nawadhya Log Monitoring</p>
+              </Link>
+              <Link href="/nawadhya-os">
+                <p>Nawadhya Operating System</p>
+              </Link>
+              <Link href="/bodhavara-ai-assistant">
+                <p>Bodhavara AI Assistant</p>
+              </Link>
+              <Link href="/private-on-premise">
+                <p>Private On-Premise</p>
+              </Link>
             </div>
             <div className="flex flex-col gap-4">
               <h2 className="font-semibold text-xl text-white">SERVICES</h2>
-              <p>Consultant</p>
+              <Link href="/services">
+                <p>Consultant</p>
+              </Link>
             </div>
             <div className="flex flex-col gap-4">
               <h2 className="font-semibold text-xl text-white">CONTACT</h2>

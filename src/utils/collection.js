@@ -159,7 +159,7 @@ export function useDeleteData() {
 
 export function useGetDataDb(api, options, dontRunFirst = false) {
   // state
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(null);
   const [option, setOptiob] = useState({});
   const [error, setError] = useState(null);
 

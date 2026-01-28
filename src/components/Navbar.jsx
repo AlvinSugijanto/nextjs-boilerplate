@@ -97,37 +97,75 @@ export default function Navbar({ scrolled, isDark }) {
           {navItems.map((item, index) => {
             if (item.children) {
               return (
-                <div key={index} className="relative group">
-                  <button
-                    onClick={() => setIsProductOpen(!isProductOpen)}
-                    className="text-sm lg:text-base text-white dark:text-gray-300
+                <div key={index}>
+                  <div className="relative group">
+                    <button
+                      onClick={() => setIsProductOpen(!isProductOpen)}
+                      className="text-sm lg:text-base text-white dark:text-gray-300
                        hover:text-blue-600 dark:hover:text-blue-400
                        transition-colors cursor-pointer flex items-center gap-1"
-                  >
-                    {item.name}
+                    >
+                      {item.name}
 
-                    <ChevronDown
-                      size={16}
-                      className={`transition-all duration-300 ${isProductOpen ? "rotate-180" : "group-hover:rotate-180"}`}
-                    />
-                  </button>
+                      <ChevronDown
+                        size={16}
+                        className={`transition-all duration-300 ${isProductOpen ? "rotate-180" : "group-hover:rotate-180"}`}
+                      />
+                    </button>
 
-                  {/* Dropdown */}
-                  <div
-                    className={`w-fit absolute left-0 pt-3 transition-all duration-300 ${isProductOpen ? "opacity-100 visible" : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"}`}
-                  >
-                    <div className="min-w-2xl grid grid-cols-2 items-start p-6 rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-white/10">
-                      {item.children.map((child, i) => (
-                        <a
-                          key={i}
-                          href={child.href}
-                          onClick={() => setIsProductOpen(false)}
-                          className="px-6 py-6 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-xl flex items-center gap-4"
-                        >
-                          {child.icon}
-                          {child.name}
-                        </a>
-                      ))}
+                    {/* Dropdown */}
+                    <div
+                      className={`w-fit absolute left-0 pt-3 transition-all duration-300 ${isProductOpen ? "opacity-100 visible" : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"}`}
+                    >
+                      <div className="min-w-2xl grid grid-cols-2 gap-8 p-6 rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-white/10">
+                        {/* PRODUCT SECTION */}
+                        <div>
+                          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                            Product
+                          </p>
+
+                          <div className="flex flex-col gap-1">
+                            {item.children.slice(0, 4).map((child, i) => (
+                              <a
+                                key={i}
+                                href={child.href}
+                                onClick={() => setIsProductOpen(false)}
+                                className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200
+                     hover:bg-blue-50 dark:hover:bg-white/10
+                     hover:text-blue-600 dark:hover:text-blue-400
+                     transition-colors rounded-lg flex items-center gap-3"
+                              >
+                                {child.icon}
+                                {child.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* HOSTING SECTION */}
+                        <div>
+                          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                            Hosting
+                          </p>
+
+                          <div className="flex flex-col gap-1">
+                            {item.children.slice(4).map((child, i) => (
+                              <a
+                                key={i}
+                                href={child.href}
+                                onClick={() => setIsProductOpen(false)}
+                                className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200
+                     hover:bg-blue-50 dark:hover:bg-white/10
+                     hover:text-blue-600 dark:hover:text-blue-400
+                     transition-colors rounded-lg flex items-center gap-3"
+                              >
+                                {child.icon}
+                                {child.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

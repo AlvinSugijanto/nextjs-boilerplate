@@ -11,13 +11,15 @@ export default function NawadhyaLogMonitoringView() {
       className={`min-h-screen text-sm transition-colors duration-300 overflow-hidden`}
     >
       <ProductHero
-        src="/assets/products/nawadhya-log-monitoring/real.jpg"
+        header="Product"
+        src="/assets/products/nawadhya-log-monitoring/3.jpg"
         title="Nawadhya Log Monitoring"
         description="Nawadhya Log Platform is a powerful log analytics engine powered
                 by Elasticsearch, enabling organizations to search, analyze, and
                 gain real-time insights from large volumes of log data. Once
                 logs are ingested into Elasticsearch, users can perform fast and
                 flexible full-text searches with advanced capabilities."
+        imageClass={""}
       />
     </div>
   );
