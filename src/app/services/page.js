@@ -1,8 +1,7 @@
 import ServicesView from "@/sections/services/view";
-import Services from "@/sections/services/view";
 
 export const metadata = {
-  title: "Services",
+  title: "Bodha Padma Nawadhya: Services",
 };
 
 const ServicesPage = () => {

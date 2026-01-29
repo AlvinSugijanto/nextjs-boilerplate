@@ -109,7 +109,7 @@ export default function ResourcesView() {
         description={
           <div className="flex flex-col gap-4">
             <p>Download our data sheet through the button below</p>
-            <div className="flex gap-3 items-center">
+            <div className="flex flex-col xs:flex-row gap-3 items-start xs:items-center">
               <button
                 onClick={() =>
                   handleDownloadClick("Nawadhya Big Data Brochure")

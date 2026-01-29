@@ -90,7 +90,7 @@ export default function Navbar({ scrolled, isDark }) {
           ${isScrolled ? "bg-primary w-full shadow-lg lg:justify-around justify-between" : "bg-white/10 max-w-5xl rounded-2xl sm:rounded-3xl lg:rounded-4xl justify-between"}    
         `}
       >
-        <Logo />
+        <Logo width={200} height={200} />
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6 lg:space-x-12">
@@ -213,18 +213,50 @@ export default function Navbar({ scrolled, isDark }) {
                       />
                     </button>
                     {isProductOpen && (
-                      <div className="bg-gray-50 dark:bg-gray-800/50">
-                        {item.children.map((child, i) => (
-                          <Link
-                            key={i}
-                            href={child.href}
-                            onClick={handleNavClick}
-                            className="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-blue-600/10 dark:hover:bg-blue-400/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-3 pl-8"
-                          >
-                            <span className="text-gray-400">{child.icon}</span>
-                            {child.name}
-                          </Link>
-                        ))}
+                      <div className="bg-gray-50 dark:bg-gray-800/50 py-2">
+                        {/* PRODUCT SECTION */}
+                        <div className="mb-4">
+                          <p className="px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-400 pl-8">
+                            Product
+                          </p>
+                          <div className="flex flex-col">
+                            {item.children.slice(0, 4).map((child, i) => (
+                              <Link
+                                key={i}
+                                href={child.href}
+                                onClick={handleNavClick}
+                                className="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-blue-600/10 dark:hover:bg-blue-400/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-3 pl-8"
+                              >
+                                <span className="text-gray-400">
+                                  {child.icon}
+                                </span>
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* HOSTING SECTION */}
+                        <div>
+                          <p className="px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-400 pl-8">
+                            Hosting
+                          </p>
+                          <div className="flex flex-col">
+                            {item.children.slice(4).map((child, i) => (
+                              <Link
+                                key={i}
+                                href={child.href}
+                                onClick={handleNavClick}
+                                className="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-blue-600/10 dark:hover:bg-blue-400/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-3 pl-8"
+                              >
+                                <span className="text-gray-400">
+                                  {child.icon}
+                                </span>
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </>

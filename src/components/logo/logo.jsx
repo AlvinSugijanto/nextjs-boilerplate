@@ -10,7 +10,6 @@ const Logo = ({ width = 200, height = 200, ...props }) => {
   return (
     <Link href={"/"}>
       <Image
-        {...props}
         src={"/logo/logo.png"}
         width={width}
         height={height}
@@ -18,6 +17,8 @@ const Logo = ({ width = 200, height = 200, ...props }) => {
           cursor: "pointer",
         }}
         alt="Logo"
+        priority
+        {...props}
       />
     </Link>
   );
