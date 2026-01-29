@@ -3,12 +3,7 @@
 import React, { useEffect, useState } from "react";
 import ProductHero from "../products/ProductHero";
 import DownloadModal from "./DownloadModal";
-import {
-  useCreateData,
-  useGetData,
-  useGetDataDb,
-  useUpdateData,
-} from "@/utils/collection";
+import { useGetDataDb, useUpdateData } from "@/utils/collection";
 import { useSearchParams } from "next/navigation";
 
 export default function ResourcesView() {
@@ -101,7 +96,7 @@ export default function ResourcesView() {
     };
 
     handleFlow();
-  }, [brochureData, searchParams]);
+  }, [brochureData]);
 
   return (
     <div
