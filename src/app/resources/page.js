@@ -2,7 +2,7 @@ import ResourcesView from "@/sections/resources/view";
 import { Suspense } from "react";
 
 export const metadata = {
-  title: "Nawadhya: Resources",
+  title: "Bodha Padma Nawadhya: Resources",
 };
 
 const ResourcesPage = () => {

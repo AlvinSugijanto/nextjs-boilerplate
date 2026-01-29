@@ -8,7 +8,6 @@ export async function POST(req) {
   try {
     const formData = await req.formData();
     const headers = req.headers;
-    console.log(formData);
 
     const res = await axios.post(`${EMAIL}`, formData, {
       headers,

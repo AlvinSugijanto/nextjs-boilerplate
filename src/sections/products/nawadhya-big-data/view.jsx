@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
 
 import Image from "next/image";
 import LightningEffects from "@/components/LightningEffects";
@@ -9,7 +10,6 @@ import { Navigation } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Card from "@/components/Card";
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 
@@ -47,7 +47,7 @@ const Hero = () => {
             <div className="relative w-full h-full z-20">
               <div className="absolute right-0 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 scale-100 rotate-6 ">
                 {/* Image 1 */}
-                {imageItem.map((src) => (
+                {imageItem.map((src, index) => (
                   <div
                     className="relative w-[600px] h-[300px] overflow-hidden shadow-2xl translate-y-15 "
                     key={src}
@@ -124,13 +124,13 @@ const About = () => {
           <p className="text-2xl tracking-[0.3em] uppercase underline underline-offset-8">
             ABOUT
           </p>
-          <p className="text-xl md:text-2xl xl:text-3xl leading-relaxed">
+          <p className="text-xl md:text-2xl xl:text-[25px] leading-relaxed">
             Technology moves fast, and building analytics platforms in-house
             takes time and expertise. While analytics and AI promise impact,
             execution is the real challenge.
           </p>
 
-          <p className="text-xl md:text-2xl xl:text-3xl leading-relaxed">
+          <p className="text-xl md:text-2xl xl:text-[25px] leading-relaxed">
             The{" "}
             <span className="font-semibold">Nawadhya Big Data Platform</span>{" "}
             removes complexity by delivering a proven, production-ready

@@ -7,7 +7,7 @@ const Footer = () => {
     <>
       <section className="bg-primary p-8 sm:p-18">
         <div className="flex xl:flex-row gap-12 xl:gap-24 flex-col justify-between text-gray-200">
-          <div className="sm:min-w-xs xl:self-center">
+          <div className="sm:min-w-xs xl:self-center xs:block hidden">
             <Logo width={300} height={300} className="w-48 sm:w-72 h-auto" />
           </div>
           <div className="flex flex-1 flex-col sm:flex-row xl:justify-center gap-16 lg:gap-36 ">
