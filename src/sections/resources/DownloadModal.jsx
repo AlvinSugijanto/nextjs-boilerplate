@@ -29,6 +29,8 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
     const host = window.location.host;
     const fullUrl = `${protocol}//${host}`;
 
+    const imageUrl = process.env.NEXT_PUBLIC_LOGO_URL;
+
     return `
 <!DOCTYPE html>
 <html>
@@ -59,7 +61,7 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
             text-align: center;
         }
         .logo-container {
-            margin-bottom: 20px;
+            margin-bottom: 0px;
         }
         .logo-img {
             max-width: 180px;
@@ -120,7 +122,7 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
     <div class="email-container">
         <div class="header">
             <div class="logo-container">
-                <img src="${fullUrl}/logo.png" alt="Nawadhya Logo" class="logo-img" />
+                <img src="${imageUrl}" alt="Nawadhya Logo" class="logo-img" />
             </div>
         </div>
         
@@ -155,7 +157,7 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
             </p>
             
             <div class="contact-info">
-                For inquiries, please contact us at: info@nawadhya.com
+                For inquiries, please contact us at: amir@bodha.co.id
             </div>
         </div>
     </div>
@@ -170,14 +172,14 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
     try {
       setLoading(true);
       // create to pb
-      const response = await createData("/collection/listCustomer", {
+      const response = await createData("/api/collection/listCustomer", {
         ...formData,
         status: "unverified",
         type: brochureType,
       });
 
       // ===== EMAIL TITLE & SUBJECT =====
-      const emailSubject = `${brochureType} Brochure Request from ${formData.name}`;
+      const emailSubject = `${brochureType} Request`;
 
       // ===== SEND EMAIL =====
       const payloadEmail = new FormData();
@@ -193,7 +195,7 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
       });
 
       toast.success(
-        `Thank you! Your ${brochureType} will be downloaded shortly.`,
+        `Thank you! Please check your email to download ${brochureType}.`,
       );
     } catch (err) {
       console.error(err);

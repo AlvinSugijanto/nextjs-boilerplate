@@ -13,7 +13,7 @@ export default function ResourcesView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [brochureType, setBrochureType] = useState("");
   const { data: brochureData } = useGetDataDb(
-    `/collection/listCustomer/${brochureId}`,
+    `/api/collection/listCustomer/${brochureId}`,
     {},
     !brochureId,
   );
@@ -26,14 +26,14 @@ export default function ResourcesView() {
   };
 
   const downloadBrochure = (type) => {
-    const isBrochure = type === "brochure";
+    const isBrochure = type === "Nawadhya Big Data Brochure";
 
     const file = {
       path: isBrochure
-        ? "/Nawadhya Brochure.pdf"
+        ? "/Nawadhya Big Data Brochure.pdf"
         : "/Nawadhya Product Line 2026.pdf",
       name: isBrochure
-        ? "Nawadhya Brochure.pdf"
+        ? "Nawadhya Big Data Brochure.pdf"
         : "Nawadhya Product Line 2026.pdf",
     };
 
@@ -70,7 +70,7 @@ export default function ResourcesView() {
 
   const updateDataPb = async () => {
     try {
-      await updateData(`/collection/listCustomer/${brochureId}`, {
+      await updateData(`/api/collection/listCustomer/${brochureId}`, {
         status: "verified",
       });
     } catch (error) {
@@ -111,7 +111,9 @@ export default function ResourcesView() {
             <p>Download our data sheet through the button below</p>
             <div className="flex gap-3 items-center">
               <button
-                onClick={() => handleDownloadClick("Nawadhya Brochure")}
+                onClick={() =>
+                  handleDownloadClick("Nawadhya Big Data Brochure")
+                }
                 className="bg-gray-500 hover:bg-gray-600 px-6 py-3 rounded-3xl border transition-colors"
               >
                 Nawadhya Brocure
