@@ -1,7 +1,13 @@
 "use client";
 import Card from "@/components/Card";
 import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import "swiper/css";
+import "swiper/css/navigation";
+import CustomSlider from "@/components/CustomSlider";
 const About = () => {
   const cardItem = [
     {
@@ -61,12 +67,7 @@ const About = () => {
             </h2>
           </div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {cardItem.map((item, index) => (
-              <Card item={item} index={index} key={item.title} />
-            ))}
-          </div>
+          <CustomSlider list={cardItem} />
         </div>
       </section>
     </>

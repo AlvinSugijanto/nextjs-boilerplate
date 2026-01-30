@@ -7,6 +7,7 @@ import ProductHero from "../products/ProductHero";
 import Card from "@/components/Card";
 import Image from "next/image";
 import { description } from "@/components/chart/pie-donut-chart";
+import CustomSlider from "@/components/CustomSlider";
 
 export default function ServicesView() {
   const cardItem = [
@@ -91,17 +92,12 @@ export default function ServicesView() {
           Dedicated Expert Support
         </h2>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-          {cardItem.map((item, index) => (
-            <Card item={item} index={index} key={item.title} />
-          ))}
-        </div>
+        <CustomSlider list={cardItem} />
       </section>
 
       {/* section 2 */}
       <section className="py-16 px-12 bg-primary">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 ">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 ">
           <div className="flex flex-col gap-8">
             <p className="text-base sm:text-lg tracking-[0.3em] uppercase underline underline-offset-8 text-white">
               Services
