@@ -80,11 +80,11 @@ export function useCreateData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const createData = async (route, body, headers) => {
+  const createData = async (route, body) => {
     try {
       setLoading(true);
 
-      const response = await axios.post(route, body, headers);
+      const response = await axios.post(route, body);
 
       return response;
     } catch (error) {
@@ -107,10 +107,10 @@ export function useUpdateData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const updateData = async (route, body, headers) => {
+  const updateData = async (route, body) => {
     try {
       setLoading(true);
-      const response = await axios.put(route, body, headers);
+      const response = await axios.put(route, body);
 
       return response;
     } catch (error) {

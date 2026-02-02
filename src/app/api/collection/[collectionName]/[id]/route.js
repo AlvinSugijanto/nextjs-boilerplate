@@ -3,28 +3,15 @@ import { NextResponse } from "next/server";
 
 import pb from "@/utils/pocketbase";
 
-function getAccessToken(data) {
-  const match = data.match(/accessToken=([^;]+)/);
-
-  return match ? match[1] : null;
-}
-
 // METHOD GET
 export async function GET(req, { params }) {
   const { collectionName, id } = await params;
   const collection = collectionName;
 
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || `Bearer ${token}`;
   const expand = req.headers.get("expand") || "";
 
   try {
     const record = await pb.collection(collection).getOne(id, {
-      headers: {
-        Authorization: authorization,
-      },
       expand,
     });
 
@@ -39,10 +26,6 @@ export async function PUT(req, { params }) {
   const { collectionName, id } = await params;
   const collection = collectionName;
 
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || `Bearer ${token}`;
   const contentType = req.headers.get("content-type");
 
   if (contentType.includes("multipart/form-data")) {
@@ -76,11 +59,7 @@ export async function PUT(req, { params }) {
     }
 
     try {
-      const record = await pb.collection(collection).update(id, data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).update(id, data);
 
       return NextResponse.json(record);
     } catch (error) {
@@ -92,11 +71,7 @@ export async function PUT(req, { params }) {
     const data = await req.json();
 
     try {
-      const record = await pb.collection(collection).update(id, data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).update(id, data);
 
       return NextResponse.json(record);
     } catch (error) {
@@ -112,10 +87,6 @@ export async function PATCH(req, { params }) {
   const { collectionName, id } = await params;
   const collection = collectionName;
 
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || `Bearer ${token}`;
   const contentType = req.headers.get("content-type");
 
   if (contentType.includes("multipart/form-data")) {
@@ -149,11 +120,7 @@ export async function PATCH(req, { params }) {
     }
 
     try {
-      const record = await pb.collection(collection).update(id, data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).update(id, data);
 
       return NextResponse.json(record);
     } catch (error) {
@@ -165,11 +132,7 @@ export async function PATCH(req, { params }) {
     const data = await req.json();
 
     try {
-      const record = await pb.collection(collection).update(id, data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).update(id, data);
 
       return NextResponse.json(record);
     } catch (error) {
@@ -185,17 +148,8 @@ export async function DELETE(req, { params }) {
   const { collectionName, id } = await params;
   const collection = collectionName;
 
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || `Bearer ${token}`;
-
   try {
-    const record = await pb.collection(collection).delete(id, {
-      headers: {
-        Authorization: authorization,
-      },
-    });
+    const record = await pb.collection(collection).delete(id, {});
 
     return NextResponse.json(record);
   } catch (error) {

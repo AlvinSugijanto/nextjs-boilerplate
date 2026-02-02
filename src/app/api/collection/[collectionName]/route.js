@@ -3,21 +3,10 @@ import { NextResponse } from "next/server";
 
 import pb from "@/utils/pocketbase";
 
-function getAccessToken(data) {
-  const match = data.match(/accessToken=([^;]+)/);
-
-  return match ? match[1] : null;
-}
-
 // GET Method
 export async function GET(req, { params }) {
   const { collectionName } = await params;
   const collection = collectionName;
-
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || `Bearer ${token}`;
 
   const type = req.headers.get("type") || "getList";
   const page = req.headers.get("page") || 1;
@@ -35,9 +24,6 @@ export async function GET(req, { params }) {
         filter,
         sort,
         fields,
-        headers: {
-          Authorization: authorization,
-        },
       });
 
       return NextResponse.json(record);
@@ -47,9 +33,6 @@ export async function GET(req, { params }) {
         filter,
         sort,
         fields,
-        headers: {
-          Authorization: authorization,
-        },
       });
 
       return NextResponse.json(record);
@@ -58,9 +41,6 @@ export async function GET(req, { params }) {
         expand,
         sort,
         fields,
-        headers: {
-          Authorization: authorization,
-        },
       });
 
       return NextResponse.json(record);
@@ -76,11 +56,6 @@ export async function GET(req, { params }) {
 export async function POST(req, { params }) {
   const { collectionName } = await params;
   const collection = collectionName;
-
-  const cookie = req.headers.get("cookie");
-  const token = getAccessToken(cookie);
-
-  const authorization = req.headers.get("authorization") || token;
 
   const contentType = req.headers.get("content-type");
 
@@ -115,11 +90,7 @@ export async function POST(req, { params }) {
     }
 
     try {
-      const record = await pb.collection(collection).create(data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).create(data, {});
 
       return NextResponse.json(record);
     } catch (error) {
@@ -133,11 +104,7 @@ export async function POST(req, { params }) {
     const data = await req.json();
 
     try {
-      const record = await pb.collection(collection).create(data, {
-        headers: {
-          Authorization: authorization,
-        },
-      });
+      const record = await pb.collection(collection).create(data, {});
 
       return NextResponse.json(record);
     } catch (error) {
