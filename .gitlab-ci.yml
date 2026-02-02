@@ -48,6 +48,6 @@ rollout:
   tags:
     - kubectl
   script:
-    - kubectl -n frontend-dev rollout restart deployment/nawadhya-web
+    - kubectl -n nawadhya rollout restart deployment/nawadhya-web
   only:
     - dev
