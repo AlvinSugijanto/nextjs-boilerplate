@@ -1,7 +1,7 @@
 import { HomeView } from "@/sections/home/view";
 
 export const metadata = {
-  title: "Bodha Padma Nawadhya",
+  title: "Nawadhya",
 };
 
 export default function LandingPage() {

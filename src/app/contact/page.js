@@ -1,7 +1,7 @@
 import ContactView from "@/sections/contact/view";
 
 export const metadata = {
-  title: "Bodha Padma Nawadhya: Contact",
+  title: "Nawadhya: Contact",
 };
 
 const ContactPage = () => {

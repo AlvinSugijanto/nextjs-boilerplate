@@ -15,8 +15,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Teletrace",
-  description: "Teletrace made simple and efficient.",
+  title: "Nawadhya",
+  description: "We Build, Scale, and Power Big Data Platforms",
   icons: [
     { rel: "icon", url: "/favicon.ico" },
     { rel: "icon", url: "/favicon.png", type: "image/png" },
