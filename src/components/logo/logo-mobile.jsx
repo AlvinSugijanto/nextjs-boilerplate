@@ -15,9 +15,6 @@ const LogoMobile = () => {
       <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
         <Activity className="w-3 h-3 text-white" />
       </div>
-      {/* <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-        Teletrace
-      </span> */}
     </div>
   );
 };

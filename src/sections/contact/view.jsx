@@ -85,11 +85,16 @@ export default function ContactView() {
         description={
           <div className="flex flex-col gap-6">
             <p>
-              For organizations of any scale, Nawadhya is a one-stop platform
-              for deploying, managing, and monitoring end-to-end data
-              infrastructure. Nawadhya enables teams to shift focus from
-              operational complexity to what matters most—building innovative,
-              customer-facing applications that drive business impact.
+              For organizations of any scale,{" "}
+              <span>
+                <b>PT. Bodha Padma Nawadhya</b>
+              </span>{" "}
+              provides an integrated platform for deploying, managing, and
+              monitoring end-to-end data infrastructure. We help organizations
+              reduce operational complexity, allowing teams to focus on building
+              innovative, customer-centric solutions that drive measurable
+              business impact. For inquiries, partnerships, or further
+              information, please contact us through the details below.
             </p>
             <div className="flex gap-2">
               <Mail />
