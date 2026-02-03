@@ -98,12 +98,9 @@ export default function ContactView() {
             </p>
             <div className="flex gap-2">
               <Mail />
-              <p>amir@bodha.co.id</p>
+              <p>padma.nawadhya@bodha.co.id</p>
             </div>
-            <div className="flex gap-2">
-              <Phone />
-              <p>+62 821-2256-0783</p>
-            </div>
+
             <div className="flex gap-2">
               <Globe />
               <p>bodha.co.id</p>

@@ -157,7 +157,7 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
             </p>
             
             <div class="contact-info">
-                For inquiries, please contact us at: amir@bodha.co.id
+                For inquiries, please contact us at: padma.nawadhya@bodha.co.id
             </div>
         </div>
     </div>
