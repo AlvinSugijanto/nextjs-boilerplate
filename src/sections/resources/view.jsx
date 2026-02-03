@@ -110,7 +110,7 @@ export default function ResourcesView() {
 
     const handleFlow = async () => {
       if (brochureData.status === "unverified") {
-        // await submitSheets(brochureData);
+        await submitSheets(brochureData);
         await updateDataPb();
         await downloadBrochure(brochureData.type);
       }
