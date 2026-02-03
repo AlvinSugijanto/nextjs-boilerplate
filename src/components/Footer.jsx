@@ -37,8 +37,7 @@ const Footer = () => {
             </div>
             <div className="flex flex-col gap-4">
               <h2 className="font-semibold text-xl text-white">CONTACT</h2>
-              <p>amir@bodha.co.id</p>
-              <p>+62 821-2256-0783</p>
+              <p>padma.nawadhya@bodha.co.id</p>
               <p>bodha.co.id</p>
             </div>
           </div>

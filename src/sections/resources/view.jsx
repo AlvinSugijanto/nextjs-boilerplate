@@ -26,35 +26,39 @@ export default function ResourcesView() {
     setIsModalOpen(true);
   };
 
-  // const downloadBrochure = (type) => {
-  //   const isBrochure = type === "Nawadhya Big Data Brochure";
-
-  //   const file = {
-  //     path: isBrochure
-  //       ? "/Nawadhya Big Data Brochure.pdf"
-  //       : "/Nawadhya Product Line 2026.pdf",
-  //     name: isBrochure
-  //       ? "Nawadhya Big Data Brochure.pdf"
-  //       : "Nawadhya Product Line 2026.pdf",
-  //   };
-
-  //   const link = document.createElement("a");
-  //   link.href = file.path;
-  //   link.download = file.name;
-  //   link.target = "_blank";
-
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
-  const downloadBrochure = (type) => {
+  const downloadBrochure = async (type) => {
     const isBrochure = type === "Nawadhya Big Data Brochure";
 
-    const fileUrl = isBrochure
-      ? "/Nawadhya Big Data Brochure.pdf"
-      : "/Nawadhya Product Line 2026.pdf";
+    const file = {
+      path: isBrochure
+        ? "/Nawadhya Big Data Brochure.pdf"
+        : "/Nawadhya Product Line 2026.pdf",
+      name: isBrochure
+        ? "Nawadhya Big Data Brochure.pdf"
+        : "Nawadhya Product Line 2026.pdf",
+    };
 
-    window.open(fileUrl, "_blank", "noopener,noreferrer");
+    try {
+      const response = await fetch(file.path);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = file.name;
+      link.style.display = "none";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    } catch (error) {
+      console.error("Download failed:", error);
+      window.open(file.path, "_blank");
+    }
   };
 
   const submitSheets = async (data) => {
@@ -96,9 +100,9 @@ export default function ResourcesView() {
 
     const handleFlow = async () => {
       if (brochureData.status === "unverified") {
-        downloadBrochure(brochureData.type);
         await submitSheets(brochureData);
-        // await updateDataPb();
+        await updateDataPb();
+        await downloadBrochure(brochureData.type);
       }
 
       setTimeout(() => {
