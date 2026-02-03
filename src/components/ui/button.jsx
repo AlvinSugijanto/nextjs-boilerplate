@@ -41,7 +41,8 @@ function Button({
   variant,
   size,
   asChild = false,
-  loading = false, // 👈 tambah ini
+  loading = false,
+  loadingText = "Submitting...",
   children,
   disabled,
   ...props
@@ -61,7 +62,7 @@ function Button({
       {loading ? (
         <span className="flex items-center justify-center gap-2">
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span>Loading...</span>
+          <span>{loadingText}</span>
         </span>
       ) : (
         children
