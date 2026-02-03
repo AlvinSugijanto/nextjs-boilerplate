@@ -275,8 +275,8 @@ export default function DownloadModal({ isOpen, onClose, brochureType }) {
           <div className="pt-2">
             <Button
               type="submit"
-              className="bg-teal-500 hover:bg-teal-600 text-white px-7 py-4 rounded-3xl transition-colors"
-              disabled={loading}
+              loading={loading}
+              className="bg-teal-500 hover:bg-teal-600 text-white px-7 py-4 rounded-3xl"
             >
               Submit
             </Button>
