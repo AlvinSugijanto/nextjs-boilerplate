@@ -5,6 +5,7 @@ import ProductHero from "../products/ProductHero";
 import DownloadModal from "./DownloadModal";
 import { useGetDataDb, useUpdateData } from "@/utils/collection";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function ResourcesView() {
   const searchParams = useSearchParams();
@@ -25,26 +26,35 @@ export default function ResourcesView() {
     setIsModalOpen(true);
   };
 
+  // const downloadBrochure = (type) => {
+  //   const isBrochure = type === "Nawadhya Big Data Brochure";
+
+  //   const file = {
+  //     path: isBrochure
+  //       ? "/Nawadhya Big Data Brochure.pdf"
+  //       : "/Nawadhya Product Line 2026.pdf",
+  //     name: isBrochure
+  //       ? "Nawadhya Big Data Brochure.pdf"
+  //       : "Nawadhya Product Line 2026.pdf",
+  //   };
+
+  //   const link = document.createElement("a");
+  //   link.href = file.path;
+  //   link.download = file.name;
+  //   link.target = "_blank";
+
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
   const downloadBrochure = (type) => {
     const isBrochure = type === "Nawadhya Big Data Brochure";
 
-    const file = {
-      path: isBrochure
-        ? "/Nawadhya Big Data Brochure.pdf"
-        : "/Nawadhya Product Line 2026.pdf",
-      name: isBrochure
-        ? "Nawadhya Big Data Brochure.pdf"
-        : "Nawadhya Product Line 2026.pdf",
-    };
+    const fileUrl = isBrochure
+      ? "/Nawadhya Big Data Brochure.pdf"
+      : "/Nawadhya Product Line 2026.pdf";
 
-    const link = document.createElement("a");
-    link.href = file.path;
-    link.download = file.name;
-    link.target = "_blank";
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(fileUrl, "_blank", "noopener,noreferrer");
   };
 
   const submitSheets = async (data) => {
@@ -63,7 +73,7 @@ export default function ResourcesView() {
       return true;
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      toast.error("Something went wrong");
       return false;
     }
   };
@@ -75,6 +85,7 @@ export default function ResourcesView() {
       });
     } catch (error) {
       console.error(error);
+      toast.error("Something went wrong");
     }
   };
 
@@ -87,7 +98,7 @@ export default function ResourcesView() {
       if (brochureData.status === "unverified") {
         downloadBrochure(brochureData.type);
         await submitSheets(brochureData);
-        await updateDataPb();
+        // await updateDataPb();
       }
 
       setTimeout(() => {

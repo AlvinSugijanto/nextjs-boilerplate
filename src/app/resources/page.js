@@ -7,7 +7,7 @@ export const metadata = {
 
 const ResourcesPage = () => {
   return (
-    <Suspense fallback={<div></div>}>
+    <Suspense fallback={<></>}>
       <ResourcesView />
     </Suspense>
   );
