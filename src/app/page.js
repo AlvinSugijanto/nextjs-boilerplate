@@ -1,9 +1,5 @@
-import { HomeView } from "@/sections/home/view";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Nawadhya",
-};
-
-export default function LandingPage() {
-  return <HomeView />;
+export default function RootPage() {
+  redirect("/home");
 }

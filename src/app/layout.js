@@ -11,12 +11,10 @@ const poppins = Poppins({
 
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Nawadhya",
-  description: "We Build, Scale, and Power Big Data Platforms",
+  title: "Next.js Boilerplate",
+  description: "A modern, production-ready Next.js boilerplate",
   icons: [
     { rel: "icon", url: "/favicon.ico" },
     { rel: "icon", url: "/favicon.png", type: "image/png" },
@@ -38,8 +36,6 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             {children}
             <ClientToaster />
-            <Navbar />
-            <Footer />
           </AuthProvider>
         </ThemeProvider>
       </body>

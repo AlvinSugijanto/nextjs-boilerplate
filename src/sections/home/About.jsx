@@ -1,67 +1,220 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
+import {
+  LayoutGrid,
+  Database,
+  Lock,
+  Layers,
+  Terminal,
+  FileCode2,
+} from "lucide-react";
 
-import "swiper/css";
-import "swiper/css/navigation";
 const About = () => {
-  const cardItem = [
+  const features = [
     {
-      title: "Future-Proof Architecture",
+      icon: <LayoutGrid className="w-6 h-6" />,
+      title: "33+ UI Components",
       description:
-        "Nawadhya is built entirely on high performance collaborative framework, ensuring strategic independence from vendor lock-in. This approach enables organizations to scale sustainably, control long-term costs, and adapt quickly to evolving data and business requirements.",
+        "Pre-built shadcn/ui components including buttons, cards, dialogs, tables, charts, and more.",
     },
     {
-      title: "Local Execution, Enterprise Assurance",
+      icon: <Lock className="w-6 h-6" />,
+      title: "Authentication Ready",
       description:
-        "With product development and 24x7 operational support based in Indonesia, Nawadhya delivers enterprise-grade reliability with local accountability. Our teams provide continuous platform availability, risk mitigation, and operational continuity for mission-critical data workloads.",
+        "Complete auth system with login, logout, session management, and route guards.",
     },
     {
-      title: "Unified Multi-Technology Data Platform",
+      icon: <Database className="w-6 h-6" />,
+      title: "PocketBase Integration",
       description:
-        "Nawadhya offers a unified platform that integrates multiple Big Data technologies to support the full data lifecycle. From ingestion to analytics, we enable faster time-to-value while maintaining governance, performance, and service consistency at scale.",
+        "Backend-ready with PocketBase SDK configured for data management and API calls.",
+    },
+    {
+      icon: <Layers className="w-6 h-6" />,
+      title: "Dark Mode Support",
+      description:
+        "Built-in theme system with next-themes for seamless light/dark mode switching.",
+    },
+    {
+      icon: <Terminal className="w-6 h-6" />,
+      title: "Developer Experience",
+      description:
+        "ESLint, Husky pre-commit hooks, and organized folder structure for clean code.",
+    },
+    {
+      icon: <FileCode2 className="w-6 h-6" />,
+      title: "Form Handling",
+      description:
+        "React Hook Form with Yup validation for robust and type-safe form management.",
     },
   ];
 
+  const techStack = [
+    { name: "Next.js 16", category: "Framework" },
+    { name: "React 19", category: "Library" },
+    { name: "Tailwind 4", category: "Styling" },
+    { name: "Framer Motion", category: "Animation" },
+    { name: "shadcn/ui", category: "Components" },
+    { name: "PocketBase", category: "Backend" },
+  ];
+
+  const containerVariants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
   return (
     <>
-      {/* ABOUT SECTION */}
-      <section className="py-16">
-        <div className="relative z-50 max-w-5xl px-4 sm:px-16 mx-auto pt-8 sm:pt-16 md:pt-32 lg:pt-64 xl:pt-80 text-center">
-          <p className="text-3xl tracking-[0.2em] underline underline-offset-8 font-light">
-            ABOUT
-          </p>
+      {/* Features Section */}
+      <section className="py-24 border-t border-border">
+        <div className="container mx-auto px-6">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              Features
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Everything you need to ship
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+              A comprehensive boilerplate with all the essential features
+              pre-configured and ready to use.
+            </p>
+          </motion.div>
 
-          <h2 className="mt-16 text-2xl md:text-3xl xl:text-5xl font-semibold">
-            What We Do?
-          </h2>
-
-          <p className="mt-8 text-lg">
-            Nawadhya enables organizations to operate scalable and secure high
-            performance collaborative framework Big Data platforms through
-            enterprise-ready SaaS solutions.
-          </p>
-
-          <p className="mt-8 text-lg">
-            With deep domain expertise and 24x7 local operational support,
-            Nawadhya ensures the reliability, performance, and continuity of Big
-            Data platforms across the enterprise.
-          </p>
+          {/* Features Grid */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"
+          >
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                className="group p-6 rounded-xl border border-border bg-card hover:bg-accent/50 transition-all duration-300"
+              >
+                <div className="p-3 rounded-lg bg-primary/10 text-primary w-fit mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* WHY NAWADHYA */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Section Header */}
-          <div className="mb-8 sm:mb-20">
-            <p className="text-sm tracking-[0.3em] uppercase text-gray-500">
-              Why Nawadhya?
+      {/* Tech Stack Section */}
+      <section className="py-24 border-t border-border bg-accent/30">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              Tech Stack
             </p>
-            <h2 className="mt-4 text-3xl sm:text-4xl font-semibold ">
-              Strategic Differentiation
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Built with modern tools
             </h2>
-          </div>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto"
+          >
+            {techStack.map((tech, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                className="px-6 py-3 rounded-full border border-border bg-background hover:bg-accent transition-colors"
+              >
+                <span className="font-medium">{tech.name}</span>
+                <span className="text-muted-foreground text-sm ml-2">
+                  {tech.category}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Quick Start Section */}
+      <section className="py-24 border-t border-border">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="max-w-2xl mx-auto text-center"
+          >
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              Quick Start
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8">
+              Get up and running in minutes
+            </h2>
+
+            {/* Code Block */}
+            <div className="text-left bg-primary text-primary-foreground rounded-xl p-6 font-mono text-sm overflow-x-auto">
+              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-primary-foreground/20">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="ml-2 text-primary-foreground/60">
+                  terminal
+                </span>
+              </div>
+              <p className="text-primary-foreground/60">
+                # Clone the repository
+              </p>
+              <p className="mb-3">
+                <span className="text-green-400">$</span> git clone
+                https://github.com/your-repo/nextjs-boilerplate.git
+              </p>
+              <p className="text-primary-foreground/60">
+                # Install dependencies
+              </p>
+              <p className="mb-3">
+                <span className="text-green-400">$</span> npm install
+              </p>
+              <p className="text-primary-foreground/60">
+                # Start development server
+              </p>
+              <p>
+                <span className="text-green-400">$</span> npm run dev
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
     </>

@@ -38,8 +38,8 @@ export function Navigations({ navigations }) {
   return (
     <SidebarGroup>
       {!isCollapsed && (
-        <SidebarGroupLabel className="text-secondary">
-          Dashboard
+        <SidebarGroupLabel className="text-muted-foreground">
+          Menu
         </SidebarGroupLabel>
       )}
 
@@ -49,11 +49,12 @@ export function Navigations({ navigations }) {
 
           const itemRoot = getRootSegment(item.url);
 
-          // ✅ active check (parent dan child)
+          // ✅ active check - exact match or starts with item.url/
+          // For /dashboard, only match exact. For others, match exact or prefix
           const isActive =
-            rootSegment === itemRoot ||
             pathname === item.url ||
-            pathname.startsWith(`${item.url}/`) ||
+            (item.url !== "/dashboard" &&
+              pathname.startsWith(`${item.url}/`)) ||
             item.items?.some((sub) => pathname.startsWith(sub.url));
 
           return (

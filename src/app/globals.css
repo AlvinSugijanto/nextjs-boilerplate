@@ -5,7 +5,6 @@
 
 @theme {
   --breakpoint-xs: 30rem;
-
 }
 
 @theme inline {
@@ -58,13 +57,13 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.39 0.05 248);
   --primary-100: oklch(0.95 0.03 237);
-  --primary-200: oklch(0.90 0.06 231);
-  --primary-300: oklch(0.83 0.10 230);
+  --primary-200: oklch(0.9 0.06 231);
+  --primary-300: oklch(0.83 0.1 230);
   --primary-400: oklch(0.75 0.14 233);
   --primary-500: oklch(0.68 0.15 237);
   --primary-600: oklch(0.59 0.14 242);
-  --primary-700: oklch(0.50 0.12 243);
-  --primary-800: oklch(0.44 0.10 241);
+  --primary-700: oklch(0.5 0.12 243);
+  --primary-800: oklch(0.44 0.1 241);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.63 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -78,7 +77,7 @@
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.85 0.18 95);
   /* primary yellow */
-  --chart-2: oklch(0.80 0.15 105);
+  --chart-2: oklch(0.8 0.15 105);
   /* slightly greener yellow */
   --chart-3: oklch(0.82 0.14 85);
   /* slightly orange tint */
@@ -115,11 +114,38 @@
   --chart-status-monitor: oklch(0.95 0.12 102);
 }
 
-
-
 /* --sidebar-accent: oklch(0.269 0 0); */
 /* --background: oklch(0.145 0 0); */
 /* --card: oklch(0.205 0 0); */
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.35 0 0);
+  --input: oklch(0.35 0 0);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.205 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.35 0 0);
+  --sidebar-ring: oklch(0.556 0 0);
+}
 
 @layer base {
   * {
@@ -160,8 +186,6 @@
   }
 }
 
-
-
 /* sooner toast */
 .sonner-toast {
   font-size: 12px !important;
@@ -176,7 +200,6 @@
   font-size: 11px !important;
   opacity: 0.9;
 }
-
 
 html {
   scroll-behavior: smooth;
