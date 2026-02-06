@@ -4,7 +4,6 @@ import Image from "next/image";
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import LightningEffects from "@/components/LightningEffects";
 
 const Hero = () => {
   const containerVariants = {
@@ -54,8 +53,6 @@ const Hero = () => {
             {/* optional overlay biar kontras */}
             {/* <div className="absolute inset-0 bg-black/50" /> */}
           </div>
-
-          <LightningEffects type="horizontal" />
 
           {/* Content */}
           <div className="relative z-50 h-full flex items-center justify-center">

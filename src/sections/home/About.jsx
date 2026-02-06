@@ -1,13 +1,9 @@
 "use client";
-import Card from "@/components/Card";
+
 import React from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import "swiper/css";
 import "swiper/css/navigation";
-import CustomSlider from "@/components/CustomSlider";
 const About = () => {
   const cardItem = [
     {
@@ -66,8 +62,6 @@ const About = () => {
               Strategic Differentiation
             </h2>
           </div>
-
-          <CustomSlider list={cardItem} />
         </div>
       </section>
     </>
